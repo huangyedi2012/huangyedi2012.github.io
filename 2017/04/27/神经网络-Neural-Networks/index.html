@@ -1,0 +1,645 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>神经网络 Neural Networks | huangyedi2012&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="huangyedi2012">
+    
+
+    
+    <meta name="description" content="人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。">
+<meta name="keywords" content="NN,BP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="神经网络 Neural Networks">
+<meta property="og:url" content="https://huangyedi2012.github.io/2017/04/27/神经网络-Neural-Networks/index.html">
+<meta property="og:site_name" content="huangyedi2012&#39;s Blog">
+<meta property="og:description" content="人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/imgs/ML/NN/SingleNeuron.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/imgs/ML/NN/400px-Network331.png">
+<meta property="og:updated_time" content="2017-11-29T16:10:21.128Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="神经网络 Neural Networks">
+<meta name="twitter:description" content="人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/imgs/ML/NN/SingleNeuron.png">
+
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="huangyedi2012&#39;s Blog" title="huangyedi2012&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="huangyedi2012&#39;s Blog">huangyedi2012&#39;s Blog</a></h1>
+				<h2 class="blog-motto">强迫症患者</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/categories">分类</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:huangyedi2012.github.io">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2017/04/27/神经网络-Neural-Networks/" title="神经网络 Neural Networks" itemprop="url">神经网络 Neural Networks</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="huangyedi2012" target="_blank" itemprop="author">huangyedi2012</a>
+		
+  <p class="article-time">
+    <time datetime="2017-04-27T02:35:44.000Z" itemprop="datePublished"> 发表于 2017-04-27</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#神经元"><span class="toc-number">1.</span> <span class="toc-text">神经元</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#神经网络模型"><span class="toc-number">2.</span> <span class="toc-text">神经网络模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#反向传播"><span class="toc-number">3.</span> <span class="toc-text">反向传播</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#输出层误差的方程"><span class="toc-number">3.1.</span> <span class="toc-text">输出层误差的方程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用下一层的误差-delta-l-1-来表示当前层的误差-delta-l"><span class="toc-number">3.2.</span> <span class="toc-text">使用下一层的误差  $\delta^{l+1}$ 来表示当前层的误差  $\delta^{l}$</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代价函数关于网络中任意偏置的改变率"><span class="toc-number">3.3.</span> <span class="toc-text">代价函数关于网络中任意偏置的改变率</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代价函数关于任何一个权重的改变率"><span class="toc-number">3.4.</span> <span class="toc-text">代价函数关于任何一个权重的改变率</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#反向传播算法描述"><span class="toc-number">3.5.</span> <span class="toc-text">反向传播算法描述</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#代码"><span class="toc-number">4.</span> <span class="toc-text">代码</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">5.</span> <span class="toc-text">参考文献</span></a></li></ol>
+		
+		</div>
+		
+		<p>人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。</p>
+<a id="more"></a>
+<h1 id="神经元"><a href="#神经元" class="headerlink" title="神经元"></a>神经元</h1><p><img src="/imgs/ML/NN/SingleNeuron.png" alt="神经元"></p>
+<p>这个“神经元”是一个以 $x_1,x_2,x_3$ 及截距 $ +1 $ 为输入值的运算单元，其输出为 $  h_{W,b}(x) = f(W^Tx) = f(\sum_{i=1}^3 W_{i}x_i +b)$ ，其中函数 $ f : \Re \mapsto \Re$ 被称为“激活函数”。在本教程中，我们选用sigmoid函数作为激活函数 $ f(\cdot) $:<br>$$<br>f(z) = \frac{1}{1+\exp(-z)}.<br>$$</p>
+<h1 id="神经网络模型"><a href="#神经网络模型" class="headerlink" title="神经网络模型"></a>神经网络模型</h1><p>所谓神经网络就是将许多个单一“神经元”联结在一起，这样，一个“神经元”的输出就可以是另一个“神经元”的输入。例如，下图就是一个简单的神经网络：</p>
+<p><img src="/imgs/ML/NN/400px-Network331.png" alt="神经网络模型"></p>
+<p>我们使用 $ w^l_{jk} $ 表示从 $(l−1)^{th}$ 层的  $k^{th} $个神经元到  $l^{th} $ 层的  $j^{th} $ 个神经元的链接上的权重。使用  $b^l_j$  表示在 $l^{th}$  层第  $j^{th} $ 个神经元的偏置，中间量 $ z^l \equiv w^l a^{l-1}+b^l$ ，使用  $a^l_j$  表示  $l^{th}$  层第  $j^{th}$  个神经元的激活值。</p>
+<p>$l^{th}$  层的第 $j^{th}$ 个神经元的激活值 $a^l_j$ 就和 $l-1^{th}$  层的激活值通过方程关联起来了。</p>
+<p>$$<br>\begin{eqnarray}<br>a^{l}_j = \sigma\left( \sum_k w^{l}_{jk} a^{l-1}_k + b^l_j \right)<br>\label{eq:fp}\tag{fp}<br>\end{eqnarray}<br>$$</p>
+<p>对方程$\eqref{eq:fp}$ 就可以写成下面这种美妙而简洁的向量形式了</p>
+<p>$$<br>\begin{eqnarray}<br>  a^{l} = \sigma(w^l a^{l-1}+b^l)<br>  \label{eq:mfp}\tag{mfp}<br>\end{eqnarray}<br>$$</p>
+<h1 id="反向传播"><a href="#反向传播" class="headerlink" title="反向传播"></a>反向传播</h1><p>反向传播的目标是计算代价函数 $C$ 分别关于  $w$  和  $b$  的偏导数  $∂C/∂w$  和  $∂C/∂b$ 。反向传播其实是对权重和偏置变化影响代价函数过程的理解。最终极的含义其实就是计算偏导数 $\partial C/\partial w_{jk}^l$ 和$\partial C/\partial b_j^l$。但是为了计算这些值，我们首先引入一个中间量， $\delta_j^l$ ，这个我们称为在  $l^{th}$  层第  $j^{th}$  个神经元上的<strong>误差</strong>。</p>
+<p>对于$l$层的第  $j^{th}$  个神经元，当输入进来时，对神经元的带权输入增加很小的变化 $\Delta z_j^l$ ，使得神经元输出由 $<br>\sigma(z_j^l)$  变成  $\sigma(z_j^l + \Delta z_j^l)$ 。这个变化会向网络后面的层进行传播，最终导致整个代价产生  $\frac{\partial C}{\partial z_j^l} \Delta z_j^l$ 的改变。所以这里有一种启发式的认识， $\frac{\partial C}{\partial z_j^l}$  是神经元的误差的度量。</p>
+<p>按照上面的描述，我们定义  $l$  层的第  $j^{th}$  个神经元上的误差  $\delta_j^l$  为：<br>$$<br>\begin{eqnarray}<br>  \delta^l_j \equiv \frac{\partial C}{\partial z^l_j}<br>  \label{eq:error}\tag{error}<br>\end{eqnarray}<br>$$</p>
+<h2 id="输出层误差的方程"><a href="#输出层误差的方程" class="headerlink" title="输出层误差的方程"></a>输出层误差的方程</h2><p><strong>输出层误差的方程</strong>， $\delta^L$ ： 每个元素定义如下：</p>
+<p>$$<br>\begin{eqnarray}<br>  \delta^L_j = \frac{\partial C}{\partial a^L_j} \sigma’(z^L_j)<br>  \label{eq:bp1}\tag{BP1}<br>\end{eqnarray}<br>$$</p>
+<p>第一个项  $\partial C/\partial a_j^L$  表示代价随着 $j^{th}$  输出激活值的变化而变化的速度。第二项 $\sigma’(z^L_j)$  刻画了在  $z_j^L$  处激活函数  $\sigma$  变化的速度。</p>
+<h2 id="使用下一层的误差-delta-l-1-来表示当前层的误差-delta-l"><a href="#使用下一层的误差-delta-l-1-来表示当前层的误差-delta-l" class="headerlink" title="使用下一层的误差  $\delta^{l+1}$ 来表示当前层的误差  $\delta^{l}$"></a>使用下一层的误差  $\delta^{l+1}$ 来表示当前层的误差  $\delta^{l}$</h2><p><strong>使用下一层的误差  $\delta^{l+1}$ 来表示当前层的误差  $\delta^{l}$</strong>：特别地，</p>
+<p>$$<br>\begin{eqnarray}<br>  \delta^l = ((w^{l+1})^T \delta^{l+1}) \odot \sigma’(z^l)<br>  \label{eq:bp2}\tag{BP2}<br>\end{eqnarray}<br>$$</p>
+<p>其中$(w^{l+1})^T$是$(l+1)^{\rm th}$层权重矩阵$w^{l+1}$的转置。假设我们知道$l+1^{\rm th}$层的误差$\delta^{l+1}$。当我们应用转置的权重矩阵$(w^{l+1})^T$，我们可以凭直觉地把它看作是在沿着网络<strong>反向</strong>移动误差，给了我们度量在$l^{\rm th}$ 层输出的误差方法。然后，我们进行 Hadamard 乘积运算 $\odot \sigma’(z^l)$ 。这会让误差通过 $l$  层的激活函数反向传递回来并给出在第 $l$  层的带权输入的误差  $\delta$ 。</p>
+<p><strong>证明：</strong><br>我们想要以$\delta^{l+1}_k = \partial C / \partial z^{l+1}_k$的形式重写$\delta^l_j = \partial C / \partial z^l_j$。应用链式法则<br>$$<br>\begin{eqnarray}<br>\delta^l_j &amp;=&amp; \frac{\partial C}{\partial z^l_j}\\<br>           &amp;=&amp; \sum_k \frac{\partial C}{\partial z^{l+1}_k} \frac{\partial z^{l+1}_k}{\partial z^l_j}\\<br>           &amp;=&amp; \sum_k \frac{\partial z^{l+1}_k}{\partial z^l_j} \delta^{l+1}_k<br>\end{eqnarray}<br>$$</p>
+<p>为了对最后一行的第一项求值，注意：</p>
+<p>$$<br>\begin{eqnarray}<br>  z^{l+1}_k = \sum_j w^{l+1}_{kj} a^l_j +b^{l+1}_k = \sum_j w^{l+1}_{kj} \sigma(z^l_j) +b^{l+1}_k<br>\end{eqnarray}<br>$$</p>
+<p>做微分，我们得到</p>
+<p>$$<br>\begin{eqnarray}<br>  \frac{\partial z^{l+1}_k}{\partial z^l_j} = w^{l+1}_{kj} \sigma’(z^l_j)<br>\end{eqnarray}<br>$$</p>
+<p>代入上式即有：</p>
+<p>$$<br>\begin{eqnarray}<br>  \delta^l_j = \sum_k w^{l+1}_{kj}  \delta^{l+1}_k \sigma’(z^l_j)<br>\end{eqnarray}<br>$$</p>
+<h2 id="代价函数关于网络中任意偏置的改变率"><a href="#代价函数关于网络中任意偏置的改变率" class="headerlink" title="代价函数关于网络中任意偏置的改变率"></a>代价函数关于网络中任意偏置的改变率</h2><p><strong>代价函数关于网络中任意偏置的改变率：</strong> 就是<br>$$<br>\begin{eqnarray}<br>  \frac{\partial C}{\partial b^l_j} = \delta^l_j<br>  \label{eq:bp3}\tag{BP3}<br>\end{eqnarray}<br>$$</p>
+<p>这其实是，误差$\delta^l_j$ 和偏导数值 $\partial C / \partial b^l_j$<strong>完全一致</strong>。</p>
+<h2 id="代价函数关于任何一个权重的改变率"><a href="#代价函数关于任何一个权重的改变率" class="headerlink" title="代价函数关于任何一个权重的改变率"></a>代价函数关于任何一个权重的改变率</h2><p><strong>代价函数关于任何一个权重的改变率：</strong> 特别地，</p>
+<p>$$<br>\begin{eqnarray}<br>  \frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k \delta^l_j<br>  \label{eq:bp4}\tag{BP4}<br>\end{eqnarray}<br>$$</p>
+<h2 id="反向传播算法描述"><a href="#反向传播算法描述" class="headerlink" title="反向传播算法描述"></a>反向传播算法描述</h2><ul>
+<li><strong>输入$x$：</strong> 为输入层设置对应的激活值$a^1$</li>
+<li><strong>前向传播：</strong> 对每个$l=2,3,…,L$计算相应的$z^l = w^la^{l-1} + b^l$ 和 $a^l = \sigma(z^l)$</li>
+<li><strong>输出层误差 $\delta^L$ ：</strong> 计算向量 $\delta^L = \nabla_a C \odot \sigma’(z^L)$</li>
+<li><strong>反向误差传播：</strong> 对每个$l=L-1, L-2,…,2$ ，计算$\delta^l = ((w^{l+1})^T\delta^{l+1})\odot \sigma’(z^l)$</li>
+<li><strong>输出：</strong> 代价函数的梯度由 $\frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k \delta^l_j$ 和 $\frac{\partial C}{\partial b_j^l} = \delta_j^l$ 得出</li>
+</ul>
+<p>证明见<a href="https://xhhjin.gitbooks.io/neural-networks-and-deep-learning-zh/content/chap2-5.html" target="_blank" rel="noopener">四个基本方程的证明</a>。</p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> random</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Network</span><span class="params">(object)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, sizes)</span>:</span></span><br><span class="line">        <span class="string">"""The list ``sizes`` contains the number of neurons in the</span></span><br><span class="line"><span class="string">        respective layers of the network.  For example, if the list</span></span><br><span class="line"><span class="string">        was [2, 3, 1] then it would be a three-layer network, with the</span></span><br><span class="line"><span class="string">        first layer containing 2 neurons, the second layer 3 neurons,</span></span><br><span class="line"><span class="string">        and the third layer 1 neuron.  The biases and weights for the</span></span><br><span class="line"><span class="string">        network are initialized randomly, using a Gaussian</span></span><br><span class="line"><span class="string">        distribution with mean 0, and variance 1.  Note that the first</span></span><br><span class="line"><span class="string">        layer is assumed to be an input layer, and by convention we</span></span><br><span class="line"><span class="string">        won't set any biases for those neurons, since biases are only</span></span><br><span class="line"><span class="string">        ever used in computing the outputs from later layers."""</span></span><br><span class="line">        self.num_layers = len(sizes)</span><br><span class="line">        self.sizes = sizes</span><br><span class="line">        self.biases = [np.random.randn(y, <span class="number">1</span>) <span class="keyword">for</span> y <span class="keyword">in</span> sizes[<span class="number">1</span>:]]</span><br><span class="line">        self.weights = [np.random.randn(y, x)</span><br><span class="line">                        <span class="keyword">for</span> x, y <span class="keyword">in</span> zip(sizes[:<span class="number">-1</span>], sizes[<span class="number">1</span>:])]</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">feedforward</span><span class="params">(self, a)</span>:</span></span><br><span class="line">        <span class="string">"""Return the output of the network if ``a`` is input."""</span></span><br><span class="line">        <span class="keyword">for</span> b, w <span class="keyword">in</span> zip(self.biases, self.weights):</span><br><span class="line">            a = sigmoid(np.dot(w, a)+b)</span><br><span class="line">        <span class="keyword">return</span> a</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">SGD</span><span class="params">(self, training_data, epochs, mini_batch_size, eta,</span></span></span><br><span class="line"><span class="function"><span class="params">            test_data=None)</span>:</span></span><br><span class="line">        <span class="string">"""Train the neural network using mini-batch stochastic</span></span><br><span class="line"><span class="string">        gradient descent.  The ``training_data`` is a list of tuples</span></span><br><span class="line"><span class="string">        ``(x, y)`` representing the training inputs and the desired</span></span><br><span class="line"><span class="string">        outputs.  The other non-optional parameters are</span></span><br><span class="line"><span class="string">        self-explanatory.  If ``test_data`` is provided then the</span></span><br><span class="line"><span class="string">        network will be evaluated against the test data after each</span></span><br><span class="line"><span class="string">        epoch, and partial progress printed out.  This is useful for</span></span><br><span class="line"><span class="string">        tracking progress, but slows things down substantially."""</span></span><br><span class="line">        <span class="keyword">if</span> test_data: n_test = len(test_data)</span><br><span class="line">        n = len(training_data)</span><br><span class="line">        <span class="keyword">for</span> j <span class="keyword">in</span> xrange(epochs):</span><br><span class="line">            random.shuffle(training_data)</span><br><span class="line">            mini_batches = [</span><br><span class="line">                training_data[k:k+mini_batch_size]</span><br><span class="line">                <span class="keyword">for</span> k <span class="keyword">in</span> xrange(<span class="number">0</span>, n, mini_batch_size)]</span><br><span class="line">            <span class="keyword">for</span> mini_batch <span class="keyword">in</span> mini_batches:</span><br><span class="line">                self.update_mini_batch(mini_batch, eta)</span><br><span class="line">            <span class="keyword">if</span> test_data:</span><br><span class="line">                <span class="keyword">print</span> <span class="string">"Epoch &#123;0&#125;: &#123;1&#125; / &#123;2&#125;"</span>.format(</span><br><span class="line">                    j, self.evaluate(test_data), n_test)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">print</span> <span class="string">"Epoch &#123;0&#125; complete"</span>.format(j)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">update_mini_batch</span><span class="params">(self, mini_batch, eta)</span>:</span></span><br><span class="line">        <span class="string">"""Update the network's weights and biases by applying</span></span><br><span class="line"><span class="string">        gradient descent using backpropagation to a single mini batch.</span></span><br><span class="line"><span class="string">        The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``</span></span><br><span class="line"><span class="string">        is the learning rate."""</span></span><br><span class="line">        nabla_b = [np.zeros(b.shape) <span class="keyword">for</span> b <span class="keyword">in</span> self.biases]</span><br><span class="line">        nabla_w = [np.zeros(w.shape) <span class="keyword">for</span> w <span class="keyword">in</span> self.weights]</span><br><span class="line">        <span class="keyword">for</span> x, y <span class="keyword">in</span> mini_batch:</span><br><span class="line">            delta_nabla_b, delta_nabla_w = self.backprop(x, y)</span><br><span class="line">            nabla_b = [nb+dnb <span class="keyword">for</span> nb, dnb <span class="keyword">in</span> zip(nabla_b, delta_nabla_b)]</span><br><span class="line">            nabla_w = [nw+dnw <span class="keyword">for</span> nw, dnw <span class="keyword">in</span> zip(nabla_w, delta_nabla_w)]</span><br><span class="line">        self.weights = [w-(eta/len(mini_batch))*nw</span><br><span class="line">                        <span class="keyword">for</span> w, nw <span class="keyword">in</span> zip(self.weights, nabla_w)]</span><br><span class="line">        self.biases = [b-(eta/len(mini_batch))*nb</span><br><span class="line">                       <span class="keyword">for</span> b, nb <span class="keyword">in</span> zip(self.biases, nabla_b)]</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">backprop</span><span class="params">(self, x, y)</span>:</span></span><br><span class="line">        <span class="string">"""Return a tuple ``(nabla_b, nabla_w)`` representing the</span></span><br><span class="line"><span class="string">        gradient for the cost function C_x.  ``nabla_b`` and</span></span><br><span class="line"><span class="string">        ``nabla_w`` are layer-by-layer lists of numpy arrays, similar</span></span><br><span class="line"><span class="string">        to ``self.biases`` and ``self.weights``."""</span></span><br><span class="line">        nabla_b = [np.zeros(b.shape) <span class="keyword">for</span> b <span class="keyword">in</span> self.biases]</span><br><span class="line">        nabla_w = [np.zeros(w.shape) <span class="keyword">for</span> w <span class="keyword">in</span> self.weights]</span><br><span class="line">        <span class="comment"># feedforward</span></span><br><span class="line">        activation = x</span><br><span class="line">        activations = [x] <span class="comment"># list to store all the activations, layer by layer</span></span><br><span class="line">        zs = [] <span class="comment"># list to store all the z vectors, layer by layer</span></span><br><span class="line">        <span class="keyword">for</span> b, w <span class="keyword">in</span> zip(self.biases, self.weights):</span><br><span class="line">            z = np.dot(w, activation)+b</span><br><span class="line">            zs.append(z)</span><br><span class="line">            activation = sigmoid(z)</span><br><span class="line">            activations.append(activation)</span><br><span class="line">        <span class="comment"># backward pass</span></span><br><span class="line">        delta = self.cost_derivative(activations[<span class="number">-1</span>], y) * \</span><br><span class="line">            sigmoid_prime(zs[<span class="number">-1</span>])</span><br><span class="line">        nabla_b[<span class="number">-1</span>] = delta</span><br><span class="line">        nabla_w[<span class="number">-1</span>] = np.dot(delta, activations[<span class="number">-2</span>].transpose())</span><br><span class="line">        <span class="comment"># Note that the variable l in the loop below is used a little</span></span><br><span class="line">        <span class="comment"># differently to the notation in Chapter 2 of the book.  Here,</span></span><br><span class="line">        <span class="comment"># l = 1 means the last layer of neurons, l = 2 is the</span></span><br><span class="line">        <span class="comment"># second-last layer, and so on.  It's a renumbering of the</span></span><br><span class="line">        <span class="comment"># scheme in the book, used here to take advantage of the fact</span></span><br><span class="line">        <span class="comment"># that Python can use negative indices in lists.</span></span><br><span class="line">        <span class="keyword">for</span> l <span class="keyword">in</span> xrange(<span class="number">2</span>, self.num_layers):</span><br><span class="line">            z = zs[-l]</span><br><span class="line">            sp = sigmoid_prime(z)</span><br><span class="line">            delta = np.dot(self.weights[-l+<span class="number">1</span>].transpose(), delta) * sp</span><br><span class="line">            nabla_b[-l] = delta</span><br><span class="line">            nabla_w[-l] = np.dot(delta, activations[-l<span class="number">-1</span>].transpose())</span><br><span class="line">        <span class="keyword">return</span> (nabla_b, nabla_w)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">evaluate</span><span class="params">(self, test_data)</span>:</span></span><br><span class="line">        <span class="string">"""Return the number of test inputs for which the neural</span></span><br><span class="line"><span class="string">        network outputs the correct result. Note that the neural</span></span><br><span class="line"><span class="string">        network's output is assumed to be the index of whichever</span></span><br><span class="line"><span class="string">        neuron in the final layer has the highest activation."""</span></span><br><span class="line">        test_results = [(np.argmax(self.feedforward(x)), y)</span><br><span class="line">                        <span class="keyword">for</span> (x, y) <span class="keyword">in</span> test_data]</span><br><span class="line">        <span class="keyword">return</span> sum(int(x == y) <span class="keyword">for</span> (x, y) <span class="keyword">in</span> test_results)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">cost_derivative</span><span class="params">(self, output_activations, y)</span>:</span></span><br><span class="line">        <span class="string">"""Return the vector of partial derivatives \partial C_x /</span></span><br><span class="line"><span class="string">        \partial a for the output activations."""</span></span><br><span class="line">        <span class="keyword">return</span> (output_activations-y)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sigmoid</span><span class="params">(z)</span>:</span></span><br><span class="line">    <span class="string">"""The sigmoid function."""</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">1.0</span>/(<span class="number">1.0</span>+np.exp(-z))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sigmoid_prime</span><span class="params">(z)</span>:</span></span><br><span class="line">    <span class="string">"""Derivative of the sigmoid function."""</span></span><br><span class="line">    <span class="keyword">return</span> sigmoid(z)*(<span class="number">1</span>-sigmoid(z))</span><br></pre></td></tr></table></figure>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><blockquote>
+<p><a href="https://xhhjin.gitbooks.io/neural-networks-and-deep-learning-zh/content/cover.html" target="_blank" rel="noopener">神经网络与深度学习</a></p>
+</blockquote>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/ML/">ML</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/NN/">NN</a><a href="/tags/BP/">BP</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="https://huangyedi2012.github.io/2017/04/27/神经网络-Neural-Networks/" data-title="神经网络 Neural Networks | huangyedi2012&#39;s Blog" data-tsina="" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2017/06/05/Spark-On-Yarn-集群安装部署/" title="Spark On Yarn 集群安装部署">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Spark On Yarn 集群安装部署</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2017/04/17/2017-04-17-Hadoop之Yarn原理/"  title="Hadoop之Yarn原理">
+ <strong>下一篇：</strong><br/> 
+ <span>Hadoop之Yarn原理
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#神经元"><span class="toc-number">1.</span> <span class="toc-text">神经元</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#神经网络模型"><span class="toc-number">2.</span> <span class="toc-text">神经网络模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#反向传播"><span class="toc-number">3.</span> <span class="toc-text">反向传播</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#输出层误差的方程"><span class="toc-number">3.1.</span> <span class="toc-text">输出层误差的方程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#使用下一层的误差-delta-l-1-来表示当前层的误差-delta-l"><span class="toc-number">3.2.</span> <span class="toc-text">使用下一层的误差  $\delta^{l+1}$ 来表示当前层的误差  $\delta^{l}$</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代价函数关于网络中任意偏置的改变率"><span class="toc-number">3.3.</span> <span class="toc-text">代价函数关于网络中任意偏置的改变率</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代价函数关于任何一个权重的改变率"><span class="toc-number">3.4.</span> <span class="toc-text">代价函数关于任何一个权重的改变率</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#反向传播算法描述"><span class="toc-number">3.5.</span> <span class="toc-text">反向传播算法描述</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#代码"><span class="toc-number">4.</span> <span class="toc-text">代码</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">5.</span> <span class="toc-text">参考文献</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="github-card">
+<p class="asidetitle">Github 名片</p>
+<div class="github-card" data-github="huangyedi2012" data-width="220" data-height="119" data-theme="medium">
+<script type="text/javascript" src="//cdn.jsdelivr.net/github-cards/latest/widget.js" ></script>
+</div>
+  </div>
+
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/ML/" title="ML">ML<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/algorithm/" title="algorithm">algorithm<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/python/" title="python">python<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/spark/" title="spark">spark<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/tools/" title="tools">tools<sup>8</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/math/" title="math">math<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/python/" title="python">python<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/配色/" title="配色">配色<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/windows/" title="windows">windows<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/git/" title="git">git<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/bash/" title="bash">bash<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/spark/" title="spark">spark<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vi/" title="vi">vi<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/日志/" title="日志">日志<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/快捷方式/" title="快捷方式">快捷方式<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vc6-0/" title="vc6.0">vc6.0<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/ignore/" title="ignore">ignore<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/blog/" title="blog">blog<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/split/" title="split">split<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/idea/" title="idea">idea<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/latex/" title="latex">latex<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/LR/" title="LR">LR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/gcd/" title="gcd">gcd<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://www.hust.edu.cn/" target="_blank" title="HUST">HUST</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> CS blog <br/>
+			Just for fun!</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/huangyedi2012" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:huangyedi2012@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="huangyedi2012">huangyedi2012</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
+
+
+<a target="_blank" href="https://github.com/comwork2016"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>

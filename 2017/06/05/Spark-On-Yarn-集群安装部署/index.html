@@ -1,0 +1,630 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Spark On Yarn 集群安装部署 | huangyedi2012&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="huangyedi2012">
+    
+
+    
+    <meta name="description" content="本文记录的是Spark在Yarn上的集群安装部署">
+<meta name="keywords" content="spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark On Yarn 集群安装部署">
+<meta property="og:url" content="https://huangyedi2012.github.io/2017/06/05/Spark-On-Yarn-集群安装部署/index.html">
+<meta property="og:site_name" content="huangyedi2012&#39;s Blog">
+<meta property="og:description" content="本文记录的是Spark在Yarn上的集群安装部署">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/imgs/Spark/spark-install.png">
+<meta property="og:updated_time" content="2017-12-01T14:42:17.842Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark On Yarn 集群安装部署">
+<meta name="twitter:description" content="本文记录的是Spark在Yarn上的集群安装部署">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/imgs/Spark/spark-install.png">
+
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="huangyedi2012&#39;s Blog" title="huangyedi2012&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="huangyedi2012&#39;s Blog">huangyedi2012&#39;s Blog</a></h1>
+				<h2 class="blog-motto">强迫症患者</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/categories">分类</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:huangyedi2012.github.io">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2017/06/05/Spark-On-Yarn-集群安装部署/" title="Spark On Yarn 集群安装部署" itemprop="url">Spark On Yarn 集群安装部署</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="huangyedi2012" target="_blank" itemprop="author">huangyedi2012</a>
+		
+  <p class="article-time">
+    <time datetime="2017-06-05T07:24:19.000Z" itemprop="datePublished"> 发表于 2017-06-05</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#安装环境"><span class="toc-number">1.</span> <span class="toc-text">安装环境</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#先决条件"><span class="toc-number">2.</span> <span class="toc-text">先决条件</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装-Scala"><span class="toc-number">2.1.</span> <span class="toc-text">安装 Scala</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装配置-Hadoop-Yarn"><span class="toc-number">2.2.</span> <span class="toc-text">安装配置 Hadoop Yarn</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Spark安装"><span class="toc-number">3.</span> <span class="toc-text">Spark安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#下载解压"><span class="toc-number">3.1.</span> <span class="toc-text">下载解压</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置-Spark"><span class="toc-number">3.2.</span> <span class="toc-text">配置 Spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#启动Spark"><span class="toc-number">3.3.</span> <span class="toc-text">启动Spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#验证Spark是否安装成功"><span class="toc-number">3.4.</span> <span class="toc-text">验证Spark是否安装成功</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">4.</span> <span class="toc-text">参考文献</span></a></li></ol>
+		
+		</div>
+		
+		<p>本文记录的是Spark在Yarn上的集群安装部署</p>
+<a id="more"></a>
+<h1 id="安装环境"><a href="#安装环境" class="headerlink" title="安装环境"></a>安装环境</h1><p>OS: CentOS release 6.7 (Final)<br>Hadoop: 2.7.3<br>Spark: spark-2.1.1-bin-hadoop2.7</p>
+<h1 id="先决条件"><a href="#先决条件" class="headerlink" title="先决条件"></a>先决条件</h1><h2 id="安装-Scala"><a href="#安装-Scala" class="headerlink" title="安装 Scala"></a>安装 Scala</h2><p>从<a href="http://www.scala-lang.org/download/" target="_blank" rel="noopener">官方下载地址</a>下载scala。</p>
+<p>修改环境变量sudo vi /etc/profile，添加以下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> SCALA_HOME=<span class="variable">$HOME</span>/<span class="built_in">local</span>/opt/scala-2.12.2</span><br><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:<span class="variable">$SCALA_HOME</span>/bin</span><br></pre></td></tr></table></figure>
+<p>验证 scala 是否安装成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scala -version        <span class="comment">#如果打印出如下版本信息，则说明安装成功</span></span><br></pre></td></tr></table></figure>
+<h2 id="安装配置-Hadoop-Yarn"><a href="#安装配置-Hadoop-Yarn" class="headerlink" title="安装配置 Hadoop Yarn"></a>安装配置 Hadoop Yarn</h2><p>Hadoop Yarn的安装见<a href="/2017/04/14/Hadoop-2-7-3-安装/">Hadoop 2.7.3 安装</a></p>
+<h1 id="Spark安装"><a href="#Spark安装" class="headerlink" title="Spark安装"></a>Spark安装</h1><h2 id="下载解压"><a href="#下载解压" class="headerlink" title="下载解压"></a>下载解压</h2><p>进入<a href="http://spark.apache.org/downloads.html" target="_blank" rel="noopener">官方下载地址</a>下载最新版Spark。</p>
+<p>在<code>~/local/opt</code>目录下解压</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xzvf spark-2.1.1-bin-hadoop2.7.tgz</span><br></pre></td></tr></table></figure>
+<h2 id="配置-Spark"><a href="#配置-Spark" class="headerlink" title="配置 Spark"></a>配置 Spark</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/<span class="built_in">local</span>/opt/spark-2.1.1-bin-hadoop2.7/conf    <span class="comment">#进入spark配置目录</span></span><br><span class="line">cp spark-env.sh.template spark-env.sh   <span class="comment">#从配置模板复制</span></span><br><span class="line">vi spark-env.sh     <span class="comment">#添加配置内容</span></span><br></pre></td></tr></table></figure>
+<p>在<code>spark-env.sh</code>末尾添加以下内容:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> SCALA_HOME=/home/hadoop/<span class="built_in">local</span>/opt/scala-2.12.2</span><br><span class="line"><span class="built_in">export</span> JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk.x86_64</span><br><span class="line"><span class="built_in">export</span> HADOOP_HOME=/home/hadoop/<span class="built_in">local</span>/opt/hadoop-2.7.3</span><br><span class="line"><span class="built_in">export</span> HADOOP_CONF_DIR=<span class="variable">$HADOOP_HOME</span>/etc/hadoop</span><br><span class="line">SPARK_MASTER_IP=master</span><br><span class="line">SPARK_LOCAL_DIRS=/home/hadoop/<span class="built_in">local</span>/opt/spark-2.1.1-bin-hadoop2.7</span><br><span class="line">SPARK_DRIVER_MEMORY=1G</span><br></pre></td></tr></table></figure>
+<p>在<code>slaves</code>文件下填上slave主机名：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">slave1</span><br><span class="line">slave2</span><br></pre></td></tr></table></figure>
+<p>将配置好的<code>scala-2.12.2</code>和<code>spark-2.1.1-bin-hadoop2.7</code>文件夹分发给所有slaves:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">scp -r ~/<span class="built_in">local</span>/opt/scala-2.12.2/ hadoop@slave1:~/<span class="built_in">local</span>/opt/</span><br><span class="line">scp -r ~/<span class="built_in">local</span>/opt/scala-2.12.2/ hadoop@slave2:~/<span class="built_in">local</span>/opt/</span><br><span class="line">scp -r ~/<span class="built_in">local</span>/opt/spark-2.1.1-bin-hadoop2.7 hadoop@slave1:~/<span class="built_in">local</span>/opt/</span><br><span class="line">scp -r ~/<span class="built_in">local</span>/opt/spark-2.1.1-bin-hadoop2.7 hadoop@slave2:~/<span class="built_in">local</span>/opt/</span><br></pre></td></tr></table></figure>
+<h2 id="启动Spark"><a href="#启动Spark" class="headerlink" title="启动Spark"></a>启动Spark</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sbin/start-all.sh</span><br></pre></td></tr></table></figure>
+<h2 id="验证Spark是否安装成功"><a href="#验证Spark是否安装成功" class="headerlink" title="验证Spark是否安装成功"></a>验证Spark是否安装成功</h2><p>用jps检查，在 master 上应该有以下几个进程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">6484 SecondaryNameNode</span><br><span class="line">9156 HQuorumPeer</span><br><span class="line">9223 HMaster</span><br><span class="line">24871 JobHistoryServer</span><br><span class="line">19771 Master</span><br><span class="line">6283 NameNode</span><br><span class="line">6653 ResourceManager</span><br><span class="line">20222 Jps</span><br></pre></td></tr></table></figure>
+<p>在 slave 上应该有以下几个进程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">17088 NodeManager</span><br><span class="line">17779 HRegionServer</span><br><span class="line">31145 Worker</span><br><span class="line">17692 HQuorumPeer</span><br><span class="line">16973 DataNode</span><br><span class="line">31390 Jps</span><br></pre></td></tr></table></figure>
+<p>进入Spark的Web管理页面： <a href="http://master:8080" target="_blank" rel="noopener">http://master:8080</a></p>
+<p><img src="/imgs/Spark/spark-install.png" alt="Spark的Web管理页面"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><blockquote>
+<p><a href="http://wuchong.me/blog/2015/04/04/spark-on-yarn-cluster-deploy/" target="_blank" rel="noopener">Spark On YARN 集群安装部署</a></p>
+</blockquote>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/spark/">spark</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/spark/">spark</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="https://huangyedi2012.github.io/2017/06/05/Spark-On-Yarn-集群安装部署/" data-title="Spark On Yarn 集群安装部署 | huangyedi2012&#39;s Blog" data-tsina="" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2017/12/01/hello-world/" title="Hello World">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Hello World</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2017/04/27/神经网络-Neural-Networks/"  title="神经网络 Neural Networks">
+ <strong>下一篇：</strong><br/> 
+ <span>神经网络 Neural Networks
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#安装环境"><span class="toc-number">1.</span> <span class="toc-text">安装环境</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#先决条件"><span class="toc-number">2.</span> <span class="toc-text">先决条件</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#安装-Scala"><span class="toc-number">2.1.</span> <span class="toc-text">安装 Scala</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装配置-Hadoop-Yarn"><span class="toc-number">2.2.</span> <span class="toc-text">安装配置 Hadoop Yarn</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Spark安装"><span class="toc-number">3.</span> <span class="toc-text">Spark安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#下载解压"><span class="toc-number">3.1.</span> <span class="toc-text">下载解压</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置-Spark"><span class="toc-number">3.2.</span> <span class="toc-text">配置 Spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#启动Spark"><span class="toc-number">3.3.</span> <span class="toc-text">启动Spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#验证Spark是否安装成功"><span class="toc-number">3.4.</span> <span class="toc-text">验证Spark是否安装成功</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">4.</span> <span class="toc-text">参考文献</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="github-card">
+<p class="asidetitle">Github 名片</p>
+<div class="github-card" data-github="huangyedi2012" data-width="220" data-height="119" data-theme="medium">
+<script type="text/javascript" src="//cdn.jsdelivr.net/github-cards/latest/widget.js" ></script>
+</div>
+  </div>
+
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/ML/" title="ML">ML<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/algorithm/" title="algorithm">algorithm<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/python/" title="python">python<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/spark/" title="spark">spark<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/tools/" title="tools">tools<sup>8</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/math/" title="math">math<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/python/" title="python">python<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/配色/" title="配色">配色<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/windows/" title="windows">windows<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/git/" title="git">git<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/bash/" title="bash">bash<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/spark/" title="spark">spark<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vi/" title="vi">vi<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/日志/" title="日志">日志<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/快捷方式/" title="快捷方式">快捷方式<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vc6-0/" title="vc6.0">vc6.0<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/ignore/" title="ignore">ignore<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/blog/" title="blog">blog<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/split/" title="split">split<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/idea/" title="idea">idea<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/latex/" title="latex">latex<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/LR/" title="LR">LR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/gcd/" title="gcd">gcd<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://www.hust.edu.cn/" target="_blank" title="HUST">HUST</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> CS blog <br/>
+			Just for fun!</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/huangyedi2012" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:huangyedi2012@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="huangyedi2012">huangyedi2012</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
+
+
+<a target="_blank" href="https://github.com/comwork2016"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>

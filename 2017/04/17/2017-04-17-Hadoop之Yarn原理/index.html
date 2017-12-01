@@ -1,0 +1,679 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Hadoop之Yarn原理 | huangyedi2012&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="huangyedi2012">
+    
+
+    
+    <meta name="description" content="YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。">
+<meta name="keywords" content="hadoop,yarn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop之Yarn原理">
+<meta property="og:url" content="https://huangyedi2012.github.io/2017/04/17/2017-04-17-Hadoop之Yarn原理/index.html">
+<meta property="og:site_name" content="huangyedi2012&#39;s Blog">
+<meta property="og:description" content="YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/imgs/Hadoop/yarn/architecture.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/imgs/Hadoop/yarn/yarn.png">
+<meta property="og:updated_time" content="2017-11-29T16:10:21.127Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hadoop之Yarn原理">
+<meta name="twitter:description" content="YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/imgs/Hadoop/yarn/architecture.png">
+
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="huangyedi2012&#39;s Blog" title="huangyedi2012&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="huangyedi2012&#39;s Blog">huangyedi2012&#39;s Blog</a></h1>
+				<h2 class="blog-motto">强迫症患者</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/categories">分类</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:huangyedi2012.github.io">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2017/04/17/2017-04-17-Hadoop之Yarn原理/" title="Hadoop之Yarn原理" itemprop="url">Hadoop之Yarn原理</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="huangyedi2012" target="_blank" itemprop="author">huangyedi2012</a>
+		
+  <p class="article-time">
+    <time datetime="2017-04-17T11:43:49.000Z" itemprop="datePublished"> 发表于 2017-04-17</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Hadoop-MapReduce-框架的问题"><span class="toc-number">1.</span> <span class="toc-text">Hadoop MapReduce 框架的问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Yarn介绍"><span class="toc-number">2.</span> <span class="toc-text">Yarn介绍</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN体系架构"><span class="toc-number">3.</span> <span class="toc-text">YARN体系架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN应用工作流程"><span class="toc-number">4.</span> <span class="toc-text">YARN应用工作流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN资源调度模型"><span class="toc-number">5.</span> <span class="toc-text">YARN资源调度模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">6.</span> <span class="toc-text">参考文献</span></a></li></ol>
+		
+		</div>
+		
+		<p>YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。</p>
+<a id="more"></a>
+<h1 id="Hadoop-MapReduce-框架的问题"><a href="#Hadoop-MapReduce-框架的问题" class="headerlink" title="Hadoop MapReduce 框架的问题"></a>Hadoop MapReduce 框架的问题</h1><p>随着分布式系统集群的规模和其工作负荷的增长，MapReduce 框架的问题逐渐浮出水面，主要的问题集中如下：</p>
+<ol>
+<li>JobTracker 是 Map-reduce 的集中处理点，存在单点故障。</li>
+<li>JobTracker 完成了太多的任务，造成了过多的资源消耗，当 map-reduce job 非常多的时候，会造成很大的内存开销，潜在来说，也增加了 JobTracker fail 的风险，这也是业界普遍总结出老 Hadoop 的 Map-Reduce 只能支持 4000 节点主机的上限。</li>
+<li>在 TaskTracker 端，以 map/reduce task 的数目作为资源的表示过于简单，没有考虑到 cpu/ 内存的占用情况，如果两个大内存消耗的 task 被调度到了一块，很容易出现 OOM(Out-Of-Memory)。</li>
+<li>在 TaskTracker 端，把资源强制划分为 map task slot 和 reduce task slot, 如果当系统中只有 map task 或者只有 reduce task 的时候，会造成资源的浪费，也就是前面提过的集群资源利用的问题。</li>
+<li>源代码层面分析的时候，会发现代码非常的难读，常常因为一个 class 做了太多的事情，代码量达 3000 多行，造成 class 的任务不清晰，增加 bug 修复和版本维护的难度。</li>
+<li>从操作的角度来看，现在的 Hadoop MapReduce 框架在有任何重要的或者不重要的变化 ( 例如 bug 修复，性能提升和特性化 ) 时，都会强制进行系统级别的升级更新。更糟的是，它不管用户的喜好，强制让分布式集群系统的每一个用户端同时更新。这些更新会让用户为了验证他们之前的应用程序是不是适用新的 Hadoop 版本而浪费大量时间。</li>
+</ol>
+<h1 id="Yarn介绍"><a href="#Yarn介绍" class="headerlink" title="Yarn介绍"></a>Yarn介绍</h1><p>Yarn的核心出发点是为了分离资源管理与作业调度/监控，实现分离的做法是拥有一个全局的资源管理器（ResourceManager，RM），以及每个应用程序对应一个的应用管理器（ApplicationMaster，AM），应用程序由一个作业（Job）或者Job的有向无环图（DAG）组成。</p>
+<p>YARN可以将多种计算框架(如离线处理MapReduce、在线处理的Storm、迭代式计算框架Spark、流式处理框架S4等) 部署到一个公共集群中，共享集群的资源。并提供如下功能：</p>
+<ol>
+<li>资源的统一管理和调度：<br> 集群中所有节点的资源(内存、CPU、磁盘、网络等)抽象为Container。计算框架需要资源进行运算任务时需要向YARN申请Container， YARN按照特定的策略对资源进行调度进行Container的分配。</li>
+<li>资源隔离：<br> YARN使用了轻量级资源隔离机制Cgroups进行资源隔离以避免相互干扰，一旦Container使用的资源量超过事先定义的上限值，就将其杀死。</li>
+</ol>
+<p>YARN是对Mapreduce V1重构得到的，有时候也成为MapReduce V2。</p>
+<p>YARN可以看成一个云操作系统，由一个ResourceManager和多个NodeManager组成， 它负责管理所有NodeManger上多维度资源， 并以Container(启动一个Container相当于启动一个进程)方式分配给应用程序启动ApplicationMaster(相当于主进程中运行逻辑) 或运行ApplicationMaster切分的各Task(相当于子进程中运行逻辑)。</p>
+<h1 id="YARN体系架构"><a href="#YARN体系架构" class="headerlink" title="YARN体系架构"></a>YARN体系架构</h1><p>YARN架构如下图所示：</p>
+<p><img src="/imgs/Hadoop/yarn/architecture.png" alt="YARN架构图"></p>
+<p>YARN总体上是Master/Slave结构，主要由ResourceManager、NodeManager、 ApplicationMaster和Container等几个组件构成。</p>
+<ul>
+<li><p><strong>ResourceManager(RM)</strong><br>  负责对各NodeManager上的资源进行统一管理和调度。将ApplicationMaster分配空闲的Container运行并监控其运行状态。对ApplicationMaster申请的资源请求分配相应的空闲Container。主要由两个组件构成：调度器和应用程序管理器：</p>
+<ol>
+<li><strong>调度器(Scheduler)</strong>：调度器根据容量、队列等限制条件（如每个队列分配一定的资源，最多执行一定数量的作业等），将系统中的资源分配给各个正在运行的应用程序。调度器仅根据各个应用程序的资源需求进行资源分配，而资源分配单位是Container，从而限定每个任务使用的资源量。Scheduler不负责监控或者跟踪应用程序的状态，也不负责任务因为各种原因而需要的重启（由ApplicationMaster负责）。总之，调度器根据应用程序的资源要求，以及集群机器的资源情况，为应用程序分配封装在Container中的资源。</li>
+<li><strong>应用程序管理器(Applications Manager)</strong>：应用程序管理器负责管理整个系统中所有应用程序，包括应用程序提交、与调度器协商资源以启动ApplicationMaster、监控ApplicationMaster运行状态并在失败时重新启动等，跟踪分给的Container的进度、状态也是其职责。</li>
+</ol>
+</li>
+<li><p><strong>NodeManager (NM)</strong><br>  NodeManager是每个节点上的资源和任务管理器。它会定时地向ResourceManager汇报本节点上的资源使用情况和各个Container的运行状态；同时会接收并处理来自ApplicationMaster的Container 启动/停止等请求。</p>
+</li>
+<li><p><strong>ApplicationMaster (AM)</strong><br>  用户提交的应用程序均包含一个ApplicationMaster，负责应用的监控，跟踪应用执行状态，重启失败任务等。ApplicationMaster是应用框架，它负责向ResourceManager协调资源，并且与NodeManager协同工作完成Task的执行和监控。MapReduce就是原生支持的一种框架，可以在YARN上运行Mapreduce作业。有很多分布式应用都开发了对应的应用程序框架，用于在YARN上运行任务，例如Spark，Storm等。</p>
+</li>
+<li><p><strong>Container</strong><br>  Container是YARN中的资源抽象，它封装了某个节点上的多维度资源，如内存、CPU、磁盘、网络等，当ApplicationMaster向ResourceManager申请资源时，ResourceManager为ApplicationMaster返回的资源便是用Container 表示的。 YARN会为每个任务分配一个Container且该任务只能使用该Container中描述的资源。</p>
+</li>
+</ul>
+<h1 id="YARN应用工作流程"><a href="#YARN应用工作流程" class="headerlink" title="YARN应用工作流程"></a>YARN应用工作流程</h1><p>如下图所示用户向YARN中提交一个应用程序后，YARN将分两个阶段运行该应用程序：</p>
+<ol>
+<li>启动ApplicationMaster，如下步骤1~3；</li>
+<li>由ApplicationMaster创建应用程序为它申请资源并监控它的整个运行过程，直到运行完成，如下步骤4~7。</li>
+</ol>
+<p><img src="/imgs/Hadoop/yarn/yarn.png" alt="YARN应用工作流程图"></p>
+<ol>
+<li>用户向YARN中提交应用程序，其中包括ApplicationMaster程序、启动ApplicationMaster的命令、命令参数、用户程序等；事实上，需要准确描述运行ApplicationMaster的unix进程的所有信息。提交工作通常由YarnClient来完成。</li>
+<li>ResourceManager为该应用程序分配第一个Container，并与对应的NodeManager通信，要求它在这个Container中启动ApplicationMaster；</li>
+<li>ApplicationMaster首先向ResourceManager注册，这样用户可以直接通过ResourceManager査看应用程序的运行状态，运行状态通过 <code>AMRMClientAsync.CallbackHandler</code>的<code>getProgress()</code> 方法来传递给ResourceManager。 然后它将为各个任务申请资源，并监控它的运行状态，直到运行结束，即重复步骤4〜7；</li>
+<li>ApplicationMaster采用轮询的方式通过RPC协议向ResourceManager申请和领取资源；资源的协调通过<code>AMRMClientAsync</code>异步完成,相应的处理方法封装在<code>AMRMClientAsync.CallbackHandler</code>中。</li>
+<li>一旦ApplicationMaster申请到资源后，便与对应的NodeManager通信，要求它启动任务；通常需要指定一个<code>ContainerLaunchContext</code>，提供Container启动时需要的信息。</li>
+<li>NodeManager为任务设置好运行环境(包括环境变量、JAR包、二进制程序等)后，将任务启动命令写到一个脚本中，并通过运行该脚本启动任务；</li>
+<li>各个任务通过某个RPC协议向ApplicationMaster汇报自己的状态和进度，以让ApplicationMaster随时掌握各个任务的运行状态，从而可以在任务失败时重新启动任务；ApplicationMaster与NodeManager的通信通过<code>NMClientAsync object</code>来完成，容器的所有事件通过<code>NMClientAsync.CallbackHandler</code>来处理。例如启动、状态更新、停止等。</li>
+<li>应用程序运行完成后，ApplicationMaster向ResourceManager注销并关闭自己。</li>
+</ol>
+<h1 id="YARN资源调度模型"><a href="#YARN资源调度模型" class="headerlink" title="YARN资源调度模型"></a>YARN资源调度模型</h1><p>YARN提供了一个资源管理平台能够将集群中的资源统一进行管理。所有节点上的多维度资源都会根据申请抽象为一个个Container。</p>
+<p>YARN采用了双层资源调度模型：</p>
+<ul>
+<li>ResourceManager中的资源调度器将资源分配给各个ApplicationMaster：资源分配过程是异步的。资源调度器将资源分配给一个应用程序后，它不会立刻push给对应的ApplicationMaster，而是暂时放到一个缓冲区中，等待ApplicationMaster通过周期性的心跳主动来取；</li>
+<li>ApplicationMaster领取到资源后再进一步分配给它内部的各个任务：不属于YARN平台的范畴，由用户自行实现。</li>
+</ul>
+<p>也就是说，ResourceManager分配集群资源的时候，以抽象的Container形式分配给各应用程序，至于应用程序的子任务如何使用这些资源，由应用程序自行决定。</p>
+<p>YARN目前采用的资源分配算法有三种。但真实的调度器实现中还对算法做了一定程度的优化。</p>
+<ol>
+<li>Capacity Scheduler：该调度器用于在共享、多租户（multi-tenant）的集群环境中运行Hadoop应用，对运营尽可能友好的同时最大化吞吐量和效用。<br> 该调度器保证共享集群的各个组织能够得到容量的保证，同时可以超额使用集群中暂时没有人使用的资源。Capacity Scheduler为了实现这些目标，抽象了queue的概念，queue通常由管理员配置。为了进一步细分容量的使用，调度器支持层级化的queue（hierarchical queues），使得在特定组织内部，可以进一步有效利用集群资源。<br> Capacity调度器支持的一些特性如下：<ul>
+<li>层级队列（Hierarchical Queues）</li>
+<li>容量保证</li>
+<li>安全性：每个队列都有队列的访问权限控制（ACL）</li>
+<li>弹性： 空闲资源可以额外分配给任何需要的队列</li>
+<li>多租户</li>
+<li>基于资源的调度（resouce-based scheduling): 对资源敏感的应用程序，可以有效地控制资源情况</li>
+<li>支持用户（组）到queue的映射：基于用户组提交作业到对应queue。</li>
+<li>运营支持：支持运行时配置队列的容量，ACL等。也可以在运行时停止queue阻止进一步往queue提交作业。</li>
+</ul>
+</li>
+<li>Fair Scheduler：公平调度FAIR，该算法的思想是尽可能地公平调度，即已分配资源量少的优先级高。也就是说，在考虑如何分配资源时，调度器尽可能使得每个应用程序都能够得到大致相当的资源。默认情况下，公平性只通过内存来衡量，但是可以配置成内存和CPU。<br>这种策略使得运行时间短的应用能够尽快结束，而不至于在等待资源时被饿死。另外，也可以为应用程序配置优先级，优先级用于决定资源使用量的占比。</li>
+</ol>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><blockquote>
+<p><a href="https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-yarn/" target="_blank" rel="noopener">Hadoop 新MapReduce 框架Yarn 详解</a><br><a href="http://blog.csdn.net/bingduanlbd/article/details/51880019" target="_blank" rel="noopener">理解Hadoop YARN架构</a></p>
+</blockquote>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/hadoop/">hadoop</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/hadoop/">hadoop</a><a href="/tags/yarn/">yarn</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="https://huangyedi2012.github.io/2017/04/17/2017-04-17-Hadoop之Yarn原理/" data-title="Hadoop之Yarn原理 | huangyedi2012&#39;s Blog" data-tsina="" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2017/04/27/神经网络-Neural-Networks/" title="神经网络 Neural Networks">
+  <strong>上一篇：</strong><br/>
+  <span>
+  神经网络 Neural Networks</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2017/04/17/2017-04-17-Hadoop之MapReduce原理/"  title="Hadoop之MapReduce原理">
+ <strong>下一篇：</strong><br/> 
+ <span>Hadoop之MapReduce原理
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Hadoop-MapReduce-框架的问题"><span class="toc-number">1.</span> <span class="toc-text">Hadoop MapReduce 框架的问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Yarn介绍"><span class="toc-number">2.</span> <span class="toc-text">Yarn介绍</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN体系架构"><span class="toc-number">3.</span> <span class="toc-text">YARN体系架构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN应用工作流程"><span class="toc-number">4.</span> <span class="toc-text">YARN应用工作流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YARN资源调度模型"><span class="toc-number">5.</span> <span class="toc-text">YARN资源调度模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#参考文献"><span class="toc-number">6.</span> <span class="toc-text">参考文献</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="github-card">
+<p class="asidetitle">Github 名片</p>
+<div class="github-card" data-github="huangyedi2012" data-width="220" data-height="119" data-theme="medium">
+<script type="text/javascript" src="//cdn.jsdelivr.net/github-cards/latest/widget.js" ></script>
+</div>
+  </div>
+
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/ML/" title="ML">ML<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/algorithm/" title="algorithm">algorithm<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/python/" title="python">python<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/spark/" title="spark">spark<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/tools/" title="tools">tools<sup>8</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/math/" title="math">math<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/python/" title="python">python<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/配色/" title="配色">配色<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/windows/" title="windows">windows<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/git/" title="git">git<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/bash/" title="bash">bash<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/spark/" title="spark">spark<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vi/" title="vi">vi<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/日志/" title="日志">日志<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/快捷方式/" title="快捷方式">快捷方式<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vc6-0/" title="vc6.0">vc6.0<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/ignore/" title="ignore">ignore<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/blog/" title="blog">blog<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/split/" title="split">split<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/idea/" title="idea">idea<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/latex/" title="latex">latex<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/LR/" title="LR">LR<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/gcd/" title="gcd">gcd<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://www.hust.edu.cn/" target="_blank" title="HUST">HUST</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> CS blog <br/>
+			Just for fun!</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/huangyedi2012" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:huangyedi2012@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="huangyedi2012">huangyedi2012</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
+
+
+<a target="_blank" href="https://github.com/comwork2016"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
