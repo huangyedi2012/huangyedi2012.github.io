@@ -1,0 +1,622 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>纵表、横表互转 | huangyedi2012&#39;s blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="huangyedi2012">
+    
+
+    
+    <meta name="description" content="将纵表中的多行记录转化成横表中的一条记录。 1、 建表纵表结构： 1234567891011create table Table_A(    name varchar(20),    course varchar(20),    score int)insert into Table_A(name,course,sco">
+<meta name="keywords" content="sql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="纵表、横表互转">
+<meta property="og:url" content="https://huangyedi2012.github.io/2017/12/03/纵表、横表互转/index.html">
+<meta property="og:site_name" content="huangyedi2012&#39;s blog">
+<meta property="og:description" content="将纵表中的多行记录转化成横表中的一条记录。 1、 建表纵表结构： 1234567891011create table Table_A(    name varchar(20),    course varchar(20),    score int)insert into Table_A(name,course,score) values(&apos;张三&apos;,&apos;chinese&apos;,60)insert into">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-12-03T14:40:37.398Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="纵表、横表互转">
+<meta name="twitter:description" content="将纵表中的多行记录转化成横表中的一条记录。 1、 建表纵表结构： 1234567891011create table Table_A(    name varchar(20),    course varchar(20),    score int)insert into Table_A(name,course,score) values(&apos;张三&apos;,&apos;chinese&apos;,60)insert into">
+
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/author.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/author.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.png" alt="huangyedi2012&#39;s blog" title="huangyedi2012&#39;s blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="huangyedi2012&#39;s blog">huangyedi2012&#39;s blog</a></h1>
+				<h2 class="blog-motto">强迫症患者</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/categories">分类</a></li>
+					
+						<li><a href="/tags">标签</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:huangyedi2012.github.io">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2017/12/03/纵表、横表互转/" title="纵表、横表互转" itemprop="url">纵表、横表互转</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="huangyedi2012" target="_blank" itemprop="author">huangyedi2012</a>
+		
+  <p class="article-time">
+    <time datetime="2017-12-03T14:16:37.000Z" itemprop="datePublished"> 发表于 2017-12-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目录</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1、-建表"><span class="toc-number">1.</span> <span class="toc-text">1、 建表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2、纵表变横表"><span class="toc-number">2.</span> <span class="toc-text">2、纵表变横表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3、横表变纵表"><span class="toc-number">3.</span> <span class="toc-text">3、横表变纵表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考文献"><span class="toc-number">4.</span> <span class="toc-text">参考文献</span></a></li></ol>
+		
+		</div>
+		
+		<p>将纵表中的多行记录转化成横表中的一条记录。</p>
+<h2 id="1、-建表"><a href="#1、-建表" class="headerlink" title="1、 建表"></a>1、 建表</h2><p>纵表结构：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> Table_A</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">20</span>),</span><br><span class="line">    course <span class="built_in">varchar</span>(<span class="number">20</span>),</span><br><span class="line">    score <span class="built_in">int</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_A(<span class="keyword">name</span>,course,score) <span class="keyword">values</span>(<span class="string">'张三'</span>,<span class="string">'chinese'</span>,<span class="number">60</span>)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_A(<span class="keyword">name</span>,course,score) <span class="keyword">values</span>(<span class="string">'张三'</span>,<span class="string">'math'</span>,<span class="number">70</span>)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_A(<span class="keyword">name</span>,course,score) <span class="keyword">values</span>(<span class="string">'张三'</span>,<span class="string">'english'</span>,<span class="number">80</span>)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_A(<span class="keyword">name</span>,course,score) <span class="keyword">values</span>(<span class="string">'李四'</span>,<span class="string">'chinese'</span>,<span class="number">90</span>)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_A(<span class="keyword">name</span>,course,score) <span class="keyword">values</span>(<span class="string">'李四'</span>,<span class="string">'math'</span>,<span class="number">100</span>)</span><br></pre></td></tr></table></figure>
+<p>横表结构</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> Table_B</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">name</span> <span class="built_in">varchar</span>(<span class="number">20</span>),</span><br><span class="line">    chinese <span class="built_in">int</span>,</span><br><span class="line">    math <span class="built_in">int</span>,</span><br><span class="line">    english <span class="built_in">int</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_B(<span class="keyword">name</span>,chinese,math,english) <span class="keyword">values</span>(<span class="string">'张三'</span>,<span class="number">60</span>,<span class="number">70</span>,<span class="number">80</span>)</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> Table_B(<span class="keyword">name</span>,chinese,math,english) <span class="keyword">values</span>(<span class="string">'李四'</span>,<span class="number">90</span>,<span class="number">100</span>,<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="2、纵表变横表"><a href="#2、纵表变横表" class="headerlink" title="2、纵表变横表"></a>2、纵表变横表</h2><p>方法一：聚合函数[max或sum]配合case语句</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,</span><br><span class="line"><span class="keyword">sum</span> (<span class="keyword">case</span> course <span class="keyword">when</span> <span class="string">'chinese'</span> <span class="keyword">then</span> score <span class="keyword">else</span> <span class="number">0</span> <span class="keyword">end</span>) <span class="keyword">as</span> chinese,</span><br><span class="line"><span class="keyword">sum</span> (<span class="keyword">case</span> course <span class="keyword">when</span> <span class="string">'math'</span> <span class="keyword">then</span> score <span class="keyword">else</span> <span class="number">0</span> <span class="keyword">end</span>) <span class="keyword">as</span> math,</span><br><span class="line"><span class="keyword">sum</span> (<span class="keyword">case</span> course <span class="keyword">when</span> <span class="string">'english'</span> <span class="keyword">then</span> score <span class="keyword">else</span> <span class="number">0</span> <span class="keyword">end</span>) <span class="keyword">as</span> english</span><br><span class="line"><span class="keyword">from</span> Table_A</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span></span><br></pre></td></tr></table></figure>
+<p>方法二：使用pivot<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> Table_A <span class="keyword">pivot</span> (<span class="keyword">max</span>(score)<span class="keyword">for</span> course <span class="keyword">in</span>(chinese,math,english)) tmp_table</span><br></pre></td></tr></table></figure></p>
+<h2 id="3、横表变纵表"><a href="#3、横表变纵表" class="headerlink" title="3、横表变纵表"></a>3、横表变纵表</h2><p>方法一：union all</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,<span class="string">'chinese'</span> <span class="keyword">as</span> course,chinese <span class="keyword">as</span> score <span class="keyword">from</span> Table_B <span class="keyword">union</span> all</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,<span class="string">'math'</span> <span class="keyword">as</span> course,math <span class="keyword">as</span> score <span class="keyword">from</span> Table_B <span class="keyword">union</span> all</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,<span class="string">'english'</span> <span class="keyword">as</span> course,english <span class="keyword">as</span> score <span class="keyword">from</span> Table_B</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">name</span>,course <span class="keyword">desc</span></span><br></pre></td></tr></table></figure>
+<p>方法二：使用unpivot </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,course,score <span class="keyword">from</span> Table_B</span><br><span class="line"><span class="keyword">unpivot</span></span><br><span class="line">(score <span class="keyword">for</span> course <span class="keyword">in</span> ([chinese],[math],english)) tmp_table</span><br></pre></td></tr></table></figure>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><blockquote>
+<p><a href="http://www.cnblogs.com/liushen/p/3333936.html" target="_blank" rel="noopener">纵表、横表互转的SQL</a></p>
+</blockquote>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/sql/">sql</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/sql/">sql</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="https://huangyedi2012.github.io/2017/12/03/纵表、横表互转/" data-title="纵表、横表互转 | huangyedi2012&#39;s blog" data-tsina="" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2017/12/03/mac下启动ssh服务/" title="mac下启动ssh服务">
+  <strong>上一篇：</strong><br/>
+  <span>
+  mac下启动ssh服务</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2017/06/05/Spark-On-Yarn-集群安装部署/"  title="Spark On Yarn 集群安装部署">
+ <strong>下一篇：</strong><br/> 
+ <span>Spark On Yarn 集群安装部署
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目录</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1、-建表"><span class="toc-number">1.</span> <span class="toc-text">1、 建表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2、纵表变横表"><span class="toc-number">2.</span> <span class="toc-text">2、纵表变横表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3、横表变纵表"><span class="toc-number">3.</span> <span class="toc-text">3、横表变纵表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考文献"><span class="toc-number">4.</span> <span class="toc-text">参考文献</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
+<aside class="clearfix">
+
+  
+<div class="github-card">
+<p class="asidetitle">Github 名片</p>
+<div class="github-card" data-github="huangyedi2012" data-width="220" data-height="119" data-theme="medium">
+<script type="text/javascript" src="//cdn.jsdelivr.net/github-cards/latest/widget.js" ></script>
+</div>
+  </div>
+
+
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分类</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/ML/" title="ML">ML<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/algorithm/" title="algorithm">algorithm<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/mac/" title="mac">mac<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/python/" title="python">python<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/spark/" title="spark">spark<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/sql/" title="sql">sql<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/tools/" title="tools">tools<sup>8</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">标签</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/hadoop/" title="hadoop">hadoop<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/math/" title="math">math<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/python/" title="python">python<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/git/" title="git">git<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/windows/" title="windows">windows<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/配色/" title="配色">配色<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/SVD/" title="SVD">SVD<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/bash/" title="bash">bash<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/idea/" title="idea">idea<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/快捷方式/" title="快捷方式">快捷方式<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vi/" title="vi">vi<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/vc6-0/" title="vc6.0">vc6.0<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/ignore/" title="ignore">ignore<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/blog/" title="blog">blog<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/删除/" title="删除">删除<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/split/" title="split">split<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/latex/" title="latex">latex<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/gcd/" title="gcd">gcd<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/license/" title="license">license<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情链接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://www.hust.edu.cn/" target="_blank" title="HUST">HUST</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> CS blog <br/>
+			Just for fun!</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/huangyedi2012" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:huangyedi2012@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
+		
+		<a href="/about" target="_blank" title="huangyedi2012">huangyedi2012</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
+
+
+<a target="_blank" href="https://github.com/comwork2016"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
