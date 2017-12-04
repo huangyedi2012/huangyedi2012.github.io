@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="huangyedi2012&#39;s blog">
 <meta property="og:description" content="启动与停止mysql  12net start mysqlnet stop mysql  创建一个名称为mydb1的数据库  1create database mydb1;  显示所有数据库  1show databases;  创建一个使用utf-8字符集的mydb2数据库。  1create database mydb2 character set utf8;  创建一个使用utf-8字符集">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2017-12-04T15:19:05.285Z">
+<meta property="og:updated_time" content="2017-12-04T15:23:51.384Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mysql入门">
 <meta name="twitter:description" content="启动与停止mysql  12net start mysqlnet stop mysql  创建一个名称为mydb1的数据库  1create database mydb1;  显示所有数据库  1show databases;  创建一个使用utf-8字符集的mydb2数据库。  1create database mydb2 character set utf8;  创建一个使用utf-8字符集">
@@ -235,7 +235,10 @@
  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> student <span class="keyword">order</span> <span class="keyword">by</span> math;</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>对总分排序后输出，然后再按从高到低的顺序输出</p>
- <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">select</span> * <span class="keyword">from</span> student <span class="keyword">order</span> <span class="keyword">by</span> (math+english+chinese) <span class="keyword">desc</span>;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">1. 对姓李的学生成绩排序输出</span><br><span class="line"></span><br><span class="line">	```sql</span><br><span class="line">	<span class="keyword">select</span> * <span class="keyword">from</span> student <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'李%'</span> <span class="keyword">order</span> <span class="keyword">by</span> (math+english+chinese);</span><br></pre></td></tr></table></figure>
+ <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> student <span class="keyword">order</span> <span class="keyword">by</span> (math+english+chinese) <span class="keyword">desc</span>;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>对姓李的学生成绩排序输出</p>
+ <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> student <span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'李%'</span> <span class="keyword">order</span> <span class="keyword">by</span> (math+english+chinese);</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>统计一个班级共有多少学生？</p>
  <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> student;</span><br></pre></td></tr></table></figure>
