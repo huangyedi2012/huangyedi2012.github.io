@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>隐性语义索引（latent semantic indexing） | huangyedi2012&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  <meta name="keywords" content="nlplsi" />
+  
+  
+  
+  
+  <meta name="description" content="隐性语义索引(LSI)采用线性代数中的奇异值分解方法，选取前几个比较大的奇异值所对应的特征向量将原矩阵映射到低维空间中，从而达到词矢量的目的。">
+<meta name="keywords" content="nlp,lsi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="隐性语义索引（Latent Semantic Indexing）">
+<meta property="og:url" content="https://huangyedi2012.github.io/2017/04/12/ml-2017-04-12-隐性语义索引（Latent-Semantic-Indexing）/index.html">
+<meta property="og:site_name" content="huangyedi2012&#39;s blog">
+<meta property="og:description" content="隐性语义索引(LSI)采用线性代数中的奇异值分解方法，选取前几个比较大的奇异值所对应的特征向量将原矩阵映射到低维空间中，从而达到词矢量的目的。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-02-08T04:37:11.196Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="隐性语义索引（Latent Semantic Indexing）">
+<meta name="twitter:description" content="隐性语义索引(LSI)采用线性代数中的奇异值分解方法，选取前几个比较大的奇异值所对应的特征向量将原矩阵映射到低维空间中，从而达到词矢量的目的。">
+  
+    <link rel="alternate" href="/atom.xml" title="huangyedi2012&#39;s blog" type="application/atom+xml">
+  
+
+  
+
+  <link rel="icon" href="/css/images/mylogo.png">
+  <link rel="apple-touch-icon" href="/css/images/mylogo.png">
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Montserrat:700" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic" rel="stylesheet" type="text/css">
+  <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+  <style type="text/css">
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/9749f0/00000000000000000001008f/27/l?subset_id=2&fvd=n5) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/90cf9f/000000000000000000010091/27/l?subset_id=2&fvd=n7) format("woff2");font-weight:500;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/8a5494/000000000000000000013365/27/l?subset_id=2&fvd=n4) format("woff2");font-weight:lighter;font-style:normal;}
+    @font-face{font-family:futura-pt;src:url(https://use.typekit.net/af/d337d8/000000000000000000010095/27/l?subset_id=2&fvd=i4) format("woff2");font-weight:400;font-style:italic;}</style>
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/jquery-3.1.1.min.js"></script>
+  <script src="/js/bootstrap.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.css" >
+
+  
+    <link rel="stylesheet" href="/css/dialog.css">
+  
+
+  
+
+  
+    <link rel="stylesheet" href="/css/header-post.css" >
+  
+
+  
+  
+  
+
+</head>
+
+
+
+  <body data-spy="scroll" data-target="#toc" data-offset="50">
+
+
+  
+  <div id="container">
+    <div id="wrap">
+      
+        <header>
+
+    <div id="allheader" class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="navbar-inner">
+          
+          <div class="container"> 
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+
+            
+              <a class="brand" style="
+                 border-width: 0px;  margin-top: 0px;"  
+                href="#" data-toggle="modal" data-target="#myModal" >
+                  <img width="90px" height="90px" alt="Hike News" src="/css/images/mylogo.png">
+              </a>
+            
+            
+            <div class="navbar-collapse collapse">
+              <ul class="hnav navbar-nav">
+                
+                  <li> <a class="main-nav-link" href="/">首页</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/archives">归档</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/categories">分类</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/tags">标签</a> </li>
+                
+                  <li> <a class="main-nav-link" href="/about">关于</a> </li>
+                
+                  <li><div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="" />
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="请输入关键词..." />
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(无标题)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+</div></li>
+            </div>
+          </div>
+                
+      </div>
+    </div>
+
+</header>
+
+
+
+      
+            
+      <div id="content" class="outer">
+        
+          <section id="main" style="float:none;"><article id="post-ml-2017-04-12-隐性语义索引（Latent-Semantic-Indexing）" style="width: 75%; float:left;" class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" class="article-title" itemprop="name">
+      隐性语义索引（Latent Semantic Indexing）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/04/12/ml-2017-04-12-隐性语义索引（Latent-Semantic-Indexing）/" class="article-date">
+	  <time datetime="2017-04-12T02:33:12.000Z" itemprop="datePublished">2017-04-12</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/ml/">ml</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>隐性语义索引(LSI)采用线性代数中的奇异值分解方法，选取前几个比较大的奇异值所对应的特征向量将原矩阵映射到低维空间中，从而达到词矢量的目的。</p>
+<a id="more"></a>
+<h1 id="奇异矩阵分解SVD"><a href="#奇异矩阵分解SVD" class="headerlink" title="奇异矩阵分解SVD"></a>奇异矩阵分解SVD</h1><p>奇异矩阵分解SVD的内容见<a href="/2017/04/12/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86%E8%A7%A3-SVD/">上文博客</a>。</p>
+<h1 id="词项—文档矩阵及SVD"><a href="#词项—文档矩阵及SVD" class="headerlink" title="词项—文档矩阵及SVD"></a>词项—文档矩阵及SVD</h1><p>词项-文档矩阵是一个由$M$个词项和$N$篇文档组成的$M×N$的权重矩阵$C$，矩阵的每行代表一个词项，每列代表一篇文档。然而，我们感兴趣的是$M×N$的词项—文档矩阵$C$，一般有$M\neq N$。这个矩阵经过SVD分解之后的形势如下式所示：</p>
+<p>$$\begin{equation}<br>CC^T =UΣV^TVΣ^TU^T =UΣΣ^TU^T<br>\end{equation}$$</p>
+<p>那么左边的$CC^T$ 代表什么呢？它实际上是一个方阵，其每行和每列都对应$M$个词项中的一个。矩阵中的第$i$行、第$j$列的元素实际上是第$i$个词项与第$j$个词项基于文档共现次数的一个重合度计算指标（可以从矩阵的乘法中推断出来）。其精确的数学含义依赖于构建$C$所使用的词项权重方法。假定$C$是词项-文档出现矩阵，那么$CC^T$的第$i$行、第$j$列的元素是词项$i$和词项$j$共现的文档数目。</p>
+<h1 id="低秩逼近"><a href="#低秩逼近" class="headerlink" title="低秩逼近"></a>低秩逼近</h1><p>小特征值对于矩阵乘法的影响也小。因此，将这些小特征值替换成0将不会对最后的乘积有实质性影响，也就是说该乘积接近$C$。SVD可以用于解决矩阵低秩逼近问题，主要操作分为以下三步：</p>
+<ol>
+<li>给定$C$，构造SVD分解有$C = UΣV^T$；</li>
+<li>把$Σ$中对角线上$r-k$个最小奇异值置为0，从而得到$Σ_k$；</li>
+<li>计算$C_k = UΣ_kV^T$作为$C$的逼近。</li>
+</ol>
+<h1 id="潜在语义索引LSI"><a href="#潜在语义索引LSI" class="headerlink" title="潜在语义索引LSI"></a>潜在语义索引LSI</h1><p>空间向量模型可以将查询和文档转换成同一空间下的向量，可以基于余弦相似度进行评分计算，能够对不同的词项赋予不同的权重，除了文档检索之外还可以推广到诸如聚类和分类等其他领域，等等。但是，向量空间表示方法没有能力处理自然语言中的两个经典问题：一义多词（synonymy）和一词多义（polysemy）问题。一个很自然的问题就是，能否利用词项的共现情况（比如，charge是和steed 还是electron在某篇文档中共现），来获得词项的隐性语义关联从而减轻这些问题的影响？</p>
+<p>即使对一个中等规模的文档集来说，词项-文档矩阵$C$也可能有成千上万个行和列，它的秩数目大概也是这个数量级。在LSI中，我们使用SVD分解来构造$C$的一个低秩逼近$C_k$，其中$k$远小于矩阵$C$原始的秩。实践时$k$的取值往往在几百以内。这样，我们就可以将词项—文档矩阵中每行和每列（分别对应每个词项和每篇文档）映射到一个$k$维空间，为$CC^T$和$C^TC$的$k$个主特征向量（对应$k$个最大的特征值）可以定义该空间。需要注意的是，不管$k$取值如何，矩阵$C_k$仍然是一个$M × N$的矩阵。矩阵$U$被称为SVD词项矩阵（SVD term matrix）,$V^T$被称为SVD文档矩阵（SVD document matrix）。</p>
+<h1 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h1><p>考虑如下词项—文档矩阵 C =</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>$d_1$</th>
+<th>$d_2$</th>
+<th>$d_3$</th>
+<th>$d_4$</th>
+<th>$d_5$</th>
+<th>$d_6$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ship</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>boat</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>ocean</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>voyage</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>trip</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>利用SVD分解，可以将其分解生成三个矩阵的乘积。</p>
+<p>计算$CC^T$的值为</p>
+<p>$$\begin{eqnarray}<br>CC^T=<br>\begin{pmatrix}<br>1  &amp;  0  &amp;  1  &amp;  0  &amp;  0  &amp;  0 \\<br>0  &amp;  1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1<br>\end{pmatrix}<br>\begin{pmatrix}<br>1  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0  &amp;  1  &amp;  1  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>0  &amp;  0  &amp;  0  &amp;  1  &amp;  1 \\<br>0  &amp;  0  &amp;  0  &amp;  1  &amp;  0 \\<br>0 &amp; 0 &amp; 0 &amp; 0 &amp; 1<br>\end{pmatrix}<br>=<br>\begin{pmatrix}<br>2  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0  &amp;  1  &amp;  1  &amp;  0  &amp;  0 \\<br>1  &amp;  1  &amp;  2  &amp;  1  &amp;  0 \\<br>1  &amp;  0  &amp;  1  &amp;  3  &amp;  1 \\<br>0 &amp; 0 &amp; 0 &amp; 1 &amp; 2<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>$CC^T$对应的特征值和特征向量为：</p>
+<p>$$\begin{equation}<br>\lambda_1=4.68,p_1=\begin{pmatrix} 0.44  &amp;  0.13  &amp;  0.48  &amp;  0.70  &amp;  0.26 \end{pmatrix}^T\\<br>\lambda_2=2.54,p_2=\begin{pmatrix} 0.30  &amp;  0.33  &amp;  0.51  &amp;  -0.35  &amp;  -0.65 \end{pmatrix}^T\\<br>\lambda_3=1.63,p_3=\begin{pmatrix} 0.57  &amp;  -0.59  &amp;  -0.37  &amp;  0.15  &amp;  -0.41 \end{pmatrix}^T\\<br>\lambda_4=1,p_4=\begin{pmatrix} 0.58  &amp;  -0.00  &amp;  -0.00  &amp;  -0.58  &amp;  0.58 \end{pmatrix}^T\\<br>\lambda_5=0.16,p_5=\begin{pmatrix} -0.25  &amp;  -0.73  &amp;  0.61  &amp;  -0.16  &amp;  0.09 \end{pmatrix}^T<br>\end{equation}$$</p>
+<p>计算$C^TC$的值为<br>$$\begin{eqnarray}<br>C^TC=<br>\begin{pmatrix}<br>1  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0  &amp;  1  &amp;  1  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>0  &amp;  0  &amp;  0  &amp;  1  &amp;  1 \\<br>0  &amp;  0  &amp;  0  &amp;  1  &amp;  0 \\<br>0 &amp; 0 &amp; 0 &amp; 0 &amp; 1<br>\end{pmatrix}<br>\begin{pmatrix}<br>1  &amp;  0  &amp;  1  &amp;  0  &amp;  0  &amp;  0 \\<br>0  &amp;  1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  1  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1<br>\end{pmatrix}<br>=<br>\begin{pmatrix}<br>3  &amp;  1  &amp;  1  &amp;  1  &amp;  1  &amp;  0 \\<br>1  &amp;  2  &amp;  0  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  1  &amp;  0  &amp;  0  &amp;  0 \\<br>1  &amp;  0  &amp;  0  &amp;  2  &amp;  1  &amp;  1 \\<br>1  &amp;  0  &amp;  0  &amp;  1  &amp;  1  &amp;  0 \\<br>0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>$C^TC$对应的特征值和特征向量为：</p>
+<p>$$\begin{equation}<br>\lambda_1=4.68,p_1=\begin{pmatrix} -0.75  &amp;  -0.28  &amp;  -0.20  &amp;  -0.45  &amp;  -0.33  &amp;  -0.12 \end{pmatrix}^T\\<br>\lambda_2=2.54,p_2=\begin{pmatrix} -0.29  &amp;  -0.53  &amp;  -0.19  &amp;  0.63  &amp;  0.22  &amp;  0.41 \end{pmatrix}^T\\<br>\lambda_3=1.63,p_3=\begin{pmatrix} -0.28  &amp;  0.75  &amp;  -0.45  &amp;  0.20  &amp;  -0.12  &amp;  0.33 \end{pmatrix}^T\\<br>\lambda_4=1,p_4=\begin{pmatrix} 0.00  &amp;  -0.00  &amp;  0.58  &amp;  -0.00  &amp;  -0.58  &amp;  0.58 \end{pmatrix}^T\\<br>\lambda_5=0.16,p_5=\begin{pmatrix} 0.53  &amp;  -0.29  &amp;  -0.63  &amp;  -0.19  &amp;  -0.41  &amp;  0.22 \end{pmatrix}^T\\<br>\lambda_6=0.16,p_6=\begin{pmatrix} 0.00  &amp;  -0.00  &amp;  -0.00  &amp;  -0.58  &amp;  0.58  &amp;  0.58 \end{pmatrix}^T<br>\end{equation}$$</p>
+<p>则根据以上SVD分解有：</p>
+<p>$$\begin{eqnarray}<br>C&amp;=&amp;UΣV^T=<br>\begin{pmatrix}<br>1 &amp; 0 &amp; 1 &amp; 0 &amp; 0 &amp; 0 \\<br>0 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\<br>1 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0 \\<br>1 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp; 0 \\<br>0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1<br>\end{pmatrix}\\<br>&amp;=&amp;<br>\begin{pmatrix}<br>0.44 &amp; 0.30 &amp; 0.57 &amp; 0.58 &amp; -0.25 \\<br>0.13 &amp; 0.33 &amp; -0.59 &amp; -0.00 &amp; -0.73 \\<br>0.48 &amp; 0.51 &amp; -0.37 &amp; -0.00 &amp; 0.61 \\<br>0.70 &amp; -0.35 &amp; 0.15 &amp; -0.58 &amp; -0.16 \\<br>0.26 &amp; -0.65 &amp; -0.41 &amp; 0.58 &amp; 0.09<br>\end{pmatrix}\\<br>&amp;\times&amp;<br>\begin{pmatrix}<br>2.16  &amp;  0  &amp;  0  &amp;  0  &amp;  0  &amp;  0\\<br>0  &amp;  1.59  &amp;  0  &amp;  0  &amp;  0  &amp;  0\\<br>0  &amp;  0  &amp;  1.28  &amp;  0  &amp;  0  &amp;  0\\<br>0  &amp;  0  &amp;  0  &amp;  1.00  &amp;  0  &amp;  0\\<br>0 &amp; 0 &amp; 0 &amp; 0 &amp; 0.39  &amp;  0<br>\end{pmatrix}\\<br>&amp;\times&amp;<br>\begin{pmatrix}<br>-0.75 &amp; -0.29 &amp; -0.28 &amp; 0.00 &amp; 0.53 &amp; 0.00 \\<br>-0.28 &amp; -0.53 &amp; 0.75 &amp; -0.00 &amp; -0.29 &amp; -0.00 \\<br>-0.20 &amp; -0.19 &amp; -0.45 &amp; 0.58 &amp; -0.63 &amp; -0.00 \\<br>-0.45 &amp; 0.63 &amp; 0.20 &amp; -0.00 &amp; -0.19 &amp; -0.58 \\<br>-0.33 &amp; 0.22 &amp; -0.12 &amp; -0.58 &amp; -0.41 &amp; 0.58 \\<br>-0.12 &amp; 0.41 &amp; 0.33 &amp; 0.58 &amp; 0.22 &amp; 0.58<br>\end{pmatrix} ^T\\<br>&amp;=&amp;<br>\begin{pmatrix}<br>-1.10 &amp; 0.06 &amp; -0.21 &amp; 0.04 &amp; -0.59 &amp; 0.62 \\<br>-0.30 &amp; -0.84 &amp; 0.36 &amp; 0.11 &amp; 0.23 &amp; -0.13 \\<br>-0.74 &amp; -1.14 &amp; -0.30 &amp; -0.09 &amp; -0.20 &amp; 0.11 \\<br>-1.07 &amp; 0.04 &amp; -0.59 &amp; -0.98 &amp; -0.28 &amp; -0.69 \\<br>0.04 &amp; -0.02 &amp; 0.62 &amp; -1.01 &amp; -0.69 &amp; -0.32<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>取$k=2$，此时左奇异向量为</p>
+<p>$$\begin{eqnarray}<br>U_{5\times 2}=\begin{pmatrix}<br>0.44 &amp; 0.30 \\<br>0.13 &amp; 0.33\\<br>0.48 &amp; 0.51\\<br>0.70 &amp; -0.35\\<br>0.26 &amp; -0.65<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>因为$0.44 \gt 0.30$，这表示第一个词与第一维空间更接近，依次类推。</p>
+<p>右奇异矩阵为：</p>
+<p>$$\begin{eqnarray}<br>U^T_{2\times 6}=\begin{pmatrix}<br>-0.75 &amp; -0.28 &amp; -0.20 &amp; -0.45 &amp; -0.33 &amp; -0.12 \\<br>-0.29 &amp; -0.53 &amp; -0.19 &amp; 0.63 &amp; 0.22 &amp; 0.41<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>第一列表示文章$d_1$与第一维空间更接近，在些基础上可利用余弦相似度对两篇文档在低维空间上进行相似度计算。</p>
+<p>中间矩阵为：</p>
+<p>$$\begin{eqnarray}<br>\Sigma = \begin{pmatrix}<br>2.16 &amp; 0.00 \\<br>0.00 &amp; 1.59<br>\end{pmatrix}<br>\end{eqnarray}$$</p>
+<p>表示的是词和文章的相关关系。</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><blockquote>
+<p><a href="/2017/04/12/%E5%A5%87%E5%BC%82%E5%80%BC%E5%88%86%E8%A7%A3-SVD/">奇异值分解 SVD</a><br><a href="https://liqiangguo.files.wordpress.com/2011/06/lsi.pdf" target="_blank" rel="noopener">矩阵分解及隐性语义索引</a><br><a href="http://blog.csdn.net/google19890102/article/details/29591553" target="_blank" rel="noopener">《数学之美》拾遗——潜在语义索引(LSI)</a></p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lsi/">lsi</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nlp/">nlp</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/04/14/hadoop-2017-04-14-Hadoop-2-7-3-安装/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <div class="article-nav-title">
+        
+          Hadoop 2.7.3 安装
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/04/12/ml-2017-04-12-奇异值分解-SVD/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">奇异值分解 SVD</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+<!-- Table of Contents -->
+
+  <aside id="toc-sidebar">
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#奇异矩阵分解SVD"><span class="nav-number">1.</span> <span class="nav-text">奇异矩阵分解SVD</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#词项—文档矩阵及SVD"><span class="nav-number">2.</span> <span class="nav-text">词项—文档矩阵及SVD</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#低秩逼近"><span class="nav-number">3.</span> <span class="nav-text">低秩逼近</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#潜在语义索引LSI"><span class="nav-number">4.</span> <span class="nav-text">潜在语义索引LSI</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#举例"><span class="nav-number">5.</span> <span class="nav-text">举例</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">6.</span> <span class="nav-text">参考文献</span></a></li></ol>
+    
+    </div>
+  </aside>
+</section>
+        
+      </div>
+      
+      <footer id="footer">
+  
+
+  <div class="container">
+      	<div class="row">
+	      <p> Powered by <a href="http://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/iTimeTraveler/hexo-theme-hiker" target="_blank">Hexo-theme-hiker</a> </p>
+	      <p id="copyRightEn">Copyright &copy; 2013 - 2018 huangyedi2012&#39;s blog All Rights Reserved.</p>
+	      
+	      
+  		   	<p id="copyRightCn">huangyedi2012 保留所有权利</p>
+  		   
+		</div>
+
+		
+  </div>
+</footer>
+
+
+<!-- min height -->
+
+<script>
+    var wrapdiv = document.getElementById("wrap");
+    var contentdiv = document.getElementById("content");
+    var allheader = document.getElementById("allheader");
+
+    wrapdiv.style.minHeight = document.body.offsetHeight + "px";
+    if (allheader != null) {
+      contentdiv.style.minHeight = document.body.offsetHeight - allheader.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    } else {
+      contentdiv.style.minHeight = document.body.offsetHeight - document.getElementById("footer").offsetHeight + "px";
+    }
+</script>
+    </div>
+    <!-- <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/categories" class="mobile-nav-link">Categories</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tags</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav> -->
+    
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/scripts.js"></script>
+
+
+
+
+  <script src="/js/dialog.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="myModalLabel">设置</h2>
+      </div>
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+
+
+      <div class="modal-body">
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" onclick="javascript:setFontSize();" aria-expanded="true" aria-controls="collapseOne">
+              正文字号大小
+            </a>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+          <div class="panel-body">
+            您已调整页面字体大小
+          </div>
+        </div>
+      
+
+
+          <div style="margin:6px;">
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" onclick="javascript:setBackground();" aria-expanded="true" aria-controls="collapseTwo">
+              夜间护眼模式
+            </a>
+        </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+          <div class="panel-body">
+            夜间模式已经开启，再次单击按钮即可关闭 
+          </div>
+        </div>
+
+        <div>
+            <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="true" aria-controls="collapseThree">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;关 于&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </div>
+         <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+          <div class="panel-body">
+            huangyedi2012&#39;s blog
+          </div>
+          <div class="panel-body">
+            Copyright © 2018 huangyedi2012 All Rights Reserved.
+          </div>
+        </div>
+      </div>
+
+
+      <hr style="margin-top:0px; margin-bottom:0px; width:80%; border-top: 1px solid #000;">
+      <hr style="margin-top:2px; margin-bottom:0px; width:80%; border-top: 3px solid #000;">
+      <div class="modal-footer">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <a id="rocket" href="#top" class=""></a>
+  <script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+  
+    <a id="menu-switch"><i class="fa fa-bars fa-lg"></i></a>
+  
+</body>
+</html>

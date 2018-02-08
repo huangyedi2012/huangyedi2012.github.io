@@ -775,6 +775,7 @@ pre code {
   white-space: pre-wrap;
   background-color: transparent;
   border-radius: 0;
+  line-height: 2em;
 }
 
 .pre-scrollable {
