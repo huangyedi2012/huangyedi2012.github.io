@@ -20,7 +20,7 @@
 <meta property="og:description" content="在社交网络中，有些用户之间联系较为紧密，而另外一些用户之间的关系则较为稀疏。在网络中，我们可以将联系较为紧密的部分用户看成一个社区，在这个社区内部，用户之间联系紧密，而在两个社区之间，联系较为稀疏。">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://huangyedi2012.github.io/imgs/ML/CommunityDetection/fast_unfolding.png">
-<meta property="og:updated_time" content="2018-02-08T04:39:07.346Z">
+<meta property="og:updated_time" content="2018-02-11T07:12:43.735Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="社区发现-Fast Unfolding算法">
 <meta name="twitter:description" content="在社交网络中，有些用户之间联系较为紧密，而另外一些用户之间的关系则较为稀疏。在网络中，我们可以将联系较为紧密的部分用户看成一个社区，在这个社区内部，用户之间联系紧密，而在两个社区之间，联系较为稀疏。">
@@ -191,7 +191,7 @@
       
         <p>在社交网络中，有些用户之间联系较为紧密，而另外一些用户之间的关系则较为稀疏。在网络中，我们可以将联系较为紧密的部分用户看成一个社区，在这个社区内部，用户之间联系紧密，而在两个社区之间，联系较为稀疏。</p>
 <a id="more"></a>
-<h4 id="社区划分的评价标准"><a href="#社区划分的评价标准" class="headerlink" title="社区划分的评价标准"></a>社区划分的评价标准</h4><p>利用算法将整个网络划分成多个社区之后，需要一个评价指标来衡量这个划分结果的好坏。fast unfolding算法采用的是模块度（Modularity）Q值来衡量。</p>
+<h1 id="社区划分的评价标准"><a href="#社区划分的评价标准" class="headerlink" title="社区划分的评价标准"></a>社区划分的评价标准</h1><p>利用算法将整个网络划分成多个社区之后，需要一个评价指标来衡量这个划分结果的好坏。fast unfolding算法采用的是模块度（Modularity）Q值来衡量。</p>
 <p>模块度最早是由Newman在文章<a href="https://arxiv.org/pdf/cond-mat/0408187.pdf" target="_blank" rel="noopener">Finding community structure in very large networks</a> 中提出。</p>
 <p>首先，定义$A_{vw}$为网络中邻接矩阵中的一个元素：</p>
 <p>$$<br>A_{vw}=<br>\begin{cases}<br>1&amp; 点v和w是相连的\\<br>0&amp; 其它<br>\end{cases}<br>$$</p>
@@ -211,7 +211,7 @@
 <p>$$<br>a_i = \frac{1}{2m} \sum_{v}k_{v}\delta(c_v,i)<br>$$</p>
 <p>同时，由于$\delta(c_v,c_w)=\sum_i\delta(c_v,i)\delta(c_w,i)$. 则模块度的计算可以简化为：</p>
 <p>$$<br>\begin{eqnarray*}<br>Q &amp; = &amp; \frac{1}{2m}\sum_{vw}\left[A_{vw}-\frac{k_v k_w}{2m}\right]\sum_i\delta(c_v,i)\delta(c_w,i) \\<br>&amp; = &amp; \sum_i \left[\frac{1}{2m}\sum_{vw}A_{vw}\delta(c_v,i)\delta(c_w,i)-\frac{1}{2m}\sum_v k_v\delta(c_v,i)\frac{1}{2m}\sum_w k_w\delta(c_w,i)\right]\\<br>&amp; = &amp; \sum_i (e_{ii}-a_i^2)<br>\end{eqnarray*}<br>$$</p>
-<h4 id="Fast-Unfolding算法"><a href="#Fast-Unfolding算法" class="headerlink" title="Fast Unfolding算法"></a>Fast Unfolding算法</h4><p>在社区发现问题中，以前的研究人员提出了许多的方法，例如标签传播算法（Label Propagation Algorithm）、Fast Unfolding等。考虑到现有数据的规模和算法的复杂度等因素，本文选用的是fast unfolding。</p>
+<h1 id="Fast-Unfolding算法"><a href="#Fast-Unfolding算法" class="headerlink" title="Fast Unfolding算法"></a>Fast Unfolding算法</h1><p>在社区发现问题中，以前的研究人员提出了许多的方法，例如标签传播算法（Label Propagation Algorithm）、Fast Unfolding等。考虑到现有数据的规模和算法的复杂度等因素，本文选用的是fast unfolding。</p>
 <p>Fast Unfolding算法的主要目标是不断划分社区使得划分后的整个网络的模块度不断增大。算法主要包括两个过程，过程示例如下。</p>
 <p><img src="/imgs/ML/CommunityDetection/fast_unfolding.png" alt="fast unfolding示意图"></p>
 <ol>
@@ -269,7 +269,7 @@
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
     
-        <ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#社区划分的评价标准"><span class="nav-number">1.</span> <span class="nav-text">社区划分的评价标准</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fast-Unfolding算法"><span class="nav-number">2.</span> <span class="nav-text">Fast Unfolding算法</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number"></span> <span class="nav-text">参考文献</span></a>
+        <ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#社区划分的评价标准"><span class="nav-number">1.</span> <span class="nav-text">社区划分的评价标准</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fast-Unfolding算法"><span class="nav-number">2.</span> <span class="nav-text">Fast Unfolding算法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考文献"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol>
     
     </div>
   </aside>
