@@ -170,6 +170,321 @@
         
           <section id="main" style="float:none;">
   
+    <article id="post-ml-2017-04-12-奇异值分解-SVD"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/04/12/ml-2017-04-12-奇异值分解-SVD/">奇异值分解 SVD</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/04/12/ml-2017-04-12-奇异值分解-SVD/" class="article-date">
+	  <time datetime="2017-04-12T00:56:22.000Z" itemprop="datePublished">2017-04-12</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/ml/">ml</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>奇异值分解(Singular Value Decomposition，以下简称SVD)是在机器学习领域广泛应用的算法，它不光可以用于降维算法中的特征分解，还可以用于推荐系统，以及自然语言处理等领域。是很多机器学习算法的基石。</p>
+        <!-- 奇异值分解(Singular Value Decomposition，以下简称SVD)是在机器学习领域广泛应用的算法，它不光可以用于降维算法中的特征分解，还可以用于推荐系统，以及自然语言处理等领域。是很多机器学习算法的基石。
+
+线性变换的几何解释首先，我们来看一个只有两行两列的简单矩阵。
+$$\begin{equation}\mathbf{M}=\begin{bmatrix}    2 &a......  -->
+        <p class="article-more-link">
+          <a href="/2017/04/12/ml-2017-04-12-奇异值分解-SVD/#more">阅读全文</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/math/">math</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/svd/">svd</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
+    <article id="post-algorithm-2017-04-09-最大公约数（辗转相除法）"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/04/09/algorithm-2017-04-09-最大公约数（辗转相除法）/">最大公约数（辗转相除法）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/04/09/algorithm-2017-04-09-最大公约数（辗转相除法）/" class="article-date">
+	  <time datetime="2017-04-09T08:06:44.000Z" itemprop="datePublished">2017-04-09</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/algorithm/">algorithm</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>辗转相除法，又称欧几里得算法，是求最大公约数(Greatest Common Divisor)的算法。</p>
+        <!-- 辗转相除法，又称欧几里得算法，是求最大公约数(Greatest Common Divisor)的算法。
+
+算法描述设两数为$a$、$b$ $(a&gt;b)$，求$a$和$b$最大公约数$gcd(a，b)$的步骤如下：
+
+用$b$除$a$，得$a÷b=q……r(0\leq r)$。
+若$r=0$，则$gcd(a,b)=b$；结束。
+若$r≠0$，取$a=b,b=r$，执行第1步。
+
+原理证明......  -->
+        <p class="article-more-link">
+          <a href="/2017/04/09/algorithm-2017-04-09-最大公约数（辗转相除法）/#more">阅读全文</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gcd/">gcd</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/math/">math</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
+    <article id="post-ml-2017-04-01-Logistic-Regression"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/04/01/ml-2017-04-01-Logistic-Regression/">Logistic Regression</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/04/01/ml-2017-04-01-Logistic-Regression/" class="article-date">
+	  <time datetime="2017-04-01T01:12:45.000Z" itemprop="datePublished">2017-04-01</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/ml/">ml</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文主要参考Andrew Ng老师的Machine Learning公开课，并用《机器学习实战》中的源码实现。</p>
+        <!-- 本文主要参考Andrew Ng老师的Machine Learning公开课，并用《机器学习实战》中的源码实现。
+
+Logistic Regression基本原理Logistic分布Logistic Distribution的分布函数和密度函数如下：
+$$\begin{equation}F(x) = P(X \leqslant x) = \frac{1}{1+e^{-(x-\mu)/\gamm......  -->
+        <p class="article-more-link">
+          <a href="/2017/04/01/ml-2017-04-01-Logistic-Regression/#more">阅读全文</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/lr/">lr</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
+    <article id="post-tools-2017-04-01-Latex数学公式"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/04/01/tools-2017-04-01-Latex数学公式/">Latex数学公式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/04/01/tools-2017-04-01-Latex数学公式/" class="article-date">
+	  <time datetime="2017-04-01T00:42:07.000Z" itemprop="datePublished">2017-04-01</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/tools/">tools</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Latex中的常用命令。</p>
+        <!-- Latex中的常用命令。
+
+多行的数学公式1234\begin&#123;eqnarray*&#125;\cos 2\theta &amp; = &amp; \cos^2 \theta - \sin^2 \theta \\&amp; = &amp; 2 \cos^2 \theta - 1.\end&#123;eqnarray*&#125;
+其中&amp;是对其点，表示在此对齐。$$\begi......  -->
+        <p class="article-more-link">
+          <a href="/2017/04/01/tools-2017-04-01-Latex数学公式/#more">阅读全文</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/latex/">latex</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/math/">math</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
+    <article id="post-git-2017-03-31-删除已经提交的Ignore-file"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/03/31/git-2017-03-31-删除已经提交的Ignore-file/">删除已经提交的Ignore file</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/03/31/git-2017-03-31-删除已经提交的Ignore-file/" class="article-date">
+	  <time datetime="2017-03-31T10:55:30.000Z" itemprop="datePublished">2017-03-31</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/git/">git</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <a id="more"></a>
+<p>To untrack a single file that has already been added/initialized to your repository, i.e., stop tracking the file but not delete it from your system use:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rm --cached filename</span><br></pre></td></tr></table></figure>
+<p>To untrack every file that is now in your <code>.gitignore</code>:</p>
+<p>First commit any outstanding code changes, and then, run this command:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rm -r --cached .</span><br></pre></td></tr></table></figure>
+<p>This removes any changed files from the index(staging area), then just run:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br></pre></td></tr></table></figure>
+<p>Commit it:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git commit -m <span class="string">".gitignore is now working"</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/git/">git</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ignore/">ignore</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
+    <article id="post-git-2017-03-31-用rebase-i-修改提交"  class="article article-type-post" itemscope itemprop="blogPost" >
+  <div id="articleInner" class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="thumb" itemprop="name">
+      <a class="article-title" href="/2017/03/31/git-2017-03-31-用rebase-i-修改提交/">用rebase -i 修改提交</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      
+	<a href="/2017/03/31/git-2017-03-31-用rebase-i-修改提交/" class="article-date">
+	  <time datetime="2017-03-31T10:25:26.000Z" itemprop="datePublished">2017-03-31</time>
+	</a>
+
+      
+    <a class="article-category-link" href="/categories/git/">git</a>
+
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>如果commit的message填写错误，可以通过git的rebase来修改提交信息。</p>
+        <!-- 如果commit的message填写错误，可以通过git的rebase来修改提交信息。
+
+用rebase -i，首先选择要修改的提交。
+1$ git rebase -i HEAD~~
+打开文本编辑器，将看到从HEAD到HEAD~~的提交如下图显示。12345678910111213141516pick 9a54fd4 添加commit的说明pick 0d4a808 添加pull的说明# Re......  -->
+        <p class="article-more-link">
+          <a href="/2017/03/31/git-2017-03-31-用rebase-i-修改提交/#more">阅读全文</a>
+        </p>
+      
+    </div>
+    <footer class="article-footer">
+      
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/git/">git</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+<!-- Table of Contents -->
+
+  
     <article id="post-tools-2017-03-31-windows-删除快捷方式箭头"  class="article article-type-post" itemscope itemprop="blogPost" >
   <div id="articleInner" class="article-inner">
     
@@ -380,285 +695,11 @@
 <!-- Table of Contents -->
 
   
-    <article id="post-tools-2017-03-31-VC6-0不能停止调试程序的解决方案"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/03/31/tools-2017-03-31-VC6-0不能停止调试程序的解决方案/">VC6.0不能停止调试程序的解决方案</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/03/31/tools-2017-03-31-VC6-0不能停止调试程序的解决方案/" class="article-date">
-	  <time datetime="2017-03-31T08:45:09.000Z" itemprop="datePublished">2017-03-31</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/tools/">tools</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>VC6.0在Windows7下调试的时候，再结束调试，程序无法退出。</p>
-        <!-- VC6.0在Windows7下调试的时候，再结束调试，程序无法退出。
-
- 问题描述 ：当我击F5开始一个项目的调试时，程序在我设置的断点处停止，这时按下Shift+F5后，VC6.0可以退出调试状态，但是windows系统的任务栏上会留下前面调试时产生的程序。该进程不能被结束，即使我使用任务管理器也不可以终止程序。而且，当修改代码之后，就不能重新编译了。想结束该进程的唯一的办法是关闭VC6.......  -->
-        <p class="article-more-link">
-          <a href="/2017/03/31/tools-2017-03-31-VC6-0不能停止调试程序的解决方案/#more">阅读全文</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/vc6-0/">vc6.0</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-tools-2017-03-31-intellij-idea-注册服务器"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/03/31/tools-2017-03-31-intellij-idea-注册服务器/">intellij idea 注册服务器</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/03/31/tools-2017-03-31-intellij-idea-注册服务器/" class="article-date">
-	  <time datetime="2017-03-31T08:32:32.000Z" itemprop="datePublished">2017-03-31</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/tools/">tools</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Intellij idea 注册服务器地址</p>
-<p>lisense server address: <a href="http://idea.iteblog.com/key.php" target="_blank" rel="noopener">http://idea.iteblog.com/key.php</a></p>
-<p>服务器更新地址:<a href="http://idea.lanyus.com/" target="_blank" rel="noopener">http://idea.lanyus.com/</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/idea/">idea</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/license/">license</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-python-2017-03-31-Python-split保留分隔符"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/03/31/python-2017-03-31-Python-split保留分隔符/">Python split保留分隔符</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/03/31/python-2017-03-31-Python-split保留分隔符/" class="article-date">
-	  <time datetime="2017-03-31T08:21:37.000Z" itemprop="datePublished">2017-03-31</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/python/">python</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>python 文本或句子切割，并保留分隔符</p>
-        <!-- python 文本或句子切割，并保留分隔符
-
-主要思想，利用正则表达式re.split() 分割，同时利用re.findall() 查找分隔符，而后将二者链接即可。
-12345678910111213141516171819202122# coding: utf-8import sysreload(sys)sys.setdefaultencoding("utf-8")import redef......  -->
-        <p class="article-more-link">
-          <a href="/2017/03/31/python-2017-03-31-Python-split保留分隔符/#more">阅读全文</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/split/">split</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-python-2017-03-31-Python日志模块"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/03/31/python-2017-03-31-Python日志模块/">Python日志模块</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/03/31/python-2017-03-31-Python日志模块/" class="article-date">
-	  <time datetime="2017-03-31T07:26:28.000Z" itemprop="datePublished">2017-03-31</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/python/">python</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>python的标准库里的日志系统从Python2.3开始支持。只要import logging这个模块即可使用。</p>
-        <!-- python的标准库里的日志系统从Python2.3开始支持。只要import logging这个模块即可使用。
-
-日志级别下表中的日志级别从上往下以此升高。logging只会输出比设定级别高的日志信息。
-
-
-
-级别
-何时使用
-
-
-
-
-DEBUG
-详细信息，典型地调试问题时会感兴趣。
-
-
-INFO
-证明事情按预期工作。
-
-
-WARNING
-表明发生了一些意外，或者不久的将来会发生问题（如‘磁......  -->
-        <p class="article-more-link">
-          <a href="/2017/03/31/python-2017-03-31-Python日志模块/#more">阅读全文</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/">python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/日志/">日志</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
-    <article id="post-tools-2017-03-31-搭建Hexo博客"  class="article article-type-post" itemscope itemprop="blogPost" >
-  <div id="articleInner" class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 class="thumb" itemprop="name">
-      <a class="article-title" href="/2017/03/31/tools-2017-03-31-搭建Hexo博客/">搭建Hexo博客</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-meta">
-      
-	<a href="/2017/03/31/tools-2017-03-31-搭建Hexo博客/" class="article-date">
-	  <time datetime="2017-03-31T02:45:23.000Z" itemprop="datePublished">2017-03-31</time>
-	</a>
-
-      
-    <a class="article-category-link" href="/categories/tools/">tools</a>
-
-      
-    </div>
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>本文主要记录Windows系统下搭建Hexo博客，以防遗忘！</p>
-        <!-- 本文主要记录Windows系统下搭建Hexo博客，以防遗忘！
-
-准备你需要准备好以下软件：
-
-Node.js
-Git
-
-安装Hexo在自己认为合适的地方创建一个文件夹，然后在文件夹空白处按住Shift+鼠标右键，然后点击在此处打开命令行窗口。（同样要记住啦，下文中会使用在当前目录打开命令行来代指上述的操作）
-在输入以下命令安装Hexo：
-12345$ npm install hexo-cli......  -->
-        <p class="article-more-link">
-          <a href="/2017/03/31/tools-2017-03-31-搭建Hexo博客/#more">阅读全文</a>
-        </p>
-      
-    </div>
-    <footer class="article-footer">
-      
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/blog/">blog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-<!-- Table of Contents -->
-
-  
 
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/page/2/">&laquo; 上一页</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/">&laquo; 上一页</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">下一页 &raquo;</a>
   </nav>
 
 </section>
