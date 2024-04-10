@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.4.2">
-
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -16,12 +14,13 @@
 
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.8.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
-<meta name="description" content="Hadoop Map&#x2F;Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。">
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Hadoop Map&#x2F;Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hadoop之MapReduce原理">
 <meta property="og:url" content="https://huangyedi2012.github.io/2017/04/17/2017-04-17-Hadoop%E4%B9%8BMapReduce%E5%8E%9F%E7%90%86/index.html">
@@ -37,7 +36,6 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/imgs/Hadoop/mapreduce/reduce-shuffle.png">
 <meta property="article:published_time" content="2017-04-17T02:11:31.000Z">
 <meta property="article:modified_time" content="2023-06-26T11:59:24.318Z">
-<meta property="article:author" content="huangyedi2012">
 <meta property="article:tag" content="hadoop">
 <meta property="article:tag" content="mapreduce">
 <meta name="twitter:card" content="summary">
@@ -57,6 +55,10 @@
 
 
 
+
+
+
+
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
   </noscript>
@@ -66,8 +68,8 @@
   <div class="headband"></div>
 
   <main class="main">
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
         <span class="toggle-line"></span>
@@ -80,13 +82,13 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">huangyedi2012</h1>
+      <p class="site-title">huangyedi2012</p>
       <i class="logo-line"></i>
     </a>
   </div>
 
   <div class="site-nav-right">
-    <div class="toggle popup-trigger">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
         <i class="fa fa-search fa-fw fa-lg"></i>
     </div>
   </div>
@@ -95,12 +97,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu">
-        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
-        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li>
-        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
-        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
-        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -133,15 +130,9 @@
     </div>
   </div>
 
-</div>
+</header>
         
   
-  <div class="toggle sidebar-toggle" role="button">
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-    <span class="toggle-line"></span>
-  </div>
-
   <aside class="sidebar">
 
     <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
@@ -157,59 +148,45 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mapreduce%E7%9A%84%E6%9E%B6%E6%9E%84"><span class="nav-text">MapReduce的架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#client-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-text">Client 客户端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jobtracker"><span class="nav-text">JobTracker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tasktracker"><span class="nav-text">TaskTracker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#task"><span class="nav-text">Task</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mapreduce%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-text">MapReduce运行机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E5%88%86%E7%89%87input-split"><span class="nav-text">输入分片（input split）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#inputformat"><span class="nav-text">InputFormat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#inputsplit"><span class="nav-text">InputSplit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#recordreader"><span class="nav-text">RecordReader</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#map%E9%98%B6%E6%AE%B5"><span class="nav-text">Map阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5"><span class="nav-text">输入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#partitioner"><span class="nav-text">Partitioner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spill%E6%BA%A2%E5%86%99"><span class="nav-text">spill（溢写）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#combiner"><span class="nav-text">Combiner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge"><span class="nav-text">merge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-text">内存缓冲区</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reduce%E9%98%B6%E6%AE%B5"><span class="nav-text">Reduce阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#copy"><span class="nav-text">copy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge-1"><span class="nav-text">merge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#reduce"><span class="nav-text">Reduce</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mapreduce%E7%9A%84%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">MapReduce的架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#client-%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">2.1.</span> <span class="nav-text">Client 客户端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jobtracker"><span class="nav-number">2.2.</span> <span class="nav-text">JobTracker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tasktracker"><span class="nav-number">2.3.</span> <span class="nav-text">TaskTracker</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#task"><span class="nav-number">2.4.</span> <span class="nav-text">Task</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mapreduce%E8%BF%90%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">3.</span> <span class="nav-text">MapReduce运行机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E5%88%86%E7%89%87input-split"><span class="nav-number">3.1.</span> <span class="nav-text">输入分片（input split）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#inputformat"><span class="nav-number">3.1.1.</span> <span class="nav-text">InputFormat</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#inputsplit"><span class="nav-number">3.1.2.</span> <span class="nav-text">InputSplit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#recordreader"><span class="nav-number">3.1.3.</span> <span class="nav-text">RecordReader</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#map%E9%98%B6%E6%AE%B5"><span class="nav-number">3.2.</span> <span class="nav-text">Map阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5"><span class="nav-number">3.2.1.</span> <span class="nav-text">输入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#partitioner"><span class="nav-number">3.2.2.</span> <span class="nav-text">Partitioner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spill%E6%BA%A2%E5%86%99"><span class="nav-number">3.2.3.</span> <span class="nav-text">spill（溢写）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#combiner"><span class="nav-number">3.2.4.</span> <span class="nav-text">Combiner</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge"><span class="nav-number">3.2.5.</span> <span class="nav-text">merge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%BC%93%E5%86%B2%E5%8C%BA"><span class="nav-number">3.2.6.</span> <span class="nav-text">内存缓冲区</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reduce%E9%98%B6%E6%AE%B5"><span class="nav-number">3.3.</span> <span class="nav-text">Reduce阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#copy"><span class="nav-number">3.3.1.</span> <span class="nav-text">copy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#merge-1"><span class="nav-number">3.3.2.</span> <span class="nav-text">merge</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#reduce"><span class="nav-number">3.3.3.</span> <span class="nav-text">Reduce</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
         <div class="site-overview-wrap sidebar-panel">
-          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="huangyedi2012"
-      src="/images/logo.svg">
-  <p class="site-author-name" itemprop="name">huangyedi2012</p>
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
   <div class="site-description" itemprop="description"></div>
 </div>
-<div class="site-state-wrap site-overview-item animated">
+<div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">64</span>
+          <span class="site-state-item-count">65</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">77</span>
+        <span class="site-state-item-count">81</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
 
-
-
         </div>
       </div>
     </div>
-  </aside>
-  <div class="sidebar-dimmer"></div>
-
-
-    </header>
 
     
-  <div class="back-to-top" role="button" aria-label="返回顶部">
-    <i class="fa fa-arrow-up"></i>
-    <span>0%</span>
-  </div>
+  </aside>
 
-<noscript>
-  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
-</noscript>
 
+    </div>
 
     <div class="main-inner post posts-expand">
 
@@ -225,13 +202,18 @@
     <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2017/04/17/2017-04-17-Hadoop%E4%B9%8BMapReduce%E5%8E%9F%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/logo.svg">
-      <meta itemprop="name" content="huangyedi2012">
-      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Hadoop之MapReduce原理 | huangyedi2012">
+      <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -248,13 +230,13 @@
 
       <time title="创建时间：2017-04-17 10:11:31" itemprop="dateCreated datePublished" datetime="2017-04-17T10:11:31+08:00">2017-04-17</time>
     </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2023-06-26 19:59:24" itemprop="dateModified" datetime="2023-06-26T19:59:24+08:00">2023-06-26</time>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
       </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-06-26 19:59:24" itemprop="dateModified" datetime="2023-06-26T19:59:24+08:00">2023-06-26</time>
+    </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -274,8 +256,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-        <p>Hadoop
+    <div class="post-body" itemprop="articleBody"><p>Hadoop
 Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。</p>
 <span id="more"></span>
 <h1 id="概述">概述</h1>
@@ -524,12 +505,12 @@ target="_blank" rel="noopener" href="http://wangzzu.github.io/2016/03/02/hadoop-
           <div class="post-nav">
             <div class="post-nav-item">
                 <a href="/2017/04/14/2017-04-14-Hadoop%E4%B9%8BHDFS%E6%9E%B6%E6%9E%84/" rel="prev" title="Hadoop之HDFS架构">
-                  <i class="fa fa-chevron-left"></i> Hadoop之HDFS架构
+                  <i class="fa fa-angle-left"></i> Hadoop之HDFS架构
                 </a>
             </div>
             <div class="post-nav-item">
                 <a href="/2017/04/17/2017-04-17-Hadoop%E4%B9%8BYarn%E5%8E%9F%E7%90%86/" rel="next" title="Hadoop之Yarn原理">
-                  Hadoop之Yarn原理 <i class="fa fa-chevron-right"></i>
+                  Hadoop之Yarn原理 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
@@ -548,15 +529,14 @@ target="_blank" rel="noopener" href="http://wangzzu.github.io/2016/03/02/hadoop-
   <footer class="footer">
     <div class="footer-inner">
 
-
-<div class="copyright">
-  &copy; 
-  <span itemprop="copyrightYear">2024</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">huangyedi2012</span>
-</div>
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
   <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
   </div>
 
@@ -564,31 +544,42 @@ target="_blank" rel="noopener" href="http://wangzzu.github.io/2016/03/02/hadoop-
   </footer>
 
   
-  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@next-theme/pjax@0.5.0/pjax.min.js" integrity="sha256-3NkoLDrmHLTYj7csHIZSr0MHAFTXth7Ua/DDt4MRUAg=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.6/dist/medium-zoom.min.js" integrity="sha256-EdPgYcPk/IIrw7FYeuJQexva49pVRZNmt3LculEr7zM=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
 
   
-<script src="https://cdn.jsdelivr.net/npm/hexo-generator-searchdb@1.4.0/dist/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
 <script src="/js/third-party/search/local-search.js"></script>
+
 
 
 
   <script src="/js/third-party/fancybox.js"></script>
 
 
-  
-
-
-
 
   
 
-  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js","integrity":"sha256-r+3itOMtGGjap0x+10hu6jW/gZCzxHsoKrOd7gyRSGY="}}</script>
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
 <script src="/js/third-party/math/mathjax.js"></script>
 
 
