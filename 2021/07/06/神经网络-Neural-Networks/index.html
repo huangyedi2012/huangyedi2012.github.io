@@ -20,30 +20,30 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"timliao2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.8.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.8.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 <meta name="description" content="人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="神经网络 Neural Networks">
-<meta property="og:url" content="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/index.html">
+<meta property="og:url" content="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/index.html">
 <meta property="og:site_name" content="huangyedi2012">
 <meta property="og:description" content="人工神经网络是由大量处理单元互联组成的非线性、自适应信息处理系统。它是在现代神经科学研究成果的基础上提出的，试图通过模拟大脑神经网络处理、记忆信息的方式进行信息处理。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/SingleNeuron.png">
-<meta property="og:image" content="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/400px-Network331.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/SingleNeuron.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/400px-Network331.png">
 <meta property="article:published_time" content="2021-07-06T02:06:41.000Z">
 <meta property="article:modified_time" content="2023-06-26T11:59:24.368Z">
 <meta property="article:author" content="huangyedi2012">
 <meta property="article:tag" content="todo">
 <meta property="article:tag" content="nn">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/SingleNeuron.png">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/SingleNeuron.png">
 
 
-<link rel="canonical" href="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/">
+<link rel="canonical" href="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/","path":"2021/07/06/神经网络-Neural-Networks/","title":"神经网络 Neural Networks"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/","path":"2021/07/06/神经网络-Neural-Networks/","title":"神经网络 Neural Networks"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>神经网络 Neural Networks | huangyedi2012</title>
@@ -219,7 +219,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://timliao2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2021/07/06/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C-Neural-Networks/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/logo.svg">
