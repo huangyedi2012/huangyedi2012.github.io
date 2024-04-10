@@ -431,11 +431,9 @@ class="math inline">\((x_i, x_im), i=1,
 f_m(x)$，其对应的叶子节点区域为 <span class="math inline">\(R_jm, j=1,
 2,…,J\)</span>。其中J为回归树<span
 class="math inline">\(t\)</span>的叶子节点的个数。</p></li>
-<li><p>对叶子区域$ j=1,2,..J$计算最佳拟合值 <span
-class="math display">\[
-\gamma_{jm}=\arg \min_{\gamma}\sum_{x_i \in R_{jm}}L(y_i,
-f_{m-1}(x_i)+\gamma) (对 \gamma求导并令导数为0即可求得)
-\]</span></p></li>
+<li><p>对叶子区域$ j=1,2,..J<span
+class="math inline">\(计算最佳拟合值\)</span>$ <em>{jm}=</em>{}<em>{x_i
+R</em>{jm}}L(y_i, f_{m-1}(x_i)+) (对 0即可求得) $$</p></li>
 <li><p>更新强学习器 <span class="math display">\[
 f_m(x)=f_{m-1}(x)+\sum_{j=1}^{J}\gamma_{jm}I(x \in R_{jm})
 \]</span></p></li>
@@ -500,7 +498,7 @@ target="_blank" rel="noopener" href="https://www.zhihu.com/question/63560633/ans
 
 <div class="copyright">
   &copy; 
-  <span itemprop="copyrightYear">2023</span>
+  <span itemprop="copyrightYear">2024</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
