@@ -244,6 +244,9 @@ embed {
   margin-right: auto;
   max-width: 100%;
 }
+a img {
+  max-width: 65%;
+}
 hr {
   background-image: repeating-linear-gradient(-45deg, #ddd, #ddd 4px, transparent 4px, transparent 8px);
   border: 0;
@@ -1825,7 +1828,7 @@ pre code {
   color: #999;
   font-size: 0.875em;
   font-weight: bold;
-  line-height: 1;
+  line-height: 2;
   margin: -15px auto 15px;
   text-align: center;
 }
