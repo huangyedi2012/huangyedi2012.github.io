@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="强化学习（Reinforcement Learning, RL）的主要目的是让智能体（agent）通过与环境的交互，学习一种策略（policy），从而在不同状态下采取最优的行动，以最大化其累积的奖励（或收益）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="强化学习">
+<meta property="og:url" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="huangyedi2012">
+<meta property="og:description" content="强化学习（Reinforcement Learning, RL）的主要目的是让智能体（agent）通过与环境的交互，学习一种策略（policy），从而在不同状态下采取最优的行动，以最大化其累积的奖励（或收益）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/vi1.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/vi2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/vi3.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/pi1.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/pi2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/pi3.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/mc_basic.png">
+<meta property="article:published_time" content="2024-09-05T07:50:33.000Z">
+<meta property="article:modified_time" content="2024-09-06T04:37:43.202Z">
+<meta property="article:tag" content="todo">
+<meta property="article:tag" content="rl">
+<meta property="article:tag" content="Monte Carlo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/vi1.png">
+
+
+<link rel="canonical" href="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/","path":"2024/09/05/强化学习/","title":"强化学习"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>强化学习 | huangyedi2012</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huangyedi2012</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E5%85%AC%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">贝尔曼公式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3"><span class="nav-number">2.</span> <span class="nav-text">值迭代</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-number">3.</span> <span class="nav-text">策略迭代</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%AA%E6%96%AD%E7%9A%84%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-number">4.</span> <span class="nav-text">截断的策略迭代</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#monte-carlo-method"><span class="nav-number">5.</span> <span class="nav-text">Monte Carlo Method</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#mc-basic"><span class="nav-number">5.1.</span> <span class="nav-text">MC Basic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mc-exploring-starts"><span class="nav-number">5.2.</span> <span class="nav-text">MC Exploring Starts</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mc-varepsilon-greedy"><span class="nav-number">5.3.</span> <span class="nav-text">MC \(\varepsilon\)-Greedy</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">67</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">83</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="强化学习 | huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          强化学习
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-09-05 15:50:33" itemprop="dateCreated datePublished" datetime="2024-09-05T15:50:33+08:00">2024-09-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-09-06 12:37:43" itemprop="dateModified" datetime="2024-09-06T12:37:43+08:00">2024-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/nlp/" itemprop="url" rel="index"><span itemprop="name">nlp</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>强化学习（Reinforcement Learning,
+RL）的主要目的是让智能体（agent）通过与环境的交互，学习一种策略（policy），从而在不同状态下采取最优的行动，以最大化其累积的奖励（或收益）。</p>
+<span id="more"></span>
+<h1 id="贝尔曼公式">贝尔曼公式</h1>
+<p>Elementwise form: <span class="math display">\[
+\begin{align*}
+v_{\pi}(s) &amp;= \sum_{a} {\pi}(a|s) \left[
+\underbrace{\sum_{r}p(r|s,a)r + \gamma
+\sum_{s&#39;}p(s&#39;|s,a)v_{\pi}(s&#39;)}_{q_{\pi}(s,a)}\right] \\
+&amp;= \sum_{a}\pi(a|s)q_{\pi}(s,a)
+\end{align*}
+\]</span></p>
+<p>Action-value function: <span class="math display">\[
+q_{\pi}(s,a) = \sum_{r}p(r|s,a)r + \gamma
+\sum_{s&#39;}p(s&#39;|s,a)v_{\pi}(s&#39;)
+\]</span></p>
+<p>Matrix form: <span class="math display">\[
+\begin{align*}
+v &amp;= r + \gamma Pv \\
+&amp;= r + \gamma v&#39;
+\end{align*}
+\]</span> State value: <span class="math display">\[
+v_{\pi}(s) = \sum_{a}\pi(a|s)q_{\pi}(s,a)
+\]</span></p>
+<h1 id="值迭代">值迭代</h1>
+<p>两个步骤：</p>
+<ol type="1">
+<li><p>策略更新： <span class="math display">\[
+\pi_{k+1} = arg \underset{\pi}{max}(r_{\pi} + \gamma P_{\pi}v_{k})
+\]</span></p>
+<p><span
+class="math inline">\(v_{k}\)</span>是已知的（迭代时可以随意赋值）</p>
+<figure>
+<img src="vi1.png" alt="计算q(s,a)" />
+<figcaption aria-hidden="true">计算<span
+class="math inline">\(q(s,a)\)</span></figcaption>
+</figure></li>
+<li><p>价值更新：选定策略后，更新state value <span
+class="math display">\[
+v_{k+1} = r_{\pi_{k+1}} + \gamma P_{\pi_{k+1}}v_{k}
+\]</span></p>
+<figure>
+<img src="vi2.png" alt="更新state value" />
+<figcaption aria-hidden="true">更新state value</figcaption>
+</figure>
+<figure>
+<img src="vi3.png" alt="多次迭代" />
+<figcaption aria-hidden="true">多次迭代</figcaption>
+</figure></li>
+</ol>
+<h1 id="策略迭代">策略迭代</h1>
+<ol type="1">
+<li><p>策略评估： <span class="math display">\[
+v_{\pi_{k}} = r_{\pi_{k}} + \gamma P_{\pi_{k}}v_{\pi_{k}}
+\]</span> 策略<span
+class="math inline">\(\pi_{k}\)</span>是已知的（随机选择策略），求解该策略的state
+value时，采用迭代的方法求解。</p>
+<figure>
+<img src="pi1.png" alt="随机选择策略" />
+<figcaption aria-hidden="true">随机选择策略</figcaption>
+</figure>
+<figure>
+<img src="pi2.png" alt="评估策略价值" />
+<figcaption aria-hidden="true">评估策略价值</figcaption>
+</figure></li>
+<li><p>策略更新： <span class="math display">\[
+\pi_{k+1} = arg \underset{\pi}{max}(r_{\pi} + \gamma P_{\pi}v_{\pi_{k}})
+\]</span> <img src="pi3.png" alt="更新策略" /></p></li>
+</ol>
+<h1 id="截断的策略迭代">截断的策略迭代</h1>
+<p>策略迭代方法中，策略评估过程中，需要无穷步的迭代才能评估出策略价值，现实过程中无法实现，因此推出基于截断的策略迭代方法。</p>
+<p>当截断步骤设置为1时，等同于值迭代。步骤为无穷时，等同于策略迭代。</p>
+<h1 id="monte-carlo-method">Monte Carlo Method</h1>
+<h2 id="mc-basic">MC Basic</h2>
+<p>主要就是将<strong>策略迭代</strong>算法变成无模型方法。</p>
+<p>策略迭代算法中，第一步是需要评估策略价值，第二步选择<span
+class="math inline">\(q(s,a)\)</span>最大的策略作为更新策略。</p>
+<p>在下面的表达式中，我们不依赖于模型计算动作价值： <span
+class="math display">\[
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a]
+\]</span> 因此，我们可以利用Monte Carlo方法来计算动作价值：</p>
+<ul>
+<li><p>从状态和动作<span
+class="math inline">\((s,a)\)</span>出发，在初始策略<span
+class="math inline">\(\pi_{0}\)</span>下，生成一个轨迹。</p></li>
+<li><p>计算该轨迹的价值：</p>
+<p><span class="math display">\[
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a]
+\]</span></p></li>
+<li><p>采样多条轨迹，然后求期望</p>
+<p><span class="math display">\[
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a] \approx
+\frac{1}{N}\sum_{i=1}^{N}g^{i}(s,a)
+\]</span></p></li>
+</ul>
+<figure>
+<img src="mc_basic.png" alt="MC Basic algorithm" />
+<figcaption aria-hidden="true">MC Basic algorithm</figcaption>
+</figure>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>效率比较低，需要多次采样大量轨迹</li>
+<li>轨迹长度需要足够长，否则距离较远的状态没有价值</li>
+<li>没有充分利用采样轨迹信息</li>
+</ul>
+<h2 id="mc-exploring-starts">MC Exploring Starts</h2>
+<p>每条轨迹中包含了以其他状态和动作为起点的轨迹，该方法对这些数据进行了利用，提高了效率。</p>
+<ul>
+<li>方法一：收集完所有轨迹后，便利所有state-action
+pari，计算平均价值，该方法需要等所有的轨迹收集完，效率低！</li>
+<li>方法二：每收集完一个轨迹，立即计算action
+value，更新策略。（可以收敛）</li>
+</ul>
+<h2 id="mc-varepsilon-greedy">MC <span
+class="math inline">\(\varepsilon\)</span>-Greedy</h2>
+<p><strong><span class="math inline">\(\varepsilon\)</span>-greedy
+policy:</strong> <span class="math display">\[
+\pi(a|s)=
+\begin{cases}
+    1-\frac{\varepsilon}{\vert\mathcal{A}(s)\vert}(\vert\mathcal{A}(s)\vert
+- 1) &amp;\text{ for the greedy actions.}
+    \\
+    \frac{\varepsilon}{\vert\mathcal{A}(s)\vert} &amp;\text{ for the
+other }\vert\mathcal{A}(s)\vert - 1\text{ actions.}
+\end{cases}
+\]</span> Where <span class="math inline">\(\varepsilon \in
+[0,1]\)</span> and <span
+class="math inline">\(\vert\mathcal{A}\vert\)</span> is the number of
+actions.</p>
+<ul>
+<li>该方法保证了greedy action总是比其他的动作概率大</li>
+<li><span
+class="math inline">\(\varepsilon\)</span>-greedy平衡了利用和探索（exploitaion
+and exploration）</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/todo/" rel="tag"># todo</a>
+              <a href="/tags/rl/" rel="tag"># rl</a>
+              <a href="/tags/Monte-Carlo/" rel="tag"># Monte Carlo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="prev" title="大模型学习笔记">
+                  <i class="fa fa-angle-left"></i> 大模型学习笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js"></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+
+</body>
+</html>
