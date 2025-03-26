@@ -777,122 +777,6 @@ href="http://www.cnblogs.com/liushen/p/3333936.html">纵表、横表互转的SQL
       </tags>
   </entry>
   <entry>
-    <title>数据库索引</title>
-    <url>/2017/12/05/2017-12-05-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95/</url>
-    <content><![CDATA[<p>本文介绍数据库索隐的基本结构、聚集索引与非聚集索引等问题。</p>
-<span id="more"></span>
-<h1 id="b-tree">B-Tree</h1>
-<p>我们常见的数据库系统，其索引使用的数据结构多是B-Tree或者B+Tree。例如，MsSql使用的是B+Tree，Oracle及Sysbase使用的是B-Tree。所以在最开始，简单地介绍一下B-Tree。</p>
-<p>B-Tree不同于Binary
-Tree（二叉树，最多有两个子树），一棵M阶的B-Tree满足以下条件：</p>
-<pre><code>1）每个结点至多有M个孩子；
-2）除根结点和叶结点外，其它每个结点至少有M/2个孩子；
-3）根结点至少有两个孩子（除非该树仅包含一个结点）；
-4）所有叶结点在同一层，叶结点不包含任何关键字信息；
-5）有K个关键字的非叶结点恰好包含K+1个孩子；</code></pre>
-<p>另外，对于一个结点，其内部的关键字是从小到大排序的。以下是B-Tree（M=4）的样例：</p>
-<p><img title="B-Tree样例" src="/imgs/sql/index/b-tree.png" style="display:block;margin:auto" /></p>
-<p>对于每个结点，主要包含一个关键字数组Key[]，一个指针数组（指向儿子）Son[]。在B-Tree内，查找的流程是：使用顺序查找（数组长度较短时）或折半查找方法查找Key[]数组，若找到关键字K，则返回该结点的地址及K在Key[]中的位置；否则，可确定K在某个Key[i]和Key[i+1]之间，则从Son[i]所指的子结点继续查找，直到在某结点中查找成功；或直至找到叶结点且叶结点中的查找仍不成功时，查找过程失败。</p>
-<p>接着，我们使用以下图片演示如何生成B-Tree（M=4，依次插入1~6）：</p>
-<p>从图可见，当我们插入关键字4时，由于原结点已经满了，故进行分裂，基本按一半的原则进行分裂，然后取出中间的关键字2，升级（这里是成为根结点）。其它的依类推，就是这样一个大概的过程。</p>
-<p><img title="B-Tree样例" src="/imgs/sql/index/b-tree2.png" style="display:block;margin:auto" /></p>
-<h1 id="数据库索引">数据库索引</h1>
-<h2 id="什么是索引">什么是索引</h2>
-<p>在数据库中，索引的含义与日常意义上的“索引”一词并无多大区别（想想小时候查字典），它是用于提高数据库表数据访问速度的数据库对象。</p>
-<pre><code>A）索引可以避免全表扫描。多数查询可以仅扫描少量索引页及数据页，而不是遍历所有数据页。
-B）对于非聚集索引，有些查询甚至可以不访问数据页。
-C）聚集索引可以避免数据插入操作集中于表的最后一个数据页。
-D）一些情况下，索引还可用于避免排序操作。</code></pre>
-<p>当然，众所周知，虽然索引可以提高查询速度，但是它们也会导致数据库系统更新数据的性能下降，因为大部分数据更新需要同时更新索引。</p>
-<h2 id="索引的存储">索引的存储</h2>
-<p>一条索引记录中包含的基本信息包括：键值（即你定义索引时指定的所有字段的值）+逻辑指针（指向数据页或者另一索引页）。</p>
-<p><img title="索引" src="/imgs/sql/index/index.png" style="display:block;margin:auto" /></p>
-<p>当你为一张空表创建索引时，数据库系统将为你分配一个索引页，该索引页在你插入数据前一直是空的。此页此时既是根结点，也是叶结点。每当你往表中插入一行数据，数据库系统即向此根结点中插入一行索引记录。当根结点满时，数据库系统大抵按以下步骤进行分裂：</p>
-<pre><code>A）创建两个儿子结点
-B）将原根结点中的数据近似地拆成两半，分别写入新的两个儿子结点
-C）根结点中加上指向两个儿子结点的指针</code></pre>
-<p>通常状况下，由于索引记录仅包含索引字段值（以及4-9字节的指针），索引实体比真实的数据行要小许多，索引页相较数据页来说要密集许多。一个索引页可以存储数量更多的索引记录，这意味着在索引中查找时在I/O上占很大的优势，理解这一点有助于从本质上了解使用索引的优势。</p>
-<h2 id="索引的类型">索引的类型</h2>
-<p>索引有聚集索引和非聚集索引两种类型。</p>
-<pre><code>A）聚集索引，表数据按照索引的顺序来存储的。对于聚集索引，叶子结点即存储了真实的数据行，不再有另外单独的数据页。
-B）非聚集索引，表数据存储顺序与索引顺序无关。对于非聚集索引，叶结点包含索引字段值及指向数据页数据行的逻辑指针，该层紧邻数据页，其行数量与数据表行数据量一致。</code></pre>
-<p>在一张表上只能创建一个聚集索引，因为真实数据的物理顺序只可能是一种。如果一张表没有聚集索引，那么它被称为“堆集”（Heap）。这样的表中的数据行没有特定的顺序，所有的新行将被添加的表的末尾位置。</p>
-<h2 id="聚集索引">聚集索引</h2>
-<p>在聚集索引中，叶结点也即数据结点，所有数据行的存储顺序与索引的存储顺序一致。</p>
-<p><img title="索引" src="/imgs/sql/index/index2.png" style="display:block;margin:auto" /></p>
-<h3 id="聚集索引与查询操作">聚集索引与查询操作</h3>
-<p>如上图，我们在名字字段上建立聚集索引，当需要在根据此字段查找特定的记录时，数据库系统会根据特定的系统表查找的此索引的根，然后根据指针查找下一个，直到找到。例如我们要查询“Green”，由于它介于[Bennet,Karsen]，据此我们找到了索引页1007，在该页中“Green”介于[Greane,
-Hunter]间，据此我们找到叶结点1133（也即数据结点），并最终在此页中找以了目标数据行。</p>
-<p>此次查询的IO包括3个索引页的查询（其中最后一次实际上是在数据页中查询）。这里的查找可能是从磁盘读取(Physical
-Read)或是从缓存中读取(Logical
-Read)，如果此表访问频率较高，那么索引树中较高层的索引很可能在缓存中被找到。所以真正的IO可能小于上面的情况。</p>
-<h3 id="聚集索引与插入操作">聚集索引与插入操作</h3>
-<p>最简单的情况下，插入操作根据索引找到对应的数据页，然后通过挪动已有的记录为新数据腾出空间，最后插入数据。</p>
-<p>如果数据页已满，则需要拆分数据页（页拆分是一种耗费资源的操作，一般数据库系统中会有相应的机制要尽量减少页拆分的次数，通常是通过为每页预留空间来实现）：</p>
-<pre><code>A）在该使用的数据段（extent）上分配新的数据页，如果数据段已满，则需要分配新段。
-B）调整索引指针，这需要将相应的索引页读入内存并加锁。
-C）大约有一半的数据行被归入新的数据页中。
-D）如果表还有非聚集索引，则需要更新这些索引指向新的数据页。</code></pre>
-<p>特殊情况：</p>
-<pre><code>A）如果新插入的一条记录包含很大的数据，可能会分配两个新数据页，其中之一用来存储新记录，另一存储从原页中拆分出来的数据。
-B）通常数据库系统中会将重复的数据记录存储于相同的页中。
-C）类似于自增列为聚集索引的，数据库系统可能并不拆分数据页，页只是简单的新添数据页。</code></pre>
-<h3 id="聚集索引与删除操作">聚集索引与删除操作</h3>
-<p>删除行将导致其下方的数据行向上移动以填充删除记录造成的空白。
-如果删除的行是该数据页中的最后一行，那么该数据页将被回收，相应的索引页中的记录将被删除。如果回收的数据页位于跟该表的其它数据页相同的段上，那么它可能在随后的时间内被利用。如果该数据页是该段的唯一一个数据页，则该段也被回收。</p>
-<p>对于数据的删除操作，可能导致索引页中仅有一条记录，这时，该记录可能会被移至邻近的索引页中，原索引页将被回收，即所谓的“索引合并”。</p>
-<h2 id="非聚集索引">非聚集索引</h2>
-<p>非聚集索引与聚集索引相比：</p>
-<pre><code>A）叶子结点并非数据结点
-B）叶子结点为每一真正的数据行存储一个“键-指针”对
-C）叶子结点中还存储了一个指针偏移量，根据页指针及指针偏移量可以定位到具体的数据行。
-D）类似的，在除叶结点外的其它索引结点，存储的也是类似的内容，只不过它是指向下一级的索引页的。</code></pre>
-<p>聚集索引是一种稀疏索引，数据页上一级的索引页存储的是页指针，而不是行指针。而对于非聚集索引，则是密集索引，在数据页的上一级索引页它为每一个数据行存储一条索引记录。</p>
-<p>对于根与中间级的索引记录，它的结构包括：</p>
-<pre><code>A）索引字段值
-B）RowId（即对应数据页的页指针+指针偏移量）。在高层的索引页中包含RowId是为了当索引允许重复值时，当更改数据时精确定位数据行。
-C）下一级索引页的指针</code></pre>
-<p>对于叶子层的索引对象，它的结构包括：</p>
-<pre><code>A）索引字段值
-B）RowId</code></pre>
-<p><img title="索引" src="/imgs/sql/index/index3.png" style="display:block;margin:auto" /></p>
-<h3 id="非聚集索引与查询操作">非聚集索引与查询操作</h3>
-<p>针对上图，如果我们同样查找“Green”，那么一次查询操作将包含以下IO：3个索引页的读取+1个数据页的读取。同样，由于缓存的关系，真实的IO实际可能要小于上面列出的。</p>
-<h3 id="非聚集索引与插入操作">非聚集索引与插入操作</h3>
-<p>如果一张表包含一个非聚集索引但没有聚集索引，则新的数据将被插入到最末一个数据页中，然后非聚集索引将被更新。如果也包含聚集索引，该聚集索引将被用于查找新行将要处于什么位置，随后，聚集索引、以及非聚集索引将被更新。</p>
-<h3 id="非聚集索引与删除操作">非聚集索引与删除操作</h3>
-<p>如果在删除命令的Where子句中包含的列上，建有非聚集索引，那么该非聚集索引将被用于查找数据行的位置，数据删除之后，位于索引叶子上的对应记录也将被删除。如果该表上有其它非聚集索引，则它们叶子结点上的相应数据也要删除。</p>
-<p>如果删除的数据是该数所页中的唯一一条，则该页也被回收，同时需要更新各个索引树上的指针。</p>
-<p>由于没有自动的合并功能，如果应用程序中有频繁的随机删除操作，最后可能导致表包含多个数据页，但每个页中只有少量数据。</p>
-<h2 id="索引覆盖">索引覆盖</h2>
-<p>索引覆盖是这样一种索引策略：当某一查询中包含的所需字段皆包含于一个索引中，此时索引将大大提高查询性能。</p>
-<p>包含多个字段的索引，称为复合索引。索引最多可以包含31个字段，索引记录最大长度为600B。如果你在若干个字段上创建了一个复合的非聚集索引，且你的查询中所需Select字段及Where,Order
-By,Group
-By,Having子句中所涉及的字段都包含在索引中，则只搜索索引页即可满足查询，而不需要访问数据页。由于非聚集索引的叶结点包含所有数据行中的索引列值，使用这些结点即可返回真正的数据，这种情况称之为“索引覆盖”。</p>
-<p>在索引覆盖的情况下，包含两种索引扫描：</p>
-<pre><code>A）匹配索引扫描
-B）非匹配索引扫描</code></pre>
-<h3 id="匹配索引扫描">匹配索引扫描</h3>
-<p>此类索引扫描可以让我们省去访问数据页的步骤，当查询仅返回一行数据时，性能提高是有限的，但在范围查询的情况下，性能提高将随结果集数量的增长而增长。</p>
-<p>针对此类扫描，索引必须包含查询中涉及的的所有字段，另外，还需要满足：Where子句中包含索引中的“引导列”（Leading
-Column），例如一个复合索引包含A,B,C,D四列，则A为“引导列”。如果Where子句中所包含列是BCD或者BD等情况，则只能使用非匹配索引扫描。</p>
-<h3 id="非配置索引扫描">非配置索引扫描</h3>
-<p>正如上述，如果Where子句中不包含索引的导引列，那么将使用非配置索引扫描。这最终导致扫描索引树上的所有叶子结点，当然，它的性能通常仍强于扫描所有的数据页。</p>
-<h1 id="参考">参考</h1>
-<blockquote>
-<p><a
-href="http://www.cnblogs.com/morvenhuang/archive/2009/03/30/1425534.html">数据库进阶系列之一：漫谈数据库索引</a></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>sql</category>
-      </categories>
-      <tags>
-        <tag>sql</tag>
-        <tag>索引</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>mysql入门</title>
     <url>/2017/12/04/2017-12-04-mysql%E5%85%A5%E9%97%A8/</url>
     <content><![CDATA[<p>本文记录mysql的一些常用命令。</p>
@@ -1049,50 +933,119 @@ href="http://www.cnblogs.com/morvenhuang/archive/2009/03/30/1425534.html">数据
       </tags>
   </entry>
   <entry>
-    <title>Dropout</title>
-    <url>/2021/08/23/Dropout/</url>
-    <content><![CDATA[<p>Dropout可以比较有效的缓解过拟合的发生，在一定程度上达到正则化的效果。</p>
+    <title>数据库索引</title>
+    <url>/2017/12/05/2017-12-05-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95/</url>
+    <content><![CDATA[<p>本文介绍数据库索隐的基本结构、聚集索引与非聚集索引等问题。</p>
 <span id="more"></span>
-<h1 id="dropout简介"><strong>Dropout简介</strong></h1>
-<h2 id="dropout出现的原因"><strong>Dropout出现的原因</strong></h2>
-<p>训练深度神经网络的时候，总是会遇到两大缺点:</p>
-<ol type="1">
-<li>容易过拟合</li>
-<li>费时</li>
-</ol>
-<p>过拟合具体表现在：模型在训练数据上损失函数较小，预测准确率较高；但是在测试数据上损失函数比较大，预测准确率较低。</p>
-<h2 id="什么是dropout">什么是Dropout</h2>
-<p>Dropout可以作为训练深度神经网络的一种trick供选择。在每个训练批次中，通过忽略一半的特征检测器（让一半的隐层节点值为0），可以明显地减少过拟合现象。这种方式可以减少特征检测器（隐层节点）间的相互作用，检测器相互作用是指某些检测器依赖其他检测器才能发挥作用。</p>
-<p>Dropout说的简单一点就是：我们在前向传播的时候，让某个神经元的激活值以一定的概率p停止工作，这样可以使模型泛化性更强，因为它不会太依赖某些局部的特征，如图所示。</p>
-<figure>
-<img src="dropout.jpg" alt="dropout" />
-<figcaption aria-hidden="true">dropout</figcaption>
-</figure>
-<h1 id="dropout训练和预测时的不同">Dropout训练和预测时的不同</h1>
-<p><strong>在训练阶段：</strong></p>
-<ol type="1">
-<li>首先随机（临时）删掉网络中一半的隐藏神经元，输入输出神经元保持不变</li>
-<li>然后把输入x通过修改后的网络前向传播，然后把得到的损失结果通过修改的网络反向传播。一小批训练样本执行完这个过程后，在没有被删除的神经元上按照随机梯度下降法更新对应的参数（w，b）</li>
-<li>在p是神经元抛弃概率时，训练后神经元参数需要进行<span
-class="math inline">\(\frac{1}{1-p}\)</span>缩放</li>
-</ol>
+<h1 id="b-tree">B-Tree</h1>
+<p>我们常见的数据库系统，其索引使用的数据结构多是B-Tree或者B+Tree。例如，MsSql使用的是B+Tree，Oracle及Sysbase使用的是B-Tree。所以在最开始，简单地介绍一下B-Tree。</p>
+<p>B-Tree不同于Binary
+Tree（二叉树，最多有两个子树），一棵M阶的B-Tree满足以下条件：</p>
+<pre><code>1）每个结点至多有M个孩子；
+2）除根结点和叶结点外，其它每个结点至少有M/2个孩子；
+3）根结点至少有两个孩子（除非该树仅包含一个结点）；
+4）所有叶结点在同一层，叶结点不包含任何关键字信息；
+5）有K个关键字的非叶结点恰好包含K+1个孩子；</code></pre>
+<p>另外，对于一个结点，其内部的关键字是从小到大排序的。以下是B-Tree（M=4）的样例：</p>
+<p><img title="B-Tree样例" src="/imgs/sql/index/b-tree.png" style="display:block;margin:auto" /></p>
+<p>对于每个结点，主要包含一个关键字数组Key[]，一个指针数组（指向儿子）Son[]。在B-Tree内，查找的流程是：使用顺序查找（数组长度较短时）或折半查找方法查找Key[]数组，若找到关键字K，则返回该结点的地址及K在Key[]中的位置；否则，可确定K在某个Key[i]和Key[i+1]之间，则从Son[i]所指的子结点继续查找，直到在某结点中查找成功；或直至找到叶结点且叶结点中的查找仍不成功时，查找过程失败。</p>
+<p>接着，我们使用以下图片演示如何生成B-Tree（M=4，依次插入1~6）：</p>
+<p>从图可见，当我们插入关键字4时，由于原结点已经满了，故进行分裂，基本按一半的原则进行分裂，然后取出中间的关键字2，升级（这里是成为根结点）。其它的依类推，就是这样一个大概的过程。</p>
+<p><img title="B-Tree样例" src="/imgs/sql/index/b-tree2.png" style="display:block;margin:auto" /></p>
+<h1 id="数据库索引">数据库索引</h1>
+<h2 id="什么是索引">什么是索引</h2>
+<p>在数据库中，索引的含义与日常意义上的“索引”一词并无多大区别（想想小时候查字典），它是用于提高数据库表数据访问速度的数据库对象。</p>
+<pre><code>A）索引可以避免全表扫描。多数查询可以仅扫描少量索引页及数据页，而不是遍历所有数据页。
+B）对于非聚集索引，有些查询甚至可以不访问数据页。
+C）聚集索引可以避免数据插入操作集中于表的最后一个数据页。
+D）一些情况下，索引还可用于避免排序操作。</code></pre>
+<p>当然，众所周知，虽然索引可以提高查询速度，但是它们也会导致数据库系统更新数据的性能下降，因为大部分数据更新需要同时更新索引。</p>
+<h2 id="索引的存储">索引的存储</h2>
+<p>一条索引记录中包含的基本信息包括：键值（即你定义索引时指定的所有字段的值）+逻辑指针（指向数据页或者另一索引页）。</p>
+<p><img title="索引" src="/imgs/sql/index/index.png" style="display:block;margin:auto" /></p>
+<p>当你为一张空表创建索引时，数据库系统将为你分配一个索引页，该索引页在你插入数据前一直是空的。此页此时既是根结点，也是叶结点。每当你往表中插入一行数据，数据库系统即向此根结点中插入一行索引记录。当根结点满时，数据库系统大抵按以下步骤进行分裂：</p>
+<pre><code>A）创建两个儿子结点
+B）将原根结点中的数据近似地拆成两半，分别写入新的两个儿子结点
+C）根结点中加上指向两个儿子结点的指针</code></pre>
+<p>通常状况下，由于索引记录仅包含索引字段值（以及4-9字节的指针），索引实体比真实的数据行要小许多，索引页相较数据页来说要密集许多。一个索引页可以存储数量更多的索引记录，这意味着在索引中查找时在I/O上占很大的优势，理解这一点有助于从本质上了解使用索引的优势。</p>
+<h2 id="索引的类型">索引的类型</h2>
+<p>索引有聚集索引和非聚集索引两种类型。</p>
+<pre><code>A）聚集索引，表数据按照索引的顺序来存储的。对于聚集索引，叶子结点即存储了真实的数据行，不再有另外单独的数据页。
+B）非聚集索引，表数据存储顺序与索引顺序无关。对于非聚集索引，叶结点包含索引字段值及指向数据页数据行的逻辑指针，该层紧邻数据页，其行数量与数据表行数据量一致。</code></pre>
+<p>在一张表上只能创建一个聚集索引，因为真实数据的物理顺序只可能是一种。如果一张表没有聚集索引，那么它被称为“堆集”（Heap）。这样的表中的数据行没有特定的顺序，所有的新行将被添加的表的末尾位置。</p>
+<h2 id="聚集索引">聚集索引</h2>
+<p>在聚集索引中，叶结点也即数据结点，所有数据行的存储顺序与索引的存储顺序一致。</p>
+<p><img title="索引" src="/imgs/sql/index/index2.png" style="display:block;margin:auto" /></p>
+<h3 id="聚集索引与查询操作">聚集索引与查询操作</h3>
+<p>如上图，我们在名字字段上建立聚集索引，当需要在根据此字段查找特定的记录时，数据库系统会根据特定的系统表查找的此索引的根，然后根据指针查找下一个，直到找到。例如我们要查询“Green”，由于它介于[Bennet,Karsen]，据此我们找到了索引页1007，在该页中“Green”介于[Greane,
+Hunter]间，据此我们找到叶结点1133（也即数据结点），并最终在此页中找以了目标数据行。</p>
+<p>此次查询的IO包括3个索引页的查询（其中最后一次实际上是在数据页中查询）。这里的查找可能是从磁盘读取(Physical
+Read)或是从缓存中读取(Logical
+Read)，如果此表访问频率较高，那么索引树中较高层的索引很可能在缓存中被找到。所以真正的IO可能小于上面的情况。</p>
+<h3 id="聚集索引与插入操作">聚集索引与插入操作</h3>
+<p>最简单的情况下，插入操作根据索引找到对应的数据页，然后通过挪动已有的记录为新数据腾出空间，最后插入数据。</p>
+<p>如果数据页已满，则需要拆分数据页（页拆分是一种耗费资源的操作，一般数据库系统中会有相应的机制要尽量减少页拆分的次数，通常是通过为每页预留空间来实现）：</p>
+<pre><code>A）在该使用的数据段（extent）上分配新的数据页，如果数据段已满，则需要分配新段。
+B）调整索引指针，这需要将相应的索引页读入内存并加锁。
+C）大约有一半的数据行被归入新的数据页中。
+D）如果表还有非聚集索引，则需要更新这些索引指向新的数据页。</code></pre>
+<p>特殊情况：</p>
+<pre><code>A）如果新插入的一条记录包含很大的数据，可能会分配两个新数据页，其中之一用来存储新记录，另一存储从原页中拆分出来的数据。
+B）通常数据库系统中会将重复的数据记录存储于相同的页中。
+C）类似于自增列为聚集索引的，数据库系统可能并不拆分数据页，页只是简单的新添数据页。</code></pre>
+<h3 id="聚集索引与删除操作">聚集索引与删除操作</h3>
+<p>删除行将导致其下方的数据行向上移动以填充删除记录造成的空白。
+如果删除的行是该数据页中的最后一行，那么该数据页将被回收，相应的索引页中的记录将被删除。如果回收的数据页位于跟该表的其它数据页相同的段上，那么它可能在随后的时间内被利用。如果该数据页是该段的唯一一个数据页，则该段也被回收。</p>
+<p>对于数据的删除操作，可能导致索引页中仅有一条记录，这时，该记录可能会被移至邻近的索引页中，原索引页将被回收，即所谓的“索引合并”。</p>
+<h2 id="非聚集索引">非聚集索引</h2>
+<p>非聚集索引与聚集索引相比：</p>
+<pre><code>A）叶子结点并非数据结点
+B）叶子结点为每一真正的数据行存储一个“键-指针”对
+C）叶子结点中还存储了一个指针偏移量，根据页指针及指针偏移量可以定位到具体的数据行。
+D）类似的，在除叶结点外的其它索引结点，存储的也是类似的内容，只不过它是指向下一级的索引页的。</code></pre>
+<p>聚集索引是一种稀疏索引，数据页上一级的索引页存储的是页指针，而不是行指针。而对于非聚集索引，则是密集索引，在数据页的上一级索引页它为每一个数据行存储一条索引记录。</p>
+<p>对于根与中间级的索引记录，它的结构包括：</p>
+<pre><code>A）索引字段值
+B）RowId（即对应数据页的页指针+指针偏移量）。在高层的索引页中包含RowId是为了当索引允许重复值时，当更改数据时精确定位数据行。
+C）下一级索引页的指针</code></pre>
+<p>对于叶子层的索引对象，它的结构包括：</p>
+<pre><code>A）索引字段值
+B）RowId</code></pre>
+<p><img title="索引" src="/imgs/sql/index/index3.png" style="display:block;margin:auto" /></p>
+<h3 id="非聚集索引与查询操作">非聚集索引与查询操作</h3>
+<p>针对上图，如果我们同样查找“Green”，那么一次查询操作将包含以下IO：3个索引页的读取+1个数据页的读取。同样，由于缓存的关系，真实的IO实际可能要小于上面列出的。</p>
+<h3 id="非聚集索引与插入操作">非聚集索引与插入操作</h3>
+<p>如果一张表包含一个非聚集索引但没有聚集索引，则新的数据将被插入到最末一个数据页中，然后非聚集索引将被更新。如果也包含聚集索引，该聚集索引将被用于查找新行将要处于什么位置，随后，聚集索引、以及非聚集索引将被更新。</p>
+<h3 id="非聚集索引与删除操作">非聚集索引与删除操作</h3>
+<p>如果在删除命令的Where子句中包含的列上，建有非聚集索引，那么该非聚集索引将被用于查找数据行的位置，数据删除之后，位于索引叶子上的对应记录也将被删除。如果该表上有其它非聚集索引，则它们叶子结点上的相应数据也要删除。</p>
+<p>如果删除的数据是该数所页中的唯一一条，则该页也被回收，同时需要更新各个索引树上的指针。</p>
+<p>由于没有自动的合并功能，如果应用程序中有频繁的随机删除操作，最后可能导致表包含多个数据页，但每个页中只有少量数据。</p>
+<h2 id="索引覆盖">索引覆盖</h2>
+<p>索引覆盖是这样一种索引策略：当某一查询中包含的所需字段皆包含于一个索引中，此时索引将大大提高查询性能。</p>
+<p>包含多个字段的索引，称为复合索引。索引最多可以包含31个字段，索引记录最大长度为600B。如果你在若干个字段上创建了一个复合的非聚集索引，且你的查询中所需Select字段及Where,Order
+By,Group
+By,Having子句中所涉及的字段都包含在索引中，则只搜索索引页即可满足查询，而不需要访问数据页。由于非聚集索引的叶结点包含所有数据行中的索引列值，使用这些结点即可返回真正的数据，这种情况称之为“索引覆盖”。</p>
+<p>在索引覆盖的情况下，包含两种索引扫描：</p>
+<pre><code>A）匹配索引扫描
+B）非匹配索引扫描</code></pre>
+<h3 id="匹配索引扫描">匹配索引扫描</h3>
+<p>此类索引扫描可以让我们省去访问数据页的步骤，当查询仅返回一行数据时，性能提高是有限的，但在范围查询的情况下，性能提高将随结果集数量的增长而增长。</p>
+<p>针对此类扫描，索引必须包含查询中涉及的的所有字段，另外，还需要满足：Where子句中包含索引中的“引导列”（Leading
+Column），例如一个复合索引包含A,B,C,D四列，则A为“引导列”。如果Where子句中所包含列是BCD或者BD等情况，则只能使用非匹配索引扫描。</p>
+<h3 id="非配置索引扫描">非配置索引扫描</h3>
+<p>正如上述，如果Where子句中不包含索引的导引列，那么将使用非配置索引扫描。这最终导致扫描索引树上的所有叶子结点，当然，它的性能通常仍强于扫描所有的数据页。</p>
+<h1 id="参考">参考</h1>
 <blockquote>
-<p>当模型使用dropout layer时，训练的时候只有占比为<span
-class="math inline">\(p\)</span>的隐层单元参与训练，那么在预测的时候，如果所有的隐藏层单元都需要参与进来，则得到的结果相比训练时平均要大<span
-class="math inline">\(\frac{1}{p}\)</span>，为了避免这种情况，就需要测试的时候将输出结果乘以
-<span class="math inline">\(p\)</span>使下一层的输入规模保持不变。</p>
-<p>而利用inverted
-dropout，我们可以在训练的时候直接将dropout后留下的权重扩大<span
-class="math inline">\(\frac{1}{p}\)</span>倍，这样就可以使结果的scale保持不变，而在预测的时候也不用做额外的操作了，更方便一些。</p>
+<p><a
+href="http://www.cnblogs.com/morvenhuang/archive/2009/03/30/1425534.html">数据库进阶系列之一：漫谈数据库索引</a></p>
 </blockquote>
-<p><strong>在测试阶段：</strong></p>
-<p>直接利用所有训练好的神经元权重计算输出，不需要dropout</p>
 ]]></content>
       <categories>
-        <category>dl</category>
+        <category>sql</category>
       </categories>
       <tags>
-        <tag>dropout</tag>
+        <tag>sql</tag>
+        <tag>索引</tag>
       </tags>
   </entry>
   <entry>
@@ -1749,91 +1702,6 @@ class="math inline">\(P(x_n|\theta)\)</span>最大；</p>
       </tags>
   </entry>
   <entry>
-    <title>树模型原理与区别</title>
-    <url>/2021/06/28/%E6%A0%91%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%8C%BA%E5%88%AB/</url>
-    <content><![CDATA[<p>RF,GBDT,XGBoost,lightGBM都属于集成学习（Ensemble
-Learning），集成学习的目的是通过结合多个基学习器的预测结果来改善基本学习器的泛化能力和鲁棒性。</p>
-<span id="more"></span>
-<h1 id="随机森林randomforest">随机森林（RandomForest）</h1>
-<p><strong>原理：</strong></p>
-<p>Random Forest（随机森林）是Bagging的扩展变体，它在以决策树
-为基学习器构建Bagging集成的基础上，进一步在决策树的训练过程中引入了随机特征选择。</p>
-<p>因此可以概括RF包括四个部分：</p>
-<p>1、随机选择样本（放回抽样）；</p>
-<p>2、随机选择特征属性；</p>
-<p>3、构建决策树；</p>
-<p>4、随机森林投票（平均）， 因此防止过拟合能力更强，降低方差。</p>
-<p><strong>优点：</strong></p>
-<ol type="1">
-<li>随机森林算法能解决分类与回归两种类型的问题，表现良好，由于是集成学习，方差和偏差都比较低，泛化性能优越；</li>
-<li>随机森林对于高维数据集的处理能力很好，它可以处理成千上万的输入变量，并确定最重要的变量，因此被认为是一个不错的降维方法。此外，该模型能够输出特征的重要性程度，这是一个非常实用的功能。</li>
-<li>可以应对缺失数据；</li>
-<li>当存在分类不平衡的情况时，随机森林能够提供平衡数据集误差的有效方法；</li>
-<li>高度并行化，易于分布式实现</li>
-<li>由于是树模型 ，不需要归一化即可之间使用</li>
-</ol>
-<p><strong>缺点：</strong></p>
-<p>随机森林在解决回归问题时并没有像它在分类中表现的那么好，这是因为它并不能给出一个连续型的输出。当进行回归时，随机森林不能够作出超越训练集数据范围的预测，这可能导致在对某些还有特定噪声的数据进行建模时出现过度拟合。</p>
-<h1 id="gbdt-gradient-boosting-decision-tree">GBDT (Gradient Boosting
-Decision Tree)</h1>
-<p><strong>原理：</strong></p>
-<p>GradientBoosting算法关键是利用损失函数的负梯度方向在当前模型的值作为残差的近似值，进而拟合一棵CART回归树。</p>
-<p>GBDT会累加所有树的结果，而这种累加是无法通过分类完成的，因此GBDT的树都是<strong>CART回归树</strong>，而不是分类树（尽管GBDT调整后也可以用于分类但不代表GBDT的树为分类树)
-因为Gradient Boosting
-需要按照损失函数的梯度近似的拟合残差，这样拟合的是连续数值，因此只有回归树。</p>
-<p><strong>优点：</strong></p>
-<ol type="1">
-<li>它能灵活的处理各种类型的数据；</li>
-<li>在相对较少的调参时间下，预测的准确度较高。</li>
-</ol>
-<p><strong>缺点：</strong></p>
-<p>当然由于它是Boosting，因此基学习器之前存在串行关系，难以并行训练数据。</p>
-<h1 id="xgboost">XGBoost</h1>
-<p>XGBoost与GBDT的区别： 在了解了XGBoost原理后容易理解二者的不同</p>
-<ol type="1">
-<li><p><strong>损失函数的改变：</strong>（导数和正则项的认识）</p>
-<p>传统的GBDT以CART树作为基学习器，XGBoost还支持线性分类器，这个时候XGBoost相当于L1和L2正则化的逻辑斯蒂回归（分类）或者线性回归（回归）；</p>
-<p>传统的GBDT在优化的时候只用到一阶导数信息，XGBoost则对代价函数进行了二阶泰勒展开，得到一阶和二阶导数；</p>
-<p>XGBoost在代价函数中加入了正则项，用于控制模型的复杂度。从权衡方差偏差来看，它降低了模型的方差，使学习出来的模型更加简单，防止过拟合，这也是XGBoost优于传统GBDT的一个特性；</p></li>
-<li><p><strong>工具的优化</strong>：（趋势值和并行的认识）</p>
-<p>shrinkage（缩减），相当于学习速率（XGBoost中的eta）。</p></li>
-<li><p><strong>列抽样</strong>：XGBoost借鉴了随机森林的做法，支持列抽样，不仅防止过
-拟合，还能减少计算；</p></li>
-<li><p><strong>对缺失值的处理</strong>：对于特征的值有缺失的样本，XGBoost还可以自动学习出它的分裂方向；</p></li>
-<li><p><strong>XGBoost工具支持并行</strong></p>
-<p>注意XGBoost的并行不是tree粒度的并行，XGBoost也是一次迭代完才能进行下一次迭代的（第t次迭代的代价函数里包含了前面t-1次迭代的预测值）。</p>
-<p>XGBoost的并行是在特征粒度上的。我们知道，决策树的学习最耗时的一个步骤就是对特征的值进行排序（因为要确定最佳分割点），XGBoost在训练之前，预先对数据进行了排序，然后保存为block结构，后面的迭代
-中重复地使用这个结构，大大减小计算量。</p>
-<p>这个block结构也使得并行成为了可能，在进行节点的分裂时，需要计算每个特征的增益，最终选增益最大的那个特征去做分裂，那么各个特征的增益计算就可以开多线程进行。</p></li>
-</ol>
-<p><strong>缺点</strong></p>
-<ol type="1">
-<li>level-wise
-建树方式对当前层的所有叶子节点一视同仁，有些叶子节点分裂收益非常小，对结果没影响，但还是要分裂，加重了计算代价。</li>
-<li>预排序方法空间消耗比较大，不仅要保存特征值，也要保存特征的排序索引，同时时间消耗也大，在遍历每个分裂点时都要计算分裂增益(不过这个缺点可以被近似算法所克服)</li>
-</ol>
-<h1 id="参考文献">参考文献</h1>
-<blockquote>
-<ol type="1">
-<li><a
-href="https://zhuanlan.zhihu.com/p/62207593">RandomForest、GBDT、XGBoost、lightGBM
-原理与区别</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/142413825">机器学习 |
-XGBoost详解</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>ml</category>
-      </categories>
-      <tags>
-        <tag>GBDT</tag>
-        <tag>随机森林</tag>
-        <tag>XGBoost</tag>
-        <tag>todo</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>机器学习损失函数</title>
     <url>/2021/06/27/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0/</url>
     <content><![CDATA[<p>损失函数旨在表示出logit和label的差异程度，不同的损失函数有不同的表示意义，也就是在最小化损失函数过程中，logit逼近label的方式不同，得到的结果可能也不同。</p>
@@ -1925,8 +1793,93 @@ Function）</a></p>
         <category>ml</category>
       </categories>
       <tags>
-        <tag>todo</tag>
         <tag>loss</tag>
+        <tag>todo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>树模型原理与区别</title>
+    <url>/2021/06/28/%E6%A0%91%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%8C%BA%E5%88%AB/</url>
+    <content><![CDATA[<p>RF,GBDT,XGBoost,lightGBM都属于集成学习（Ensemble
+Learning），集成学习的目的是通过结合多个基学习器的预测结果来改善基本学习器的泛化能力和鲁棒性。</p>
+<span id="more"></span>
+<h1 id="随机森林randomforest">随机森林（RandomForest）</h1>
+<p><strong>原理：</strong></p>
+<p>Random Forest（随机森林）是Bagging的扩展变体，它在以决策树
+为基学习器构建Bagging集成的基础上，进一步在决策树的训练过程中引入了随机特征选择。</p>
+<p>因此可以概括RF包括四个部分：</p>
+<p>1、随机选择样本（放回抽样）；</p>
+<p>2、随机选择特征属性；</p>
+<p>3、构建决策树；</p>
+<p>4、随机森林投票（平均）， 因此防止过拟合能力更强，降低方差。</p>
+<p><strong>优点：</strong></p>
+<ol type="1">
+<li>随机森林算法能解决分类与回归两种类型的问题，表现良好，由于是集成学习，方差和偏差都比较低，泛化性能优越；</li>
+<li>随机森林对于高维数据集的处理能力很好，它可以处理成千上万的输入变量，并确定最重要的变量，因此被认为是一个不错的降维方法。此外，该模型能够输出特征的重要性程度，这是一个非常实用的功能。</li>
+<li>可以应对缺失数据；</li>
+<li>当存在分类不平衡的情况时，随机森林能够提供平衡数据集误差的有效方法；</li>
+<li>高度并行化，易于分布式实现</li>
+<li>由于是树模型 ，不需要归一化即可之间使用</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<p>随机森林在解决回归问题时并没有像它在分类中表现的那么好，这是因为它并不能给出一个连续型的输出。当进行回归时，随机森林不能够作出超越训练集数据范围的预测，这可能导致在对某些还有特定噪声的数据进行建模时出现过度拟合。</p>
+<h1 id="gbdt-gradient-boosting-decision-tree">GBDT (Gradient Boosting
+Decision Tree)</h1>
+<p><strong>原理：</strong></p>
+<p>GradientBoosting算法关键是利用损失函数的负梯度方向在当前模型的值作为残差的近似值，进而拟合一棵CART回归树。</p>
+<p>GBDT会累加所有树的结果，而这种累加是无法通过分类完成的，因此GBDT的树都是<strong>CART回归树</strong>，而不是分类树（尽管GBDT调整后也可以用于分类但不代表GBDT的树为分类树)
+因为Gradient Boosting
+需要按照损失函数的梯度近似的拟合残差，这样拟合的是连续数值，因此只有回归树。</p>
+<p><strong>优点：</strong></p>
+<ol type="1">
+<li>它能灵活的处理各种类型的数据；</li>
+<li>在相对较少的调参时间下，预测的准确度较高。</li>
+</ol>
+<p><strong>缺点：</strong></p>
+<p>当然由于它是Boosting，因此基学习器之前存在串行关系，难以并行训练数据。</p>
+<h1 id="xgboost">XGBoost</h1>
+<p>XGBoost与GBDT的区别： 在了解了XGBoost原理后容易理解二者的不同</p>
+<ol type="1">
+<li><p><strong>损失函数的改变：</strong>（导数和正则项的认识）</p>
+<p>传统的GBDT以CART树作为基学习器，XGBoost还支持线性分类器，这个时候XGBoost相当于L1和L2正则化的逻辑斯蒂回归（分类）或者线性回归（回归）；</p>
+<p>传统的GBDT在优化的时候只用到一阶导数信息，XGBoost则对代价函数进行了二阶泰勒展开，得到一阶和二阶导数；</p>
+<p>XGBoost在代价函数中加入了正则项，用于控制模型的复杂度。从权衡方差偏差来看，它降低了模型的方差，使学习出来的模型更加简单，防止过拟合，这也是XGBoost优于传统GBDT的一个特性；</p></li>
+<li><p><strong>工具的优化</strong>：（趋势值和并行的认识）</p>
+<p>shrinkage（缩减），相当于学习速率（XGBoost中的eta）。</p></li>
+<li><p><strong>列抽样</strong>：XGBoost借鉴了随机森林的做法，支持列抽样，不仅防止过
+拟合，还能减少计算；</p></li>
+<li><p><strong>对缺失值的处理</strong>：对于特征的值有缺失的样本，XGBoost还可以自动学习出它的分裂方向；</p></li>
+<li><p><strong>XGBoost工具支持并行</strong></p>
+<p>注意XGBoost的并行不是tree粒度的并行，XGBoost也是一次迭代完才能进行下一次迭代的（第t次迭代的代价函数里包含了前面t-1次迭代的预测值）。</p>
+<p>XGBoost的并行是在特征粒度上的。我们知道，决策树的学习最耗时的一个步骤就是对特征的值进行排序（因为要确定最佳分割点），XGBoost在训练之前，预先对数据进行了排序，然后保存为block结构，后面的迭代
+中重复地使用这个结构，大大减小计算量。</p>
+<p>这个block结构也使得并行成为了可能，在进行节点的分裂时，需要计算每个特征的增益，最终选增益最大的那个特征去做分裂，那么各个特征的增益计算就可以开多线程进行。</p></li>
+</ol>
+<p><strong>缺点</strong></p>
+<ol type="1">
+<li>level-wise
+建树方式对当前层的所有叶子节点一视同仁，有些叶子节点分裂收益非常小，对结果没影响，但还是要分裂，加重了计算代价。</li>
+<li>预排序方法空间消耗比较大，不仅要保存特征值，也要保存特征的排序索引，同时时间消耗也大，在遍历每个分裂点时都要计算分裂增益(不过这个缺点可以被近似算法所克服)</li>
+</ol>
+<h1 id="参考文献">参考文献</h1>
+<blockquote>
+<ol type="1">
+<li><a
+href="https://zhuanlan.zhihu.com/p/62207593">RandomForest、GBDT、XGBoost、lightGBM
+原理与区别</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/142413825">机器学习 |
+XGBoost详解</a></li>
+</ol>
+</blockquote>
+]]></content>
+      <categories>
+        <category>ml</category>
+      </categories>
+      <tags>
+        <tag>GBDT</tag>
+        <tag>todo</tag>
+        <tag>随机森林</tag>
+        <tag>XGBoost</tag>
       </tags>
   </entry>
   <entry>
@@ -2380,238 +2333,6 @@ in large networks</a></p>
       <tags>
         <tag>社区发现</tag>
         <tag>图算法</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ABCNN</title>
-    <url>/2021/07/08/ABCNN/</url>
-    <content><![CDATA[<p>ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。</p>
-<span id="more"></span>
-<h1 id="主要思路">主要思路</h1>
-<h2 id="bcnn">BCNN</h2>
-<p><strong>BCNN结构</strong>：使用基本CNN网络（无attention机制），每次处理一对句子，输出层解决sentence
-pair task.</p>
-<figure>
-<img src="bcnn.png" alt="bcnn" />
-<figcaption aria-hidden="true">bcnn</figcaption>
-</figure>
-<p>假设输入两个句子 <span class="math inline">\(s_0\)</span> 和 <span
-class="math inline">\(s_1\)</span>，句子长度分别为 <span
-class="math inline">\(l_0\)</span> 和 <span
-class="math inline">\(l_1\)</span>。输入的长度取 <span
-class="math inline">\(s = max(l_0,l_1)\)</span> ,短的补0。</p>
-<h3 id="input-layer">Input layer</h3>
-<p>每个句子被填充为相同长度<span
-class="math inline">\(s\)</span>，使用词向量映射每个句子为矩阵$
-d_0s$维矩阵。</p>
-<h3 id="convolution-layer">Convolution layer</h3>
-<p>卷积核取<span class="math inline">\(d_0 \times
-w\)</span>,沿词方向做卷积，左右做padding，分别加长度$w-<span
-class="math inline">\(1 补0。则卷积后得到特征长度为\)</span>s + 2 (w-1)
-- w + 1 = s+w-1<span class="math inline">\(。叠加\)</span>d_1$
-个卷积核，最终得到新的词向量，维度为<span class="math inline">\(d_1
-\times (s+w-1)\)</span> 。卷积核的高须为词向量的维度。</p>
-<p>设词向量分别为<span
-class="math inline">\(v_1,v_2,...,v_s\)</span>。记<span
-class="math inline">\(c_i =
-[v_{i-w+1},v_{i-w+2},...,v_i]\)</span>，<span
-class="math inline">\(c_i\)</span>的维度为<span
-class="math inline">\(d_0\times w\)</span>。<span
-class="math inline">\(p_i\)</span>为卷积<span
-class="math inline">\(c_i\)</span>后的特征，则有：</p>
-<p><span class="math display">\[
-p=tanh(Wc_i + b)
-\]</span></p>
-<p>其中，<span
-class="math inline">\(W\)</span>为卷积核集合，即为卷积权重，其维度为<span
-class="math inline">\(d_1\times d_0\times w\)</span>，<span
-class="math inline">\(b_i\)</span>为对应的偏置。</p>
-<h3 id="pooling-layer">Pooling layer</h3>
-<p>沿词的方向，步长为<span class="math inline">\(step\)</span>,长度为
-$wp $ ,取需要池化的向量<span class="math inline">\(p_i\)</span>,维度为
-<span class="math inline">\(d_0\times
-w\)</span>,经过池化函数后，维度变为$d_0
-$。池化函数作用的是词向量沿着词维度的特征集合。池化函数可取均值，最大值等。</p>
-<p><strong>all-ap</strong>：对所有特征列做column-wise的pooling操作，得到
-<span class="math inline">\(s \times 1\)</span>维度的输出向量</p>
-<p><strong>w-ap</strong>：卷积核长度设置为<span
-class="math inline">\(w\)</span>，对窗口<span
-class="math inline">\(w\)</span>内的特征列做column-wise的polling操作，得到<span
-class="math inline">\(s+w-1\)</span>的输出向量。</p>
-<h3 id="output-layer">Output layer</h3>
-<p>就是对整个特征层做池化。输出特征向量后，把两个句子的特征向量拼接起来得到特征。</p>
-<h2 id="abcnn">ABCNN</h2>
-<p>ABCNN（Attention-Based
-BCNN）有3种结构，ABCNN-1，ABCNN-2，ABCNN-3。</p>
-<h3 id="abcnn-1">ABCNN-1</h3>
-<figure>
-<img src="abcnn_1.png" alt="ABCNN-1" />
-<figcaption aria-hidden="true">ABCNN-1</figcaption>
-</figure>
-<p>结构中增加了一个抽象层级，就是在原有单词级上增加了一个短语级的抽象。单词级的抽象文中重新命名为unit,作为低级别的表示，短语级的作为更高一级的表示。图中那个红色的与BCNN网络中的输入是一样的，是句子的词向量矩阵，两个句子。第一个句子5个单词，第二个句子7个单词。</p>
-<p>蓝色的为短语级高一级的词向量表示。蓝色表示是由Attention Matrix
-A和红色词向量计算生成</p>
-<p>Attention Matrix <span
-class="math inline">\(A\)</span>是由左右两个句子的情况生成。<span
-class="math inline">\(A\)</span>中的 <span
-class="math inline">\(i\)</span> 列值是由左边句子（五个单词）中第 <span
-class="math inline">\(i\)</span>
-个单词（unit）的向量与右边句子的Attention值分布<span
-class="math inline">\(j\)</span>行值是由右边句子中第<span
-class="math inline">\(j\)</span>个单词的向量与左边句子的Attention值分布</p>
-<p>注意力矩阵<span
-class="math inline">\(A\)</span>定义句子间词的关系，即： <span
-class="math display">\[
-A_{i,j}=score(F_{0,r}[:,i],F_{1,r}[:,j])
-\]</span> 其中，<span
-class="math inline">\(F_{i,r[:,k]}\)</span>定义为第<span
-class="math inline">\(i\)</span>个句子的第<span
-class="math inline">\(k\)</span>个词向量。 <span class="math display">\[
-score(x,y)=\frac{1}{1+|x-y|}
-\]</span> 生成注意力矩阵后，利用<span
-class="math inline">\(F_{0,a}=W_0A^T，F_{1,a}=W_1A\)</span>
-得到句子对应的注意力特征矩阵。叠加到句子的特征矩阵中，进行卷积。</p>
-<h3 id="abcnn-2">ABCNN-2</h3>
-<figure>
-<img src="abcnn_2.png" alt="ABCNN-2" />
-<figcaption aria-hidden="true">ABCNN-2</figcaption>
-</figure>
-<p>ABCNN-2架构是在以初始词向量形式输入并经过卷积后的输出的向量表示中（两个句子分别变成了7col和9col），计算出Attention
-Matrix
-A，计算方法还是计算两个句子对应单词向量的欧式距离，生成向量矩阵，方法同ABCNN-1的架构。</p>
-<p>第二步：计算卷积向量权重，给每个单词计算一个权重值。左边句子（7col）的每个单词对应的Attention权重是由Matrix
-A中列向量求和的值作为权重值，col-wise
-sum，右边句子中每个单词的权重值是Matrix
-A中行向量求和值作为权重值，row-wise sum. <span class="math display">\[
-a_{0,j}=\sum A[j,:]t
-\]</span> 句子原始输入是词向量矩阵，左边的是<span
-class="math inline">\(5*d\)</span>，右边是<span
-class="math inline">\(7*d\)</span>，<span
-class="math inline">\(w\)</span>是3 <span class="math display">\[
-F_{i,r}^c \in R^{d\times(s_i+w-1)}
-\]</span> 将卷积输出的特征矩阵，基于Attention权重值，做池化。<span
-class="math inline">\(i\)</span>取值为0,1，<span
-class="math inline">\(j\)</span>取值为句子长度。 <span
-class="math display">\[
-F_{i,r}^p[:,j]=\sum_{k=j:j+2}a_{i,k}F_{i,r}^c[:,k], j = 1...s_i
-\]</span> <strong>ABCNN-1和ABCNN-2比较:</strong></p>
-<ol type="1">
-<li>ABCNN-1中Attention是间接的影响卷积，ABCNN-2中通过Attention权重直接影响池化。</li>
-<li>ABCNN-1需要两个权重矩阵需要学习，并且输入特征矩阵要两次，
-相比ABCNN-2网络需要更多的参数学习，容易过拟合。</li>
-<li>ABCNN-2执行更大粒度的池化，如果在卷积层输入的是词粒度的，那么ABCNN-2在池化时就已经是短语粒度的（经过卷积了），池化时的w和卷积的w保持一致。</li>
-</ol>
-<h3 id="abcnn-3">ABCNN-3</h3>
-<figure>
-<img src="abcnn_3.png" alt="ABCNN-3" />
-<figcaption aria-hidden="true">ABCNN-3</figcaption>
-</figure>
-<p>将ABCNN-1和ABCNN-2结合，作为架构，这样保留word
-level信息，也增加了phrase level的信息。更加高层次的特征抽象。</p>
-<h1 id="工程网络图">工程网络图</h1>
-<h2 id="bcnn-1">BCNN</h2>
-<pre class="mermaid">graph BT 
-
-subgraph Input Layer
-X1("x1 [None, 300, 40]")
-X2("x2 [None, 300, 40]")
-
-X1 --> X1_expand("x1_expand [None,300, 40,1]")
-X2 --> X2_expand("x2_expand [None,300, 40,1]")
-end
-
-X1_expand --all_pool--> left_ap_0("left_ap_0 [None, 300]")
-X2_expand --all_pool--> right_ap_0("right_ap_0 [None, 300]")
-
-subgraph CNN Layer 1
-X1_expand --"padding (3,3)"--> left_pad_1("left_pad [None, 300, 46, 1]")
-X2_expand --"padding (3,3)"--> right_pad_1("right_pad [None, 300, 46, 1]")
-
-left_pad_1 --"convolution (300, 4, 50)"--> left_conv_trans_1("left_conv_trans [None, 50, 43, 1]")
-right_pad_1 --"convolution (300, 4, 50)"--> right_conv_trans_1("right_conv_trans [None, 50, 43, 1]")
-
-left_conv_trans_1 --"w_pool (1, 4)"--> left_wp_1("left_wp [None, 50, 40, 1]")
-left_conv_trans_1 --"all_pool (1, 43)"--> left_ap_1("left_ap [None, 50]")
-
-
-right_conv_trans_1 --"w_pool (1, 4)"--> right_wp_1("left_wp [None, 50, 40, 1]")
-right_conv_trans_1 --"all_pool (1, 43)"--> right_ap_1("left_ap [None, 50]")
-end
-
-subgraph CNN Layer 2
-left_wp_1 --"padding (3,3)" --> left_pad_2("left_pad [None, 50, 46, 1]")
-right_wp_1 --"padding (3,3)" --> right_pad_2("right_pad [None, 50, 46, 1]")
-
-left_pad_2 --"convolution (50, 4, 50)"--> left_conv_trans_2("left_conv_trans [None, 50, 43, 1]")
-right_pad_2 --"convolution (50, 4, 50)"--> right_conv_trans_2("right_conv_trans [None, 50, 43, 1]")
-
-left_conv_trans_2 -- "w_pool (1,4)" --> left_wp_2("left_wp [None, 50, 40, 1]")
-left_conv_trans_2 -- "all_pool (1, 43)" --> left_ap_2("left_ap [None, 50]")
-
-
-right_conv_trans_2 -- "w_pool (1,4)" --> right_wp_2("right_wp [None, 50, 40, 1]")
-right_conv_trans_2 -- "all_pool (1, 43)" --> right_ap_2("right_ap [None, 50]")
-end
-
-left_ap_0 --cosine -------> sims_0("sims_0 [None, ]")
-right_ap_0 --cosine -------> sims_0
-
-
-left_ap_1 --cosine -----> sims_1("sims_1 [None, ]")
-right_ap_1 --cosine -----> sims_1
-
-
-left_ap_2 --cosine --> sims_2("sims_2 [None, ]")
-right_ap_2 --cosine --> sims_2
-
-subgraph Output Layer
-
-sims_0 --stack--> stack_sim("stack_sim [None, 3]")
-sims_1 --stack--> stack_sim
-sims_2 --stack--> stack_sim
-
-features("features [None, 4]") --concat--> output_features("output_features [None, 7]")
-stack_sim --concat--> output_features
-
-output_features --"full connected" --> output("output [None, 2]")
-output --softmax--> softmax("softmax [None, ]")
-
-end</pre>
-<h1 id="参考文献">参考文献</h1>
-<blockquote>
-<ol type="1">
-<li><a href="https://aclanthology.org/Q16-1019.pdf">文献：ABCNN:
-Attention-Based Convolutional Neural Network for Modeling Sentence
-Pairs</a></li>
-<li><a
-href="https://zhuanlan.zhihu.com/p/50160263">注意力机制之ABCNN</a></li>
-<li><a
-href="https://www.jianshu.com/p/bb366027978a">文献阅读笔记：ABCNN:
-Attention-Based Convolutional Neural Network for Modeling Sentence
-Pairs</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>nlp</category>
-      </categories>
-      <tags>
-        <tag>模型</tag>
-        <tag>文本匹配</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ESIM</title>
-    <url>/2021/07/08/ESIM/</url>
-    <content><![CDATA[
-]]></content>
-      <categories>
-        <category>nlp</category>
-      </categories>
-      <tags>
-        <tag>模型</tag>
-        <tag>todo</tag>
-        <tag>文本匹配</tag>
       </tags>
   </entry>
   <entry>
@@ -3225,6 +2946,238 @@ href="https://www.elastic.co/guide/cn/elasticsearch/guide/current/scoring-theory
       </tags>
   </entry>
   <entry>
+    <title>ABCNN</title>
+    <url>/2021/07/08/ABCNN/</url>
+    <content><![CDATA[<p>ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。</p>
+<span id="more"></span>
+<h1 id="主要思路">主要思路</h1>
+<h2 id="bcnn">BCNN</h2>
+<p><strong>BCNN结构</strong>：使用基本CNN网络（无attention机制），每次处理一对句子，输出层解决sentence
+pair task.</p>
+<figure>
+<img src="bcnn.png" alt="bcnn" />
+<figcaption aria-hidden="true">bcnn</figcaption>
+</figure>
+<p>假设输入两个句子 <span class="math inline">\(s_0\)</span> 和 <span
+class="math inline">\(s_1\)</span>，句子长度分别为 <span
+class="math inline">\(l_0\)</span> 和 <span
+class="math inline">\(l_1\)</span>。输入的长度取 <span
+class="math inline">\(s = max(l_0,l_1)\)</span> ,短的补0。</p>
+<h3 id="input-layer">Input layer</h3>
+<p>每个句子被填充为相同长度<span
+class="math inline">\(s\)</span>，使用词向量映射每个句子为矩阵$
+d_0s$维矩阵。</p>
+<h3 id="convolution-layer">Convolution layer</h3>
+<p>卷积核取<span class="math inline">\(d_0 \times
+w\)</span>,沿词方向做卷积，左右做padding，分别加长度$w-<span
+class="math inline">\(1 补0。则卷积后得到特征长度为\)</span>s + 2 (w-1)
+- w + 1 = s+w-1<span class="math inline">\(。叠加\)</span>d_1$
+个卷积核，最终得到新的词向量，维度为<span class="math inline">\(d_1
+\times (s+w-1)\)</span> 。卷积核的高须为词向量的维度。</p>
+<p>设词向量分别为<span
+class="math inline">\(v_1,v_2,...,v_s\)</span>。记<span
+class="math inline">\(c_i =
+[v_{i-w+1},v_{i-w+2},...,v_i]\)</span>，<span
+class="math inline">\(c_i\)</span>的维度为<span
+class="math inline">\(d_0\times w\)</span>。<span
+class="math inline">\(p_i\)</span>为卷积<span
+class="math inline">\(c_i\)</span>后的特征，则有：</p>
+<p><span class="math display">\[
+p=tanh(Wc_i + b)
+\]</span></p>
+<p>其中，<span
+class="math inline">\(W\)</span>为卷积核集合，即为卷积权重，其维度为<span
+class="math inline">\(d_1\times d_0\times w\)</span>，<span
+class="math inline">\(b_i\)</span>为对应的偏置。</p>
+<h3 id="pooling-layer">Pooling layer</h3>
+<p>沿词的方向，步长为<span class="math inline">\(step\)</span>,长度为
+$wp $ ,取需要池化的向量<span class="math inline">\(p_i\)</span>,维度为
+<span class="math inline">\(d_0\times
+w\)</span>,经过池化函数后，维度变为$d_0
+$。池化函数作用的是词向量沿着词维度的特征集合。池化函数可取均值，最大值等。</p>
+<p><strong>all-ap</strong>：对所有特征列做column-wise的pooling操作，得到
+<span class="math inline">\(s \times 1\)</span>维度的输出向量</p>
+<p><strong>w-ap</strong>：卷积核长度设置为<span
+class="math inline">\(w\)</span>，对窗口<span
+class="math inline">\(w\)</span>内的特征列做column-wise的polling操作，得到<span
+class="math inline">\(s+w-1\)</span>的输出向量。</p>
+<h3 id="output-layer">Output layer</h3>
+<p>就是对整个特征层做池化。输出特征向量后，把两个句子的特征向量拼接起来得到特征。</p>
+<h2 id="abcnn">ABCNN</h2>
+<p>ABCNN（Attention-Based
+BCNN）有3种结构，ABCNN-1，ABCNN-2，ABCNN-3。</p>
+<h3 id="abcnn-1">ABCNN-1</h3>
+<figure>
+<img src="abcnn_1.png" alt="ABCNN-1" />
+<figcaption aria-hidden="true">ABCNN-1</figcaption>
+</figure>
+<p>结构中增加了一个抽象层级，就是在原有单词级上增加了一个短语级的抽象。单词级的抽象文中重新命名为unit,作为低级别的表示，短语级的作为更高一级的表示。图中那个红色的与BCNN网络中的输入是一样的，是句子的词向量矩阵，两个句子。第一个句子5个单词，第二个句子7个单词。</p>
+<p>蓝色的为短语级高一级的词向量表示。蓝色表示是由Attention Matrix
+A和红色词向量计算生成</p>
+<p>Attention Matrix <span
+class="math inline">\(A\)</span>是由左右两个句子的情况生成。<span
+class="math inline">\(A\)</span>中的 <span
+class="math inline">\(i\)</span> 列值是由左边句子（五个单词）中第 <span
+class="math inline">\(i\)</span>
+个单词（unit）的向量与右边句子的Attention值分布<span
+class="math inline">\(j\)</span>行值是由右边句子中第<span
+class="math inline">\(j\)</span>个单词的向量与左边句子的Attention值分布</p>
+<p>注意力矩阵<span
+class="math inline">\(A\)</span>定义句子间词的关系，即： <span
+class="math display">\[
+A_{i,j}=score(F_{0,r}[:,i],F_{1,r}[:,j])
+\]</span> 其中，<span
+class="math inline">\(F_{i,r[:,k]}\)</span>定义为第<span
+class="math inline">\(i\)</span>个句子的第<span
+class="math inline">\(k\)</span>个词向量。 <span class="math display">\[
+score(x,y)=\frac{1}{1+|x-y|}
+\]</span> 生成注意力矩阵后，利用<span
+class="math inline">\(F_{0,a}=W_0A^T，F_{1,a}=W_1A\)</span>
+得到句子对应的注意力特征矩阵。叠加到句子的特征矩阵中，进行卷积。</p>
+<h3 id="abcnn-2">ABCNN-2</h3>
+<figure>
+<img src="abcnn_2.png" alt="ABCNN-2" />
+<figcaption aria-hidden="true">ABCNN-2</figcaption>
+</figure>
+<p>ABCNN-2架构是在以初始词向量形式输入并经过卷积后的输出的向量表示中（两个句子分别变成了7col和9col），计算出Attention
+Matrix
+A，计算方法还是计算两个句子对应单词向量的欧式距离，生成向量矩阵，方法同ABCNN-1的架构。</p>
+<p>第二步：计算卷积向量权重，给每个单词计算一个权重值。左边句子（7col）的每个单词对应的Attention权重是由Matrix
+A中列向量求和的值作为权重值，col-wise
+sum，右边句子中每个单词的权重值是Matrix
+A中行向量求和值作为权重值，row-wise sum. <span class="math display">\[
+a_{0,j}=\sum A[j,:]t
+\]</span> 句子原始输入是词向量矩阵，左边的是<span
+class="math inline">\(5*d\)</span>，右边是<span
+class="math inline">\(7*d\)</span>，<span
+class="math inline">\(w\)</span>是3 <span class="math display">\[
+F_{i,r}^c \in R^{d\times(s_i+w-1)}
+\]</span> 将卷积输出的特征矩阵，基于Attention权重值，做池化。<span
+class="math inline">\(i\)</span>取值为0,1，<span
+class="math inline">\(j\)</span>取值为句子长度。 <span
+class="math display">\[
+F_{i,r}^p[:,j]=\sum_{k=j:j+2}a_{i,k}F_{i,r}^c[:,k], j = 1...s_i
+\]</span> <strong>ABCNN-1和ABCNN-2比较:</strong></p>
+<ol type="1">
+<li>ABCNN-1中Attention是间接的影响卷积，ABCNN-2中通过Attention权重直接影响池化。</li>
+<li>ABCNN-1需要两个权重矩阵需要学习，并且输入特征矩阵要两次，
+相比ABCNN-2网络需要更多的参数学习，容易过拟合。</li>
+<li>ABCNN-2执行更大粒度的池化，如果在卷积层输入的是词粒度的，那么ABCNN-2在池化时就已经是短语粒度的（经过卷积了），池化时的w和卷积的w保持一致。</li>
+</ol>
+<h3 id="abcnn-3">ABCNN-3</h3>
+<figure>
+<img src="abcnn_3.png" alt="ABCNN-3" />
+<figcaption aria-hidden="true">ABCNN-3</figcaption>
+</figure>
+<p>将ABCNN-1和ABCNN-2结合，作为架构，这样保留word
+level信息，也增加了phrase level的信息。更加高层次的特征抽象。</p>
+<h1 id="工程网络图">工程网络图</h1>
+<h2 id="bcnn-1">BCNN</h2>
+<pre class="mermaid">graph BT 
+
+subgraph Input Layer
+X1("x1 [None, 300, 40]")
+X2("x2 [None, 300, 40]")
+
+X1 --> X1_expand("x1_expand [None,300, 40,1]")
+X2 --> X2_expand("x2_expand [None,300, 40,1]")
+end
+
+X1_expand --all_pool--> left_ap_0("left_ap_0 [None, 300]")
+X2_expand --all_pool--> right_ap_0("right_ap_0 [None, 300]")
+
+subgraph CNN Layer 1
+X1_expand --"padding (3,3)"--> left_pad_1("left_pad [None, 300, 46, 1]")
+X2_expand --"padding (3,3)"--> right_pad_1("right_pad [None, 300, 46, 1]")
+
+left_pad_1 --"convolution (300, 4, 50)"--> left_conv_trans_1("left_conv_trans [None, 50, 43, 1]")
+right_pad_1 --"convolution (300, 4, 50)"--> right_conv_trans_1("right_conv_trans [None, 50, 43, 1]")
+
+left_conv_trans_1 --"w_pool (1, 4)"--> left_wp_1("left_wp [None, 50, 40, 1]")
+left_conv_trans_1 --"all_pool (1, 43)"--> left_ap_1("left_ap [None, 50]")
+
+
+right_conv_trans_1 --"w_pool (1, 4)"--> right_wp_1("left_wp [None, 50, 40, 1]")
+right_conv_trans_1 --"all_pool (1, 43)"--> right_ap_1("left_ap [None, 50]")
+end
+
+subgraph CNN Layer 2
+left_wp_1 --"padding (3,3)" --> left_pad_2("left_pad [None, 50, 46, 1]")
+right_wp_1 --"padding (3,3)" --> right_pad_2("right_pad [None, 50, 46, 1]")
+
+left_pad_2 --"convolution (50, 4, 50)"--> left_conv_trans_2("left_conv_trans [None, 50, 43, 1]")
+right_pad_2 --"convolution (50, 4, 50)"--> right_conv_trans_2("right_conv_trans [None, 50, 43, 1]")
+
+left_conv_trans_2 -- "w_pool (1,4)" --> left_wp_2("left_wp [None, 50, 40, 1]")
+left_conv_trans_2 -- "all_pool (1, 43)" --> left_ap_2("left_ap [None, 50]")
+
+
+right_conv_trans_2 -- "w_pool (1,4)" --> right_wp_2("right_wp [None, 50, 40, 1]")
+right_conv_trans_2 -- "all_pool (1, 43)" --> right_ap_2("right_ap [None, 50]")
+end
+
+left_ap_0 --cosine -------> sims_0("sims_0 [None, ]")
+right_ap_0 --cosine -------> sims_0
+
+
+left_ap_1 --cosine -----> sims_1("sims_1 [None, ]")
+right_ap_1 --cosine -----> sims_1
+
+
+left_ap_2 --cosine --> sims_2("sims_2 [None, ]")
+right_ap_2 --cosine --> sims_2
+
+subgraph Output Layer
+
+sims_0 --stack--> stack_sim("stack_sim [None, 3]")
+sims_1 --stack--> stack_sim
+sims_2 --stack--> stack_sim
+
+features("features [None, 4]") --concat--> output_features("output_features [None, 7]")
+stack_sim --concat--> output_features
+
+output_features --"full connected" --> output("output [None, 2]")
+output --softmax--> softmax("softmax [None, ]")
+
+end</pre>
+<h1 id="参考文献">参考文献</h1>
+<blockquote>
+<ol type="1">
+<li><a href="https://aclanthology.org/Q16-1019.pdf">文献：ABCNN:
+Attention-Based Convolutional Neural Network for Modeling Sentence
+Pairs</a></li>
+<li><a
+href="https://zhuanlan.zhihu.com/p/50160263">注意力机制之ABCNN</a></li>
+<li><a
+href="https://www.jianshu.com/p/bb366027978a">文献阅读笔记：ABCNN:
+Attention-Based Convolutional Neural Network for Modeling Sentence
+Pairs</a></li>
+</ol>
+</blockquote>
+]]></content>
+      <categories>
+        <category>nlp</category>
+      </categories>
+      <tags>
+        <tag>模型</tag>
+        <tag>文本匹配</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ESIM</title>
+    <url>/2021/07/08/ESIM/</url>
+    <content><![CDATA[
+]]></content>
+      <categories>
+        <category>nlp</category>
+      </categories>
+      <tags>
+        <tag>模型</tag>
+        <tag>todo</tag>
+        <tag>文本匹配</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>LSTM原理</title>
     <url>/2021/07/28/LSTM%E5%8E%9F%E7%90%86/</url>
     <content><![CDATA[<h1 id="参考文献">参考文献</h1>
@@ -3333,6 +3286,21 @@ Embeddings layer 实际上就是一个大小为 (512, 768)
 world” 和“Hi there”, “Hello” 和“Hi”会由完全相同的position
 embeddings，因为他们都是句子的第一个词。同理，“world”
 和“there”也会有相同的position embedding。</p>
+<blockquote>
+<p>transformer中设计的Position是一个固定向量，但是Google的BERT中的位置编码是可学习的，通过一个可学习的嵌入层来实现的。</p>
+<ul>
+<li>固定位置编码：
+<ul>
+<li>优点：计算简单、无需额外训练，能够处理任意长度的序列。</li>
+<li>缺点：可能无法针对特定任务进行优化，灵活性较差。</li>
+</ul></li>
+<li>可学习位置编码：
+<ul>
+<li>优点：能够根据具体任务数据进行优化，灵活性更高，通常在实际任务中表现更好。</li>
+<li>缺点：需要额外的训练参数，模型复杂度略有增加。</li>
+</ul></li>
+</ul>
+</blockquote>
 <h2 id="网络结构">网络结构</h2>
 <p>BERT的主要结构是transformer，一个BERT预训练模型的基础结构是标准transformer结构的encoder部分，一个标准transformer结构如下图所示，其中右边的部分就是BERT中使用的encoder部分。</p>
 <figure>
@@ -3360,7 +3328,7 @@ Normalization + feedforword + Layer Normalization
 <img src="self_attention_1.png" alt="self attention1" />
 <figcaption aria-hidden="true">self attention1</figcaption>
 </figure></li>
-<li><p>计算self-attention的分数值，该分数值决定了当我们在某个位置encode一个词时，对输入句子的其他部分的关注程度。这个分数值的计算方法是Query与Key做点成，以下图为例，首先我们需要针对Thinking这个词，计算出其他词对于该词的一个分数值，首先是针对于自己本身即q1·k1，然后是针对于第二个词即q1·k2。</p>
+<li><p>计算self-attention的分数值，该分数值决定了当我们在某个位置encode一个词时，对输入句子的其他部分的关注程度。这个分数值的计算方法是Query与Key做点乘，以下图为例，首先我们需要针对Thinking这个词，计算出其他词对于该词的一个分数值，首先是针对于自己本身即q1·k1，然后是针对于第二个词即q1·k2。</p>
 <figure>
 <img src="self_attention_2.png" alt="self attention2" />
 <figcaption aria-hidden="true">self attention2</figcaption>
@@ -3643,20 +3611,6 @@ href="https://blog.csdn.net/qq_27586341/article/details/90146342">word2vec原理
       </tags>
   </entry>
   <entry>
-    <title>共线性特征</title>
-    <url>/2021/07/20/%E5%85%B1%E7%BA%BF%E6%80%A7%E7%89%B9%E5%BE%81/</url>
-    <content><![CDATA[
-]]></content>
-      <categories>
-        <category>ml</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>特征工程</tag>
-        <tag>共线性</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>卷积神经网络（CNN）</title>
     <url>/2021/07/08/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%EF%BC%88CNN%EF%BC%89/</url>
     <content><![CDATA[<p><strong>卷积神经网络（Convolutional Neural Network,
@@ -3720,6 +3674,20 @@ Dropout方法中对dropout之后的做了除以p的rescale操作。</strong></p>
       </tags>
   </entry>
   <entry>
+    <title>共线性特征</title>
+    <url>/2021/07/20/%E5%85%B1%E7%BA%BF%E6%80%A7%E7%89%B9%E5%BE%81/</url>
+    <content><![CDATA[
+]]></content>
+      <categories>
+        <category>ml</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>特征工程</tag>
+        <tag>共线性</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>数据倾斜</title>
     <url>/2021/07/19/%E6%95%B0%E6%8D%AE%E5%80%BE%E6%96%9C/</url>
     <content><![CDATA[<p>简单的讲，数据倾斜就是我们在计算数据的时候，数据的分散度不够，导致大量的数据集中到了一台或者几台机器上计算，这些数据的计算速度远远低于平均计算速度，导致整个计算过程过慢。</p>
@@ -3753,6 +3721,26 @@ href="https://cloud.tencent.com/developer/article/1519028">一文带你搞清楚
       </categories>
       <tags>
         <tag>Map Reduce</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深度学习中的梯度消失、梯度爆炸问题</title>
+    <url>/2021/07/27/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E6%A2%AF%E5%BA%A6%E6%B6%88%E5%A4%B1%E3%80%81%E6%A2%AF%E5%BA%A6%E7%88%86%E7%82%B8%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<h1 id="参考文献">参考文献</h1>
+<blockquote>
+<ol type="1">
+<li><a
+href="https://zhuanlan.zhihu.com/p/33006526">详解深度学习中的梯度消失、爆炸原因及其解决方法</a></li>
+</ol>
+</blockquote>
+]]></content>
+      <categories>
+        <category>dl</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>梯度消失</tag>
+        <tag>梯度爆炸</tag>
       </tags>
   </entry>
   <entry>
@@ -3957,38 +3945,6 @@ href="https://www.cnblogs.com/guoyaohua/p/classification-metrics.html">【机器
       </categories>
       <tags>
         <tag>评价指标</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>深度学习中的梯度消失、梯度爆炸问题</title>
-    <url>/2021/07/27/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E6%A2%AF%E5%BA%A6%E6%B6%88%E5%A4%B1%E3%80%81%E6%A2%AF%E5%BA%A6%E7%88%86%E7%82%B8%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<h1 id="参考文献">参考文献</h1>
-<blockquote>
-<ol type="1">
-<li><a
-href="https://zhuanlan.zhihu.com/p/33006526">详解深度学习中的梯度消失、爆炸原因及其解决方法</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>dl</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>梯度消失</tag>
-        <tag>梯度爆炸</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ASAP: A Chinese Review Dataset Towards Aspect Category Sentiment Analysis and Rating Prediction </title>
-    <url>/2021/11/25/ASAP-A-Chinese-Review-Dataset-Towards-Aspect-Category-Sentiment-Analysis-and-Rating-Prediction/</url>
-    <content><![CDATA[
-]]></content>
-      <categories>
-        <category>paper</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
       </tags>
   </entry>
   <entry>
@@ -4206,6 +4162,65 @@ href="https://xhhjin.gitbooks.io/neural-networks-and-deep-learning-zh/content/co
       <tags>
         <tag>todo</tag>
         <tag>nn</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ASAP: A Chinese Review Dataset Towards Aspect Category Sentiment Analysis and Rating Prediction </title>
+    <url>/2021/11/25/ASAP-A-Chinese-Review-Dataset-Towards-Aspect-Category-Sentiment-Analysis-and-Rating-Prediction/</url>
+    <content><![CDATA[
+]]></content>
+      <categories>
+        <category>paper</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Dropout</title>
+    <url>/2021/08/23/Dropout/</url>
+    <content><![CDATA[<p>Dropout可以比较有效的缓解过拟合的发生，在一定程度上达到正则化的效果。</p>
+<span id="more"></span>
+<h1 id="dropout简介"><strong>Dropout简介</strong></h1>
+<h2 id="dropout出现的原因"><strong>Dropout出现的原因</strong></h2>
+<p>训练深度神经网络的时候，总是会遇到两大缺点:</p>
+<ol type="1">
+<li>容易过拟合</li>
+<li>费时</li>
+</ol>
+<p>过拟合具体表现在：模型在训练数据上损失函数较小，预测准确率较高；但是在测试数据上损失函数比较大，预测准确率较低。</p>
+<h2 id="什么是dropout">什么是Dropout</h2>
+<p>Dropout可以作为训练深度神经网络的一种trick供选择。在每个训练批次中，通过忽略一半的特征检测器（让一半的隐层节点值为0），可以明显地减少过拟合现象。这种方式可以减少特征检测器（隐层节点）间的相互作用，检测器相互作用是指某些检测器依赖其他检测器才能发挥作用。</p>
+<p>Dropout说的简单一点就是：我们在前向传播的时候，让某个神经元的激活值以一定的概率p停止工作，这样可以使模型泛化性更强，因为它不会太依赖某些局部的特征，如图所示。</p>
+<figure>
+<img src="dropout.jpg" alt="dropout" />
+<figcaption aria-hidden="true">dropout</figcaption>
+</figure>
+<h1 id="dropout训练和预测时的不同">Dropout训练和预测时的不同</h1>
+<p><strong>在训练阶段：</strong></p>
+<ol type="1">
+<li>首先随机（临时）删掉网络中一半的隐藏神经元，输入输出神经元保持不变</li>
+<li>然后把输入x通过修改后的网络前向传播，然后把得到的损失结果通过修改的网络反向传播。一小批训练样本执行完这个过程后，在没有被删除的神经元上按照随机梯度下降法更新对应的参数（w，b）</li>
+<li>在p是神经元抛弃概率时，训练后神经元参数需要进行<span
+class="math inline">\(\frac{1}{1-p}\)</span>缩放</li>
+</ol>
+<blockquote>
+<p>当模型使用dropout layer时，训练的时候只有占比为<span
+class="math inline">\(p\)</span>的隐层单元参与训练，那么在预测的时候，如果所有的隐藏层单元都需要参与进来，则得到的结果相比训练时平均要大<span
+class="math inline">\(\frac{1}{p}\)</span>，为了避免这种情况，就需要测试的时候将输出结果乘以
+<span class="math inline">\(p\)</span>使下一层的输入规模保持不变。</p>
+<p>而利用inverted
+dropout，我们可以在训练的时候直接将dropout后留下的权重扩大<span
+class="math inline">\(\frac{1}{p}\)</span>倍，这样就可以使结果的scale保持不变，而在预测的时候也不用做额外的操作了，更方便一些。</p>
+</blockquote>
+<p><strong>在测试阶段：</strong></p>
+<p>直接利用所有训练好的神经元权重计算输出，不需要dropout</p>
+]]></content>
+      <categories>
+        <category>dl</category>
+      </categories>
+      <tags>
+        <tag>dropout</tag>
       </tags>
   </entry>
   <entry>
@@ -4648,91 +4663,6 @@ Negation Resolution as Graph Parsing</a>.</li>
       </tags>
   </entry>
   <entry>
-    <title>高维矩阵乘法</title>
-    <url>/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/</url>
-    <content><![CDATA[<p>NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。</p>
-<span id="more"></span>
-<h1 id="高维矩阵可视化">高维矩阵可视化</h1>
-<p><strong>一维:</strong>
-首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="yiwei.jpg" alt="一维矩阵" />
-<figcaption aria-hidden="true">一维矩阵</figcaption>
-</figure>
-<p><strong>二维:</strong>shape=[2,3]的二维矩阵可视化如下</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">[<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="erwei.jpg" alt="二维" />
-<figcaption aria-hidden="true">二维</figcaption>
-</figure>
-<p>为方便展示三维矩阵，旋转角度如下:</p>
-<figure>
-<img src="erwei2.jpg" alt="二维" />
-<figcaption aria-hidden="true">二维</figcaption>
-</figure>
-<p><strong>三维:</strong>一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">  [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line"> </span><br><span class="line"> [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="sanwei.jpg" alt="三维" />
-<figcaption aria-hidden="true">三维</figcaption>
-</figure>
-<p>切片展示如下:</p>
-<figure>
-<img src="sanwei2.jpg" alt="三维" />
-<figcaption aria-hidden="true">三维</figcaption>
-</figure>
-<p><strong>四维:</strong>shape=[2,2,2,3]的四维矩阵可视化如下:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">   [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line">  </span><br><span class="line">  [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">   [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]],</span><br><span class="line">  </span><br><span class="line">  [[[<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>],</span><br><span class="line">    [<span class="number">16</span>,<span class="number">17</span>,<span class="number">18</span>]],</span><br><span class="line">   </span><br><span class="line">  [[<span class="number">19</span>,<span class="number">20</span>,<span class="number">21</span>],</span><br><span class="line">  [<span class="number">22</span>,<span class="number">23</span>,<span class="number">24</span>]]]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="siwei.jpg" alt="四维" />
-<figcaption aria-hidden="true">四维</figcaption>
-</figure>
-<h1 id="高维矩阵运算">高维矩阵运算</h1>
-<p>从上面的结论可以看出:<strong>所有大于二维的，最终都是以二维为基础堆叠在一起的！！</strong></p>
-<p>所以在矩阵运算的时候，其实最后都可以转成我们常见的二维矩阵运算，遵循的原则是：<strong>在多维矩阵相乘中，需最后两维满足shape匹配原则，最后两维才是有数据的矩阵，前面的维度只是矩阵的排列而已！</strong></p>
-<p><strong>相乘必须满足以下两个条件：</strong></p>
-<ol type="1">
-<li>两个n维数组的前n-2维必须完全相同。例如（3,2,4,2）（3,2,2,3）前两维必须完全一致；</li>
-<li>最后两维必须满足二阶矩阵乘法要求。例如（3,2,4,2）（3,2,2,3）的后两维可视为（4,2）x（2,3）满足矩阵乘法。</li>
-</ol>
-<p>另，由于广播机制，第一维为1的，可以与第一维任何数相乘：</p>
-<p>（3,2,4,2）*（1,2,2,3）——&gt;&gt;（3,2,4,3）</p>
-<p>（1,2,4,2）*（3,2,2,3）——&gt;&gt;（3,2,4,3）</p>
-<p>比如两个三维的矩阵相乘，分别为shape=[2,2,3]和shape=[2,3,2]</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">a = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>  <span class="number">3.</span>]</span><br><span class="line">  [ <span class="number">4.</span>  <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>  <span class="number">9.</span>]</span><br><span class="line">  [<span class="number">10.</span> <span class="number">11.</span> <span class="number">12.</span>]]]</span><br><span class="line"></span><br><span class="line">b = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>]</span><br><span class="line">  [ <span class="number">3.</span>  <span class="number">4.</span>]</span><br><span class="line">  [ <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"></span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>]</span><br><span class="line">  [ <span class="number">9.</span> <span class="number">10.</span>]</span><br><span class="line">  [<span class="number">11.</span> <span class="number">12.</span>]]]</span><br></pre></td></tr></table></figure>
-<p>计算的时候把a的第一个shape=[2,3]的矩阵和b的第一个shape=[3,2]的矩阵相乘，得到的shape=[2,2]，即</p>
-<figure>
-<img src="matmul1.jpg" alt="matmul1" />
-<figcaption aria-hidden="true">matmul1</figcaption>
-</figure>
-<p>同理，再把a，b个字的第二个shape=[2,3]的矩阵相乘，得到的shape=[2,2]。</p>
-<figure>
-<img src="matmul2.jpg" alt="matmul2" />
-<figcaption aria-hidden="true">matmul2</figcaption>
-</figure>
-<p>最终把结果堆叠在一起，就是2个shape=[2,2]的矩阵堆叠在一起，结果为：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[ <span class="number">22.</span>  <span class="number">28.</span>]</span><br><span class="line">  [ <span class="number">49.</span>  <span class="number">64.</span>]]</span><br><span class="line"></span><br><span class="line"> [[<span class="number">220.</span> <span class="number">244.</span>]</span><br><span class="line">  [<span class="number">301.</span> <span class="number">334.</span>]]]</span><br></pre></td></tr></table></figure>
-<h1 id="参考文献">参考文献</h1>
-<blockquote>
-<ol type="1">
-<li><a
-href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
-<li><a
-href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>math</category>
-      </categories>
-      <tags>
-        <tag>tensor</tag>
-        <tag>numpy</tag>
-        <tag>matmul</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>激活函数</title>
     <url>/2021/12/01/%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0/</url>
     <content><![CDATA[<p>激活函数为神经网络引入了非线性，增强了神经网络的表达能力。</p>
@@ -4846,54 +4776,88 @@ GELU(x) = xP(X \le x) = xΦ(x)
       </tags>
   </entry>
   <entry>
-    <title>上海天壤智能科技有限公司</title>
-    <url>/2020/07/19/%E4%B8%8A%E6%B5%B7%E5%A4%A9%E5%A3%A4%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="0af94974f7a9039ba7a6041fe5da6541ed91ead1804c20660ea5984729929d36">5d20b81ac1f5d0b70e9113cacf134e1ebc8ffd03f4a917696faa51abfbe5fca7341999c5d88f9101d6c86be741db1e77b91f8c3b808b62850cc3beb489fea67fba4cdc5c00b6951c4ddc80a08bff8b819c8f60d9dc0a9fe6c287031269e6f1f43da2ec6b2dd346527937cc080c1d283ac20743de9b8934dfefef41ae45cd04c4ce6943d953ae40cc77e4d5dd4e7f35a834eb8dec3586e1722ff3d2abe46a5543e55e1f0bc08415402fe1183c043b871c5fc0ffb71f7ff21a109210ed95772f3b655eaad5bed7ae6a3994323ab1e800c79e605d971622ad68929b3560873edd20bab180de001f09b9ff63a7ebe91f7a6bc93e731d18d9fa1a6608026527d57541deb1cd77d84923105dc60fa6f25165d56d5a7ed2732e8e34e0c1c070d59dc9ce6aafd2fc1f50d230c18f8d3a4551269cb7375398311defd1d52b9554182af0aa93f2fe63ae10a580841240919062fdea1633b951ca02320f6d353d7799375ca8dff7357254e9418698b92ce771147b9ba76036dfa049faa010875bd1fea38ea28fb17c7524b2f68ff81e8bb3aaf5b45b9ea0512dd731081640d4d822e98f08341fca15240af37805e88a77a1e7608e80985a20e7d98f640bad9f05888a559fb1a40a444561e97ec8ea67915960da115f62503e0dc3ff1432c00dab7c586ee1f645a31ce98de8cdea326597aaae1ca60aa58b2d0358525841536ebb06911ca2d4606ccbae7ce8af95dd9001de779c45b7ddfdd1599f4e9b72ea3ccc377cee36b0a29d0f03809203f1272c11f7df13a0699e1e3e3fa0d6360ff70d3442262f783fa78617c447c454c450acce584acd4752fa85fc05071be125840ec58dc48dbb4444a96ffcc9e90849304d6904311f1edac85b41baaf7543a067bd39086dff0c0b780eef42d0a3389951c8dd822b4aee5284dbf180867be610dd4d2dd6ae923f536444a6c526e2ab33838853d7dd6788026152110a10edaf95e019d5c9e04d88a2ad7bea8ea32094ee2ca563cc9ce11204a74d3676731c0020de8b1934ff6c00062d42a5709a20df042a81da417bc12c60b2cfa66a2b4b10e61b5fb465466fa123c46cb1dc1d0541dc56b8acdf201de7f0a26b94e49f82d59b933be44c0e78b98645d7f5f63eb51d87ceaca308e31a9cabe5f6adc7654b9ea75da923c42cfb4d10f3e4420df8f3048637fa2e92c215d9418233ac7b08e65baf4894e0a522b64bd38a270c7be5fef710c7e94c47147ee168de797ea8db3e8244dde894b56d041c581d4c1a15fad24e658f89950b8eae8f26a29315cea03ed88b2fd5f85833cdf8bc7d8b45d9b868d1159749d67d50980753c07291a176f5e6dd5c9b11491613a0a3644efa1b53d437aa103f0f13290a65fb2479d936f5f79887334eaf1bf718adeaced7cd55a66fb62b025594c63a9f35dd2ba5c1e789ae2565cce438f7e5cded5362718538e20d04b06bd54ccdc46ed95fd7716b26275ec00cf19e64eeb9b0eb65cb6889c77cdfe096e1a68c1c784a7d228bcf59b59c51a50ec628f7c2d4121d3800351c527614eaf36cb6af8706099a116f373bcfa25377ff8fd4b72954312db9c5f301b671f8e7eb1ea2979dfd8a058336476b0bdf331d1ea6a01e03bd4455ae85dfae6b3a9b00fd42879f652d4495853a92b52304f02000a5f71816dcf006c14e233113bc299b360172c9d415628077520bfe92f3aed854aa1a18ec7de271d43b6afe6216ece78487d2b7b5a9189afb8cc5b62400db168c807282f82f4889601178cc12710feda7ef4815163bec16f977cde18c21f823b6c99463eeecacc03a2acf475e9c33f414a0d6112984c5d97ae4e5183e982e428a4cecd7e76c131d525a1751475ec7e0f7aee103b172d2118b9ee4ce16ca8c33be189c8b0c4a2fe823e22411bec1b442d293d9431cd49a6fd7494fab4d0b97eddeac9c16cbd646c8779ce8688ffc25f9a9f9a29c9ad05e615a6349cbbf3411cf385be77a9befff543578a6c6b5cb9bd81f5f5b459f7e85dd2a85ba1f5b8f640af1027b562ae656732bbb4151d2595c5ee50144ce64d481ead9c428d260c4fdda8682cb73b0d17771db8759f7c4e52abaf4d09ed96e4aac915953ab59b3fae5f251fd97aecf5d05b4b9070775a3a58d86fa36d038884487cf5499fda49ec6e37b5d34bb1650fd2d99aa8e22ef165e1d08e5ee225599261d1c20728297f1ec19b2e38c5b5dccd160dadbc35036d34962752b89a51d0659dc2fc6ab6bda4632be5e205bb62db0eda01ffe5df184ac193d2d70c1ae651319436806e9002a688fd0bdf5743ff9f54df021a56d35dcf2cedd3ff8fc44b951a9087e80c8e8925ccb0930e1be7788ca17941178f028474a3c83b0ee36962ab3930eab57fce213bcc09ea84e7906af42d18f5c690222604257ed7a6c15d2768514806351cb90bdaea2df808614860f54cbdc74785fef36dcdc649aac4dd41c4ee573d38099b9263778e480b6e292d090d2d283f452ddd6991670edc4010e9a27fdc95327eeea6f974ebf561e876908208d9b35c84297a226b65e03ae62629eac435800d138346f5eff9bcfbbded9028fafb3ffa382fbea7e23bb32ef3a85587bfbf602e1527d78b7cab2e18b6291f0c842fe2f8907472a48f6509bc79ff4786e20f426ace9c6f736fdf539ae187932129f33c79a5e170075c8d31b32073c764d717d11cfbbdfefe56ca9092f18c5189dbabbb34205ef4b0977c1d08526df55c8e70f59bc9158073ade65ad28c69e0f53deea1d8e55070dca1338190b2bfe93cbd0470072e972e890083b0197118980d8a2d22acf0b2d3753fb2ba8200acd59da7af2a0d51482b3a3f6e81badd9a168db55599f6bb7fcaab651cffa90b383145cb8c1075e32b5f371fe39b1410521272007ee99714db4b4e4cdd9ec63681b3854ed0dfd2a3aa4c9fd843adf8a2bfa8a03ce1a013e3c006540ffe652dee383768c9d80fd15189bac0f36e2c53d679e37414ad5cb74a138c5670529123f89b8fb00e9ee5108013dbdbdeb0913752dc97782e7708ccff5e30bfef7b1147b562dbfbe101a6ca8623428c1b0e272b15f185e9f05a034502f984cbdcb66463b005e09df13b24789a8723930cfb264f009b316a62b37fe49aab5715129356aeef103b0fed5ac0ca5e0d34ee738a8129bf6a257a7e390d6f4b80b76437ce4736990c636afecdf4740588f0895b8e82d09710700e07534a05046992cc758e2300576333f246df7b21a2e77d0963bf2d0ed3653ca8bb83417055f9f154bb6c49d85e267d7ab26e5c442decaa4a06c086b5758b8c007e0ee9a188fa02d6f555594d65a4c55089cf78f167dd9c325ccf84bfb18a31cf5a7c31cfe9bb5e2efae2c4c54b8af2ce5449250a94ef90546a7ac1e12d93c9731709ff58c91b188704e7f015cbdbf1419d5004bc446cad6af3a3c3f5401dae3a9956eec0fc528cf04388b39bd6ef48b337ef2543215b155794754a9ea63fc36f87802ee3e0d59d6fdb27291f68a16be87d4cf200f75af7b1f89b8ca58e3e66263b32c1c3f14c16b80ae6cfab792e4a366c0b1537b0335c81cba0bd0190f0df0c5b6f0fa04acbe3664336e19f7978b02d18d3c45684f3d3cbd609e84c1d96fc48df539d2a8e658093f72edd98a9e7ec28182cfa92cac7a69064651000d9c4c293e2d98d15b396a8a061fc41096a50b4c91f83c2909e94e5816f58fbb4781edd643ff8b5476d4d2bcdda663fe181228484cfecf91aaad072480026b15a1107475d593ab592b357beff7201e6a9cd7debf436e50c5df358f05a8f312b830005694d5cb3758fc233f907cae861fdd81077e25ff6fbe048481210fcf5883eaeba6dc7f8680e20c11163f3f762f9b0edff0ec0bc4e52f9c85d894f53a43a7f590e59e7201fb6f721326e28674083b07ad2e55155de182861c2c3a75b389d8a6c4a107b39055882f432bafbdb222ed4a8648809131b7372894e18698b61f439f1b0681cc759119d38cd62833a989e97c08f6d1766dc65d1eeed14ce070b72d288a8be3223d83c41d2170db945bd06ab0c739619e5c9c8093c8a7b73d3c8bf60dd3dc85598676987486476d303f7f476b420f8997bd732bdf7c8678f1a0e66ce21e4e29e2ab2a9fc57402d2590d035ab3718d53d99ea81d0e70cc4a16366306f3545dd5a5600e0b51ac9513df813c3e9eb0409ff4fa45d354fd0a4adc97c00fb0681f5b397767130497363333521e78ae6b269e2df07d6415782112010b7732da866bc61f42239145e0d20e33d2b8a04319dfabb5cb738ebc073083a1d7ce3897c3fabaf353522ab78072f548d2fbea4b95651dadf53862f1958905cc1cf6bcbced6942d1f04266710eb7f09b77d8c2b1f891d9e15bad22849102d18feda5c88e6e4bb8a43537d7846e842adeb69a25b90cef38323ac806a1a6d58170199edbb6c4ce74f4f62da22ed6294d6fe6600ae1714beb1fec79bf960cbfdcaacbca03d6be3fe78b51a2f683255fe09bdf53f9bda361cc2da1f7b48fb75ef35075791858bfccced08656cbea23b81388edb791e00b815b78709199e74bba2eefb1b4b0c3671300a1ed2d5f101a4b8c045c683f3c9e22619da9460e475b7ab7427db0d689aed99aea94f3b5ff56e91ea2e1c05a86fd5190a193a01225ff2d357642c5dc164d2501968297b32ae31a7090fbf673a5eaa07147441934e1c8d9d6fdb7de9732087befafe45a70b1ee35a75a0ec2fc786efb138c2939b99106e6f2498f404cd0e05ffdd05665967747c9303b6e8f8fdfce1fcdcbdc0f7848c095b9cb84e903a5edf3a657e9affd67d990898000dca23bc41b70b3c6e873301e58f0d8da346df93db9daaf813358281a74b83532a6ff73047cfc41cc3706a98f41ca57965fe771a4aac3a021552c11160fcaab01df7e601e08fe92d79fd721a8dbb7e33af09ab478b9636169513ab05aa8f0f97db8c64a6eb22be1bdde895cd61796a3072b92df84daa9b26144354b7b740fd9948b912964b2d75e8d5cb1de97e64ae141e30da4a99d18da661b21110dc48f4045723270bc72817f2b96627701f04127587b5cc4bfffec1f242e97a214c5deb2e8af7f0d5e476ba735932a6bf7774869bfeca274759d2daa9732860d092d39126a1912a5877d25bd06db279c4343ba6cbfcb44a24fb53e1d6431f212adcb75a43b378ac4149e69f5a6ffe8bc71f66d4977f6ea68fc8ca039541a729c77a002d47ac2ab8da0319ad366d116c926089720cdb6155c090bab2b20226d347fb6b4908f708e5dad7861ecdc257c381839ad52c7c6badad7b8a0b6cd6af31d5bbc7883068841bd27f08fc09ab3c78814fef33f61a0c36054e95577d9e9672952b07d315f8a2ed075a74b627787ae68c7e9a7783fb978f7f77dbe13cf4e4753115240d4e83595d3be912a4155d83054cdf421a9bca5cb650337d91864209bff8de4a03edb8dd95c68998637d25d6a8fcb33a40786d69109f90bf01a2c132a8f4a8b03c139d68586b316f7c855f757ca4476d2425864ae6b82aeb7b6b6c5d4e371dc9633a4d84f3770c878979c8bc69167506a32b1b1b2a31ece69993d3a93a059b7f030135c9d337a731fed64111f12d44a713325a26f72c1d5f6562cd68b90fa1f9665d94e36fdef53974c3f72280593df436c4335d6fead542385c86600d52035b0955475f1d0d0d3cf667ec164152f5d33b11ef00b6040f3ad24f0ea1d1836abed98d733dd2c4476212814179ade70595f783d2664426e72b275f59aa0166bfcb5ec478a4b34e3301ef6d2b9bee39b04a382d14232a1d982f257441807f2619adfa78a32d8dcbc2e3509f8115d39bf8cbf8326fa053d9f71475e81ac34ef0ea90a549eff04a92939531b784a21697f963d5bace8db97d4752c57879ac4f81655d248cfb4f891546c59bd30589296abdeeb2e75ff164f0df7fd8903237691349368a07f68c47a6d205c529d6709c07c0543ea19b6c5af8e34c1e7c4103505cf2d2ea6cd5f4174c5e6a382f731263ff1bbbc76b7c38f4883950aa5e9b29aa792290c593c9234bfa264bb6d71947c559d86b12367c77c8b8aafd1eb4eddaddfff56b9b78e7ab24125882283a4c7a744ee959aaab78467c98a7e579c3c65ce4b169f809e670b9144ce46e58bf88b7add8537e778fc6a346ed248fa2c948e783ceb6b8aba3d65c3d78319049ec12a419e8399342dd57fa6e033bce0879a5bc996e9956bb0e6f250bcb0c4c983de8fb0c1fcb8e2d107e1e473973d4000b2f9c47fb1085e0702013edcfe21477870278107aa5606ad5c5b38b73fce3acd795e34afdf296919a67eda5224547e4121cc580ff3b7108f362af2b055863a93a7be88e52de59ac9dece083ef458c60224342eba99e52f4fd8e046635d88c3b5ecfe8106be16205011868b873dc22bc40eb234fa84584c6bd75849c7b708503b5f0333746dc5c57276db51934d63c9a48188f59e5cf5ba9effe4b7e1f20903baff2dc6b7bf68b95779b1e2a805b3692be903ee29b290809b5e17fce537ca8434b4788db994d0d51fde77c114f458b0173227294e295351303dbf68e46c07a328ee4f710e5f9a8b88f52a9f9a739a9eca38089496f6c855619c8a735618435006933e18af0ea0ad439d635e0425ec05fc50a86dfeaaadcfd0a064f8c22beac262e8a4fa152fd4491ae862b3607259d9efa32063366a4e1d5c6ce89941d7a25711076a6a3c261c0bb258e329b38f20ba454b31d318ee89bb5dd8911a765f1e6756e5a7a730e90487f924f455333c4227e12f5952b266ad9aef010a90312be123f51966f3e9f8f82e0f4a0b63db1736244e74151a426549d95ae3d1575083dbc25029effbf9a94b73b2dcf4f696b17c2248219c8f8dd6bb1b88e9d04f1fd42fff7d61ce79d20dbd75498d547e02f5dcbd091f9471a62bfcd932d956dbbbaf386d35bf4f446ab17c069da2129666f73132cdfa0dc9f183020c4f8b4dd3349fa653377ede68f36b8c7de4606f48fbf7cd1d64ab0c4218000cbf4843f812a1e24a49288801ad84bc7ddc103aae2170e6d597ad09d7694fa790c2f7e9757cbe0688a38e66c47b4afc06cc83be7105650829e0b99dd179bdfa65269bcbe651c73425b6dfcfd89918a036b008f808b40f86c0282a0ded9cee862074c55dd678a8e22e451372dfdbc09097a725f01a9185cae508398f8c7e0d79c57ba4955d3d692134657a078a6d08a470a9c9cea6ccd74e5b7a17e223d21a2169c9b04a6894c9ed0e922e3d9d4e49e404c2f5c8ba35aebf2b6d6d38e8ad21062c2e95a262677bd490a1365ba49244b8d191a52a4261679e3cc64269eb0a69ce2c43b13282d7de0be4e9e3f3000fabe109c77b5dbd27baf08eedf9b13055539afa1a962aef6b1dde246133cbc754d5c77a63ecef9f57cf2dca25743e9f279d4ed17727f2118cc389bece5a29d769d712392bac49901a46f68a83a05b6913543f5a07198768fc463282f8c7b80320cd4de63e205ba390eb5cdcfa5bea678ecb0a37b86eaf918c38946669b82835d1e1ca81e629a539ca929f1b038e50a25bf8d63653f1c8b2f3e31287bd578f89bda0dd6ef8bb9e96febe19df2b53ae3d5491fd12e1cf07c062ed3d568ecfd16c6a65938964c88f23e8311e54ff5deaee424dbb6ef74ca6bf74b859f8529e088afe3d21fa51010154ccadb12e73ec82545f511d3f24a5abb7e361ed3e4b196bf670bef47a7d31e0c28cde00cb2de919986f53803c4f00027a3bc1560287064fea4fb644c9186e7a542ca7d51f2a6d153d6d51e3eeb28f89575608138dc2b8d769f2be1111cac43638088a21853fa74273548eb46ce88215954f20e43b3fd61bdca246a1e1defd0b0d53978beecf79535e731cfd5b2317987f182a24eed0924a79c826bec481505696028ad1452e26587c3ba31727e6f99644b8160468a9c338bd6d9b292776a998e0a30388d451cce3f3db6f1026da127f3dec74f72dcf0b5633743a62e6e7d022aaae55b55c47cf5e4721304ac40c27b5a98e224f0eabed83e336b0ee8053cd66042a8181f6420a7d3ff67e386c048bc8ff788416d52f3753477f965057a39d57e9890802448fb48ba041f75f07f9a62d38a8101eef2dd9791a65caf0263116c2f26924721bcd082404b059e5e4698cb089d360b3c6ccff4eb49868d599e1b8d96df94042eca27c86da4bb9b67b6c57cdbf93a54cb59e7f916d82f586ca9dbd27e5f95ab66fba5f8f6e340c0244706d619ee6eae33ca99e086acf0c96d9582ee769add7b80f85dd6e08291852a0c2b3e987a13849ef30d9ecaef676107a4780c283dcab7154cef986665ba746bfc70b55dc63801f0679441e9462f77804198349d974408cbf76a0950724b7445e37f8d74a9bb1d85208948ca69582326a6f125c34432fe342180f4f7b6226d186d3022a483ade64edf933448a094fb3c31c1ebd24f045c5deba73dbc4b7b699d1081c84269a646fe835bee68892899b74ad43366c92be4974310ab5535c56b1b72fe3e17be87741122f3d24b9d2d891ece36059b053df2c923ff0e08619ba35874a5b29bc4eaa091d6b4436a0f0afa95f027e1b1acf8795e57ccc7e401a88e0229a151e500e5aa960ae65bbaf4c3666c24af3b0a6993fb275de69d91985d09e0883a062c4b7b6d45fb5ebb70c74045b3e61683d9d87e24152f0134a3645fd2c3750ae9b72ce4c1dbbeb92242466ab8382c8cc8f74edceac9f5cc546d7e42f6854c109ec46891ef8dd9b405d186bc7d3e3e64711ac506db8f6fd5f4904d82c2ef9dca247f6f924bc89eaddda376000519fba83beb555fe8fffc20426bff8778be6bdb5bbf516b2527eb9aa57c9a1f2fbd0e2e8cf92d258e5e93473e34b25fbc377119d0221a3ea3c548929bab58442939983f72e2016076107be585e443ff7f417b101bb380e74b455071ad16876a009714e6bce26f342e2dcdd241bdf409e063312a51c2ab9da0a6018a34bcb4d10dcce854efc5015af50b095e8ac957c31c7f9f387c5a7f3029333bbd6b1afefa6cb71cdfe960c3b4d31aa1d835bd352d05fef07d97b81a63eac7b6cbeaed82e35063c08399e889c100ebee6d528617f50cc0eff71acbf8717abe047a465c2e4fc91ccd242bb5b872b7b27919945634d3cc077b7654f95f7a5dd7d6d27890ed07a1dd724e3b825950a26fae3882b9e2c2b17404994ac2bb1c2d3fde8a7c18f651fd42b708e843e2840b24de82fdff9b0642265c6d7a74983fdf89ff160335077c9f1d11f2cf27ec50db048f606d866ad84521b04dd1cfd1e3702696f505b1e904eee837b5edcc98645c30cf02f9eb88ffbe765f33c3954e19499bf81c0f814129f7f203c635b2649abd6c6102aab3e5a88d06e2fb660fc5abf03baa05520df5f3503f412ff6152c4f474cc05a45c2a986a765c1f1d6f05226c07e4d68cc4d74c187515405b9f724d590b482529a8012664b10a43305487728ee3811bd431c476154f83e3414f97f55a23aa7815377896dafd47463b26c9031cd528ebafaa50751ebf67bc7c866101ae88eff197872108569d4666eb20aaa63eecc0af0fb2fcca32c0ca939b79d8edfbb33599910ff644ce1f7354d6ee269a7add8b95e680f5ba171bbd256387f6b01e2b8ffc95b18edfa35dc420cfcc8d059eee9f34e6f48c748ee7267d601467d35ddca453b23c9c8a38005dd4afd2a71e2b3074c8cb3992cb6bb407adef70ca2a54957fee153615e914def2395426f463d10001b0dc2ee4fd5131baf905756e2e16fcb1732f32fbd71f83e68051fd84888b365b0ba43d9bdd3a7c82ecbbe9a51e8db15dc9c5cbea40773b6a0212e23d13049a52cb7752f29ab331ccb2269265e19ee972eb27b6e557b33a1a40ddf43b982e01e7e4258e685fd9978622a190336030a54052482c296f37ec9d5ae3639405e695068eb30b6827b1ae29b9d950dc1e872026b277b24a15f255d4ec5cbe09c8d10252434f51a41b02079c1191a9b6a52592e26b65afdd99f64618984b25e3212ddcd2f5c3252c92f2ace5e9f22b6faba94c0989b33d0c362fc90dc3b9bf31d46b4b2af56a4fddf3fc67d79cea4ed2a52cb078dd2e5dc7f685c946773ec05fa5121c18dd8ce72b85091f742ef4f7beef09d873ba24159d65aaf37875ae1a388936f0c19fbf2f43de22929eef55af4cb40235305e8652a400bcd2222d8c8ae4ca9f7c5c92481e80fea75234169b78c6f4a982d88675d0a226536b328d5ec10b87c30b3b0a2908fe4139839146cf9da9841bca1d5079c895ca18a9ba9b3c1946d5978e053b68962d224e8daa6366089ca02b83a273ff6acd7a27dcd27ea216a0af4b832a0fa28b3b0fc4eefe1a2c4f53f89de6c36cc50cc57e1ba89d1eecfd82fd9ed761743f689f95355b8c1d39ca9e15f430b9c00f965b1410bfc4ccf6ac099528c5929055ea86dba8b4daab8900eb319124fa9ea41dc1aefecbc9f0c69cb98c26a975e9d9c88ddc1e8bb6fbd1220315dc9efd9ffe4bb5972d7c4abd274014e19125f3d80c93e5831e5142c0564cb46c6b5e2e31b66c69c27adf2e279ad59625cdc4d3f76bd0b19d317efc998310c84a273f0445eb7c483255452c424226642714b4aa614030f3c9bd356e145c5394704d4ca5a62286facef2faf41c3bb007631f64ae1ad460e509be4151979baad342e25c042e2f80d8cae6938e48f206b0dea95c5ecd6c333ea85515d9be0257948644d51b600d7d75b65ab85a37ef95c33247b4e101c06ca5f7dd91115a9347fbea5ba6a84cf933b5274446bb99a27735b3bf5d7223d0fd09d9ae90257f5cf4241a2e93a9c0dceeaa379cc9fb68ab306e051ea8a2927eec1a467aeea6a661992aa3e9233b529f219f310c00d13456ea603f33ee1bf7efa899580be02a9825e8bb25046a6604ab6adfc6f4473b80203b950866ac2d6b76dfdd98cbc55d12edae52f02d12232feca504c2618c9edae5d2813a311d51ca969d12c16977d1fdb6573849fb9b0c9d079a8d01ac582855ca8da984fab6daf2ebfa519252d4e9a116d24c1662b52e8f0775d71b62446bb56ff6af0d5643e5d070e8d4325ed6093c72a306b90a97bfea281c94294b54c92db9b23af21844fd9a1deddba17e45a4161ee9a85ea9429c2acb3428f53267b19dee5e8ea6fe86182bdb0c73a2a38c00a36def2172c60e3f3e0fd3e1cb2cd786805558ad4c25dadee63a29c20d0c7c9e1f15c5326ebd829e90e3792d6a665f06d8ea4b30574c14b15d747bb907da0ddb2b3c6b70e907505ed79f1522d92eb26cba2604a9a78a607abde631eb33193c2d80617800034a7b19d48712e48338f2b18abee45588eb95c71b05713a0dacccfd2ae7f6b3d9048e4b67fcb2ab610b4b52bdc927771102208133e628c64aa0e78633a4fec6f97541dd457be815dfb0a676278acf160f99371f7debce1a658451e48443c579194ec40b406939daa8fb733d45bb794253e85d904111e998400f82c91d16424698de258f94f09ec58073836273e06e124674f5e85fee7003f9af27d08442a8561b13d272123fdcb2d5dd281a0162a9d111345d44fd729f703fe929b966bf3e294bbe69559e5b48b0a0ac2cf4d1b8b59f15b8d237d530f8ff438597f6e685d13a03748fecc86108c91272817025ba4e0aefbe2783945b58e69485f2a89edd4de4ed4d9211173107be6cd9332c0ecd4e50cdaf87ae1556f5a5d4dbe1d39f390e0825631026ed28669d7a4c1dd69c53f701b7715f38ac24f60268029ee370263adc97fada7f5692ba9902f7123f5ecd5f7b35d53ad1009c6ccfce3fcd893594aaa86c39ffc9838ff90f8659b1407e2b18695b5650151e81c2bdbb2099504dad65d17c7972e5f1b20101954bc9070adc0bbdba681c100c9e4a1e14521ec4d72a5ea436d700a0559b2305fb0a473035fb1b4001c0558919f54e908d9dcf9628b58570f335daf5ba7c80145e4297e3e82bb368a6ef6712170849fd382e439895a4916649110cdf20ce87b6abf617610eeeedc70ba51491f30a418f1414a5dccc57ec5a90f35394e5fc611cf74b6e33e25f165b377fda04ecc32ee433156a78c0a5c8d67215ce8f768fb7e613caff9c83c3b2b2b9a669a8fdcce5ff7dd238899a675af102739d8a0698aa96ec298a63d25d39e1ce92c3e6b2b688ab193e3d71fa2400d36a87c9178e18a420ae1d9acfec5bb55ac863978c2b64d10fa34a7bf926d37923774415776d275da60536d21461edc45349ce69a31f61fb873bcb05bdf61f98f65138d31aee680fe205c243becf692b3b9e43e3971184fcaa3fd61f6f19df8f62c70227a3c0369afbba3bdcc512ab656b77949111b0b2e3da3f3e8e41c61768d1f185ce5200ec34f2b2d3e630444572cc3bf08799c3df77555371ad953d35b3faf8005479fe1e760d276ce39c79751d212cea17f912f6d2a8178f26d9f5ecda5fd06eea100e8b00237d8b1ee4b84b8174be753302c42dd2b1d27475f3d211957b37dc82e4704b1fc081f905e140ad26086e209623631ae5070da6227bea9612bd76817151f14268f3c167ff3ff234966d24eed4c44f6751d16e8391800c521ad1219b802120ffcdb2e742b320f218682878fec1d1df5bcdf38426cd8ad77ae13adfeab034778debf2a1eb6ce8e4873027fd15f4196475e293d8ca9d57a2b0735cf8ef273623cd3c47c1f8dad3cc01c910d93ae4b35ae5838ee572c8707a39a0a941bdf78b79e4210d3e619df1ea4bf7bf884200ffa2201363a805e29a99ae01e4179c2531a1efe99f034c671fc5dad26b8c16ed71604d660e70b80f75732004b9a62c4bbc488492647f61af1bccdff51817f9d6ac70b1fd96a042c4f568c27ee2b389dee3484fe847fcf463cf2ff6257049951a32a4f2212315ece05e80f3df9c21a3235415b9ac86b75a44753691b5a7e5f722ba1002772149b7fe8bf0510e587a83d330a2f12c2eedce9bf148e658216bc53ef426cc9609d6f641a78be2742175607baa2ee30dbb0d061594b55770ffb8be9521d98cbebb2a188bd4e8c1e082794b5da8f051c829f0d6c7758ff225124384be650e679fb76830a8751bbe0338e5372032a395b114382db71c260edba8ed26c4573f242466f6fac6f64f34a8656dba3cb3e771aec463e8f75f76a8f1852cea6c9ba20c472da02b3487cf66c6d8328ad40dad2a699d3c24b472a6d008cd113cdfdcf2d0d59bdb5935d82724f96b2ae35abd5800805dca1baf9a38c90a05f9084c11610f18bbbdd2718b176292083d1bad4ee40a2da704139baae5b37740b313c9c1c35fce168a1cb74fabe5abc192a6d8ebba6706ca45f0ed84aea078a8b5775b9379f198bf7e38aedd8539fd2b4e46c07f1bb5a729691d7e088b7477a332ed45b33e82b988fcdbe1504338b947cc7a64c6ff6dbdc0d57223d7ef0cebc5363b02534873676f72a2308a904196683493bcaf241e367a0acdb02303826e6cded904ba6d3d41e39277a7aae403e8851d6f1deff21df1cc16c7c2cf818e218ee187a69b2813474d20c363cfc0503251642c3a2b2d6bec1de317caaaa77624872add49396beefec3e880539543eefceb108c85aaae6c5812b1aff7395adc145d96f2755235daf199036fe86253523066f2f945fe379823712e70de6948fbe691ae30d52c1c1f5834c9b0f91cc38d39445a36c612a1830a24cd6c7198c94642ce51498e9011e58a6c123278a239e5865e77e213b4b0e7942df6578e2a2d4f7c3b1c9dc0f2f525db44270c0a7ef88fd330297c6029fdda407ac4798fe10118d0d1a6643c4fccbe2bc373787c250501c07ab1607bc6c8d57ac7eb5582a39ccb1b640101960bef616cb25a9ae3bfa6613f321f338bcc3d5e69154098a50592ef7676d355d88b9cbdfca02fd1dceadf4d3131b8e6c54a8f955bf63f84c0a6837cd62eb13be3aca3b8f28f8fc2cd2ede6aead8721c96252540eab0ddbe11a019bf1d9b5e1f208a51f1ecf7d770</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+    <title>高维矩阵乘法</title>
+    <url>/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/</url>
+    <content><![CDATA[<p>NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。</p>
+<span id="more"></span>
+<h1 id="高维矩阵可视化">高维矩阵可视化</h1>
+<p><strong>一维:</strong>
+首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="yiwei.jpg" alt="一维矩阵" />
+<figcaption aria-hidden="true">一维矩阵</figcaption>
+</figure>
+<p><strong>二维:</strong>shape=[2,3]的二维矩阵可视化如下</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">[<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]]</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="erwei.jpg" alt="二维" />
+<figcaption aria-hidden="true">二维</figcaption>
+</figure>
+<p>为方便展示三维矩阵，旋转角度如下:</p>
+<figure>
+<img src="erwei2.jpg" alt="二维" />
+<figcaption aria-hidden="true">二维</figcaption>
+</figure>
+<p><strong>三维:</strong>一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">  [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line"> </span><br><span class="line"> [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]]</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="sanwei.jpg" alt="三维" />
+<figcaption aria-hidden="true">三维</figcaption>
+</figure>
+<p>切片展示如下:</p>
+<figure>
+<img src="sanwei2.jpg" alt="三维" />
+<figcaption aria-hidden="true">三维</figcaption>
+</figure>
+<p><strong>四维:</strong>shape=[2,2,2,3]的四维矩阵可视化如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">   [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line">  </span><br><span class="line">  [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">   [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]],</span><br><span class="line">  </span><br><span class="line">  [[[<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>],</span><br><span class="line">    [<span class="number">16</span>,<span class="number">17</span>,<span class="number">18</span>]],</span><br><span class="line">   </span><br><span class="line">  [[<span class="number">19</span>,<span class="number">20</span>,<span class="number">21</span>],</span><br><span class="line">  [<span class="number">22</span>,<span class="number">23</span>,<span class="number">24</span>]]]]</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="siwei.jpg" alt="四维" />
+<figcaption aria-hidden="true">四维</figcaption>
+</figure>
+<h1 id="高维矩阵运算">高维矩阵运算</h1>
+<p>从上面的结论可以看出:<strong>所有大于二维的，最终都是以二维为基础堆叠在一起的！！</strong></p>
+<p>所以在矩阵运算的时候，其实最后都可以转成我们常见的二维矩阵运算，遵循的原则是：<strong>在多维矩阵相乘中，需最后两维满足shape匹配原则，最后两维才是有数据的矩阵，前面的维度只是矩阵的排列而已！</strong></p>
+<p><strong>相乘必须满足以下两个条件：</strong></p>
+<ol type="1">
+<li>两个n维数组的前n-2维必须完全相同。例如（3,2,4,2）（3,2,2,3）前两维必须完全一致；</li>
+<li>最后两维必须满足二阶矩阵乘法要求。例如（3,2,4,2）（3,2,2,3）的后两维可视为（4,2）x（2,3）满足矩阵乘法。</li>
+</ol>
+<p>另，由于广播机制，第一维为1的，可以与第一维任何数相乘：</p>
+<p>（3,2,4,2）*（1,2,2,3）——&gt;&gt;（3,2,4,3）</p>
+<p>（1,2,4,2）*（3,2,2,3）——&gt;&gt;（3,2,4,3）</p>
+<p>比如两个三维的矩阵相乘，分别为shape=[2,2,3]和shape=[2,3,2]</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">a = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>  <span class="number">3.</span>]</span><br><span class="line">  [ <span class="number">4.</span>  <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>  <span class="number">9.</span>]</span><br><span class="line">  [<span class="number">10.</span> <span class="number">11.</span> <span class="number">12.</span>]]]</span><br><span class="line"></span><br><span class="line">b = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>]</span><br><span class="line">  [ <span class="number">3.</span>  <span class="number">4.</span>]</span><br><span class="line">  [ <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"></span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>]</span><br><span class="line">  [ <span class="number">9.</span> <span class="number">10.</span>]</span><br><span class="line">  [<span class="number">11.</span> <span class="number">12.</span>]]]</span><br></pre></td></tr></table></figure>
+<p>计算的时候把a的第一个shape=[2,3]的矩阵和b的第一个shape=[3,2]的矩阵相乘，得到的shape=[2,2]，即</p>
+<figure>
+<img src="matmul1.jpg" alt="matmul1" />
+<figcaption aria-hidden="true">matmul1</figcaption>
+</figure>
+<p>同理，再把a，b个字的第二个shape=[2,3]的矩阵相乘，得到的shape=[2,2]。</p>
+<figure>
+<img src="matmul2.jpg" alt="matmul2" />
+<figcaption aria-hidden="true">matmul2</figcaption>
+</figure>
+<p>最终把结果堆叠在一起，就是2个shape=[2,2]的矩阵堆叠在一起，结果为：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[ <span class="number">22.</span>  <span class="number">28.</span>]</span><br><span class="line">  [ <span class="number">49.</span>  <span class="number">64.</span>]]</span><br><span class="line"></span><br><span class="line"> [[<span class="number">220.</span> <span class="number">244.</span>]</span><br><span class="line">  [<span class="number">301.</span> <span class="number">334.</span>]]]</span><br></pre></td></tr></table></figure>
+<h1 id="参考文献">参考文献</h1>
+<blockquote>
+<ol type="1">
+<li><a
+href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
+<li><a
+href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
+</ol>
+</blockquote>
+]]></content>
       <categories>
-        <category>job</category>
+        <category>math</category>
       </categories>
       <tags>
-        <tag>Map Reduce</tag>
-        <tag>XGBoost</tag>
-        <tag>数据倾斜</tag>
-        <tag>LR</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>深圳极光联盟</title>
-    <url>/2020/07/22/%E6%B7%B1%E5%9C%B3%E6%9E%81%E5%85%89%E8%81%94%E7%9B%9F/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="0a5afce902152c2ddf39e32be1db9bbfc39484c661cdeb2759d0e569a781bf7e">5d20b81ac1f5d0b70e9113cacf134e1e0631fbdeb95d2e18e69242aada9459a8c4c9d289ad03a9e0d8b9f5577febb77a1289a33b1c1aa2858f144d451fa114f747046125a80d333e7f74639abb23edd296e3a35fa6fdff280e60a8019e1454fb126c13f07ac42adff90d0c5bebd0a04eeb91fef6f80753bd7b0b5ddc92f75ee0b3eb94ef17633917e2e7b7df33a15624c9c91c2820c584149baa1c0bbeec1a8c1eb6639ccf6eb658ee5e93c4d82ce4936cbcaf7824dad203b6f24fafff576184268e163eb69a51b01bdcf2b9f732a3627fb33e5080e176c63bf468caab4065375ca78fcc4dd0b38de40f693a40bea847907080291ba2ee3f30ac8aedcb500b09f6235409c6fbcd6d733a4eadd700ee6089e36314d8017f9be10c8948e9b849ba03667d919fba86efb7217f72869361f9ed30565d0ba9bf3b294fc692c357da3e45a96494b94b334caaf612bdbd9f41bdbc7bfdc104090fe9bbde7556ebb63d6dc3fdef51379f3b60d0c374f22003298e8c966c857ca069cb9b8cc4e85a47cb8dd02aa08f0ef00f7813c2119bdd75eefada083067dd078cc70d5858b73ec00d0fd1d6dba7cce5aa94153a6b45f328b6e42ee3d4b42d23610c7497339e883559afd1e4e49eb840751749f6a34789c4b75813cd95bbca2e693bc8b7220e384247b022da76d94643c79f0be643d8736a773388ca2e1301be47dfc5c66d8a6fe47b6ea222c78fbb94c58774c27ea06186a3b0eaf63f8ad636d190df97b7f83e42bea460e3541c90e699382a3d57f4083af10f34d9672d30c048e9d91da52efc5b60ca548a99af43aa713706301001637c272ef4c4a0029346784e3561c624301e8965b48f82f9e084140c7370daabbca5b4f3f7c91de8bdf38f330a58a4b07136871abc316a132020395b8dc6a54eb443e88f53dd60dacac2936d3e2152ec81844ae164d0b5c63b21d7611eb09f76029d566c179c849491a5acbd8819e397a30ac5830aed04491220a9c178df2a713f6c7032ab0234fc608862a7f21ddf6cb38fadffbf0062c586ab0fbb524d19c5e1e0fb5303a918da812e47ebae67ead3ec728e4df5dfd990d070f8209de1d2943e39dae1c08bbbdbfe4a43f93912a1b154357240d4c9a1fb77b0f9a2d57be19e576c58a80438bfcf5c20a016b3b2e2fd3a21eff190dfe6522b1807f6a9e588beeee8aa723de1016eb3d63b12fed192774b65b341f7c0b3d9bfa49a8e43020389289b9a8f2b49ef67e7d2ff0fc51558c9571f394a2e584e8c3b5c2deb22f76c690cdb0c08caa66ae07eba69899077fedd87a767fc0f550fa207a1e4e0193995410a2a2445c6108748e3f66e68f932c9e3c3d21e85a30e3971b6fa7dc1189f781ba24efb2671046fd8503c9a3a0c4d082056e6d53c489f38adc671c5774858e36b853788c5c0fd9a8ad78241738051d125fbe15b9610ac0fb207e5d19ccfd1110435d34610e0d9c6b6e2078f404a98bda334ab97b43d00369ee53e496ae84d33ea0d469db8b4e1d80e09db9ac2eba97b74ca0e0a1ad28e7686b5f5d1d49e55de8b798041f000220b761b5239abe16db87a95caea773a849c8ea58c8649cb9396c6e5416f062c28cf232802dba884e51a6abed8de484d7bb836ae08aad80ca4dcb04d31d77b30fbb8602fc564197cb3b3debf43cf6b6edb3e78454c061a3446603dedee655b4d30a929c22302341ea703c94256d805270ffb89ee32e9dd7ed9ae316a7d2321133f2afce8558af1335173b3feb11798456b7d33c77435fd0d2f659861b3bc12b937df614ecdfedf3a6ce41f0da1c76a14bc9626175fa3a71ff8ef28ef126d34bbb2284d2cfc3e4f26c7240c56931e848f5b4cee3659b0005ca0e2f4393ef297a9fb9d284a830153f740e4dc967dab45f6a65d1f1f3af5f097e65704c2dec7be7f950c168522a6bfb32fe0cff154ad2f6cc19ce591a07adbc96ebf06a4a4b1093fd1993a367158a5ce5bf9cfbed819e17adf351b54d3d876b474f296a3be91b3ecdfecebd569627fd839afa8b8655808c96b8f8612c924db4442d3a1fafb353410f48de56c6b842669d7ce3b84f9e21f0db4573b06858e65ce46349bc4edea92261e6d3cf457bbbfb3f2cefdad3c369d7828c2193420d16b8b980380be6f7d73b17fbd4e783ca3cf026c47f904b9ff45471a35b7b51d980ec3a701ce71b29c125c56efc37987ff91ee65b89477ddda99e73ccbaf98c1269179095cd3441d438c68be1c0de88296e27c5a649a8bbf477822d02c2e3273d613dac31b57fbd8196fe13f942353ee48c1cab869f04f2af8d0e8c94b0ad5df12b31f298d8cfa134fbd3ad105fc0e5964cc726eaf45dd407b7cd128c8612971d8c76f806a15fd273b18229a996a15d9d3454e8db9f4dd808bf302b073ae6dc92cc348ab416d1fabd5ce7bac0378fdca4f813d57f1df36ac3e851e9c23180ea61cd24f74f914c59327401dd9e85fabab426c1601f42af62ffab8b55b3911c1ac8a954bd4c4286ff4801e18d181ce876d37d1b82e1551264c9aca74cdea740053de89fa279bdf98e192972537c736b3a8451455aadccee011fe5a40f91b76028a41be531ba5b2ad05340b806d17515c4b2d6f862c79408b9dca6f3b6e308fdadfd26c13f2ba749c5d0aa045dcd7a08388662ebd5edc6885f7a07bf513850c47a21a8987b9db841d4151a70a132f7ba2bdfc3ffff396e07e436a1595620ef5a3131889316e7c3ef2890b026f3549f68b877d881837cabfee300191e467303d2043a4e49aeec2e2baf4041534c921effd10cab654898586ef8ea69db60747aacb34fdae4c3fcf23e71e3ab2d73853d50233ec963e85ca0b77b157925830155878b9239a5e328ced06b48655dfe5105bca0756cc0a5b584c9b86a55115b75237f6e4dcb46ac92125f9f15d89be022140d4c01face17b0b0644737b3b3fd0b9dee7015b35b0e199d22cf9f851b38ca31e10a491b68f2bc2676e5c9312f57a97e5090f6b8088be3d4ee57d37c8ad920e069ba9cfcff103d134fcb34d0a0b29266569a1416279376fed5fede1de47f7784993d16b269bb0538f7a29c31ad18c02733c0ea5c03a42468d87e0b8ffa2d09c801c0aa537d69822c48343996cafd2b86c3351656165510d694e275c11a24a211c4938fce9cdccdfca8971da8894a198af531a486d0d9bcda0955f4ae97032855e140a9d1c7e93b54a15856dc0465866e77d5234225d444f82430e4ea7e8c2cb33d76fa58f2d755464f794d6b4ff89406415fc9a0d850b59db6b28d1e816c4b983ccba7289ac1366038f42886a5bebd82a1ce4416239b1798779600c08efcd27c0e70def96c1a7cd58dfa0a7e3194ffa047c1c339d8740e4d6b6e7b0f5ba4fea0102bdddbd0dbd2c638f492223c6f5d42ebf8a0723573fe03a836867de1ef5625541b8b30263a8831fda3f436afcc46a425532879ec33a428a190c9ebcd7dd42d185bfd2fd8ce8e584d253aa99c848ba31184b1db82c06be20fbb491a80e9406f0978dbbf49fdda1f169b666aff7378d7265b344496fac6ece885ccd885de2b6ace28335db6da0403c306979c80ac419fb6595857c674ebe945208b6a5ad1c73778fae31722d18f72ded75da209cdee1ad38f3fbda3bf334685a8eed71116f5c1b8b73ae46c478f5e4cd26c02f6b4e556e1a5bfe3075d000a4d4eb0705e408236be4b10134d8e89f3a8658634937b51c484a03999a498cdc056e3f67911148d6eda0b4831a206708c5ba18fee7282b14e3dd3d930567aadede3d4b78bbfe30f08f76bbf273a3535cdbd4ba1deff16d8f867a89be1f1c88ef488f5ee3c61fd9b0613a6de20fbeea851624afc497a91f4f2c13b5ffb8db33b8fee649f42aebd083aebded096fc298141fcb73c029850e081246954cf2f9fe83029f9bee6e460a6f64b425ddcb25347919cfb67833d3916c827318e8573612cec34a537a2f4ad0b20fffb5039982083629deaf4082f8bfcd9ab354ed29b6d1ef8fe425d216c1e63fe9839e5f0f6d2be880f02acc0ab2c31a8bdef7cb86f3271299550d0dac4866a50a4cf1153ce91f158497eee378784e20f16b31725f03e0c08a8b8d78b63a21800d9ab0234a3cdd483f6124f49c362bcda270c4431b0a6c417e47e28f7168cf52d7c15b161a226c8f86c66eb60cf778f83848066ceb1544125a30fdaac0ee757a764f234bc23c2f271636d8b98381d68dbbab7896401932763601cb0c9d46db2854bf5b2fc9665fec8507b99e9499aeb99a6c6c6849a5104f0e8ff03b1ad0766c8a8c0485347c2ca5d845ae78fe4fb705a707a5726f5c17ade542135b248ef5487d3dc9f74ffc48acf6e03ae41e1e7d784e2fad163b902b0929d1ff3ef1f90213276d7c31aba67b89cc6f1d47f9df4e3cd1da622bdf617141be4b8f2dd79cd8a54445c99f2aec2e05fd8758f1a1c202c07168e4f4f5ae6f7c69838675d311c8f9e6a5a9a6cdf5228e54bd41b8188304a929ce2507831c765a1c115c945783fddf7bfb150fe76f40763e9462fe0b244dac18fcc67e8938e857b6646e12aca0a737f56ec38d88f006f2206a8fc3c61ff795171f0c0b243de530e19f041b73f97320e31ef21ada33d3da032b9ed2c13f54fb8961c2025db910ddd60b516932de61bbc5ee1ee175d814778797f20502f304199957ea82bd0ca19475ce017c4b7e1eae91bee6e8f3e69a2ae8b47c3393a794467b86b6074e145fa4b00945a84abb5395870d5c80bddd68ebb27bd6c6e9ebc2b4e4f4c7f572c5b7fd15fc38eef524959167364fa11a4a2b6c5bca780e946af0713abe2a5a88943c32834fc6aa0313e4cb80b75ce5a91db4a2928edc98e9993925100a8474afb47c479036c9832fddb0486d0e3e84ea27ab5dedbe51c7c65d8cfe78144253bd8fb8d0833070af9f79dae6c2a810d21797e0c8a727328bec85fa7e776766c0260403c183ab40033fb9b909b7aceefbd487d06bfa1ef88ca1e911d2f364e553b9bc3fffad26735c3e0f75ec500bc1dd10dae2c54a92d44ef52bd5de0664e84cc44da401cfbbe6f4d30a3535c84c6cbe32294985b28b28951a87b6581a61039ccf1e082c345654d683ae50fa386cb0999012ef1f9858aa3c381b48af68fcdedf51706b6b1ca02aa0402f6947361a9840fc5a8e218e2e2c6f92b0af2facbe645027e30fd6766cde5e78857c044b02fb26cfeec3bfacd0efa5328ebfa9ed1f62a0625ad2af92efbbddbaba816cd0ec828159df167e5bb8243b8ca4634f9ff21b8993790bcd03be431b769cf0768101d5796ce9ea563934b4bc2cbd1d72bfe22ea662339667fdef2dd3b7336dd555aead71fbb3ac1f4fc6bb722133007c4fca997b700ad9fc290f56fcaaab10fa879a8955e6f4f4b188b7055c764caa28f04681f9510814006c13e3a4042380c866db53aea38d50e6ff871e97de2f6a9edb9327f7151ea9f83c39984dffcef0b64b62fe180a135f8459013060a62e796adb8bc610641fd8c92585f43552a721c267edf394d77f818c11eb410ec3f71dbe2df1eee00c7927aa669f0b85f639123b369464309396f3d939492335dabe5ac8fd7e88b52260b882a1f904698019be40efce2b82c3ae2574acfe869798d082650820499f645a9570a6a2649b7dc63540f0f90da81f5aedb1fd2b493b46bf65b98d40b99797ef2a557dbaff7083e7ebb8e567171c57e30b2595190d06a62d6fcbe8e20899b9c986b90c62080171063802c51fef1c79ae9b3ced28a5c80d8e46c9b7b2efadf0d8a91767952b05d2c3c67ee8918e3e144a2b1d1ecb6290b4236034ce2074f5efe8ac30ac32776890155eb5313b1c3cbb9265fd72c759b01b158c39e109290421b0df8ccc2435c8e3de00624c0253860aba9e95db05a7ace9938925c633a330418d4d5f0531089ea81fb5e9b8e3851ffea9249b9160908b84141ad5020f524ea529b92696fec7d3ba1f63fde4ccc71fc762f1ad242caa1e24ccdfa3ee54d36d1e49478a5dfbd1cd0c91c8fa0b9491f43dfaea610978fdfbadbf015f3486bbd1270c43d69ffded5e9ccc4187eb47634d2b1d9b506cd36a48bfc4531079725e8503bf65c0612e96dcfb12546a2b15878f10b8153f449bca1f5dc181c9e60b716e328d4563894c6d8c651ed8da54b5ce29175745c1df9f4620b36b53fbba91744b30a771484dfd556f669461c149077f585df17c64ce13a17d0a44ce4209120c858e32caaaa3d4f1637348731230ef760a642c027121c0b6d6261afca351d02d71abb4e1121d954d68d822a9b66a2573dceae723d2d0edaba0315d9a588d5ba4d02b5c022f6cb6c6f2505cd70591a42ff3edafcb3b5cc9ccb69362e257559215c999985fed74d62116f5dc40c2b71724c466981eb00a2108eaa60851f1c7770b7842178e3c9cec2a7792930ed4c37b5a4bcafc54cede2b2230fa824cd7fedc1caf775db3eb9e555ed4d3c6fa4ab4b81c2c2c6e126d8b5c55094d62e5602aae9ab5a0c8611433325609e5e60c3c04d5d9d45426b07dc986193cf6856dd5883bcc383ad42cad297ac140ca1598922b94792747fe2cfd4e52e84f364a5ac2660524d5796029bcbe689f80d7991bafe4045eced16047293e0a80de5ff357833ec3883d554c131003752e98ec9c07d85299ec19fab53fb319969cba0c78a8c909988ab9cd102e1df22a149dc5b7c3f7e952eab436b3200a87d1370aecd2d6294134deb1f8fb7f5b22198b73f38c30419f79ced25305f6586102d3ee6d3917d5ab2fecc30a62b0c63093206105e01ef7edfce72bbe91d9df2e6520dfbf724a14692f1095a038eead049c47f5b65578c8297efe801724ef24e477b37e5e2bd4d3c7341653b1ccceaa3f28de5bd354968171b27c34d5fd2968dee17497befe8959d16311172229115de7f3104a05ec876e9dc6ad8c55aec7f58f35dc4acbc86a65acb2c6e92d94eaaec9c4b58e94b13734bd5f735586e91df63be08b3e6c0a64818245bfb37a160954f816f6750bbf9fb3569d02ad94523b9142811ff976eb2477cfe181002a2ad69a79cafd14207793972323bb4ae205baeba83118f6eaee5eb045bba688a3b1000e1a3fbf94e43b1ada1a0a8964bed377a80d88b019cc39a214abed44a0bf5c13a3d09e0e9f6da199d53e1b6a9a6253c1ed739d6b70ed7032992e67c9234bacaf31d8307a80878f00ed9c30e7c10e9d2dc2700acef4052051ee5561643dd28c24a84f2d7ac861ed467d49b6923f6412a81a457659a846f8493bb06736bdbc92b4f8c9095cbf57b5b831322d66616ccea9d1a2fb438713df47da5ceddaec042d0e555f5e96bd1df133a57bdd89bbc1358735e1d42ec89ba9c96be4c8ed6f6162300641aff076a542d99736287bb77684ab4cb949f9ea1e51c430d10a871d4e2d3224895d398fab1f28db4f0b95356bf22145583bf8fc9b27d5ce6d3d011db0e1ff8172dc5ec49d52de25cc44a354299d9d4df4a831403a3f99ff47ffe1ac723419cca699c97d392672748faf2f409ceeb21710863d81e668faace29e37fd3d5d08c7f2f38732da647428f0dcd598e635d6cae67c04944b4c9dee042676ee3512482201297a0786d699c26a6ffa01ceb296d32b7c4241dbd93855b15d3b26f25616e0422e5e0e81bf6708831b744268d7c3ca2a23a5c8815aa8f3c0861fbc0d0c052a9979a6d7e40fe3ef73342786f0b4b260a67290967db11ef327798aff4442e1e2858ced0ae6827e004b1bffd370d2ac3a20f23d3d90a6be4c35ca9662ef5035ef10da08511e1d9361f47c9413d59f2b84c42526e61815796d4cbfa90db0f156f7f3db578ee2dc44bf556d80394849efd19567bb73253934b3b50bb85168768d03a16d5c1db33f94fd3e87c530346e6a7a2d9e739c4d8ea2878da44a322afd5d1215b0c30fa99f77b008e7a4374cc102bf9c738720607e2b23473dbbee1aa1a1972fd71d90ba43843672b39a88ee955cbbac3e8dae57d42f4d1afb2b158fcc73f34872dde2d7b36fb536db36194eaadd872f3f3d84849b8852c438d9045b5279f6956159d493720d0a8164da53869247756de38c9d944374138926ed1a6be4ca3d21ceb9dd1e823c32808577920a27a9c48a2306ced20b864e183584c9bdb10935147bafc8182e46c2ca42b2e86773400789bfc5adc5fa3fb2eb66c83acd063fd6b3cba165f5f747361e09389e9b4c562f6366674afadb736aed9d34e971b15f9786e319772cd8dfd9a8c047ec27710f9e475f3dca6093b0403b48ef60f03c36db447411408380d46f1b873834712ea971e47b7a4cb2b267f8bd744deb17de262493307a605b1b53c9ea4e408fc99467acab2a56162b480d05b1d65ae76db946f2df78e377e591df5f312e4bed291b4184cd2b5c4ca3fd0a56619d1734cbfaf92640a912aee1996c77ccd62238c093ce60d43831e6b08ae3619d60a9140c2c3ca3d136c8d9e30ee11f97a1805f8e8e62475931c9a8b9c8eb679915c62a3a433c999e09580d8edab25c2355517551ac1a3033c646a609f3884e323fd549af76d85bf0913b204793edb388c819fa4492444dbb5ab0bf7dcaf4e0f5c576be046292772fd85745d749f173645a4a732aef74d63336e08987f3fa14fd9fa491c876af4a16ec7ad5d9de52a159062cfbdba37bb420b2871b96ba4bf3b956cf20a3818368640b3e191ebe7024737b35d486e40a77a59b288f50ba12c3c1b273cfdfa0b2f2f846dc6c82673546e84b11b4b826d65d990ef9a349ff67fef33389e76e13a13badd75d67116973555500c6ed4fdc4b5090e9d505c8590d59ccf447edc17cbec79b74fffcd0bc84ff4a9bed7c7196f6dff977d309a865f36856d22b2c7fc7d432f1380a89c323a06af220b2c119f2a6cfbaf52be73845cec7c3395ee77f486a7a6fd9f80bfbc5efd60f783a39487aba98b041a405ebb65e3bf51fa83ad2e4363838369a9decda488f1930668d974278b5fe64a8f065d94fbed663a329b89874f8aa854749a2dcac9f5bdcb142c74a75ab68061e7f4b58e4dfaabadd4272280ef19c26e9a40b9f5024ae962b20ff37afe7c22e4bcc71a54866d49926021c8fca99537a4378fe8dbf0f4b6ceb47fd19ad007a6b521d17c7f092abd8b569d20e1d4abee6446a692932c7f29bb36956fbdbefce841d8f10c6116efeca7bd7c71ce8a0ee5374c7665c08ac90a9d54491e04b43928f6a58ec80d823003aac1aeffb0528b6e9e8094447537f4a1ac4a1137a3e7eb088a919c3985154ec21ab422225d247d20143ff2b1be8a2e432cd2a59b023ae071de41e58a99f7ce8ca08391333ccfe39cfe1e5d9a7807769e6bf4e84ac2c098fafb885f81328f1e02d0b41f7026f32e0bb579aaefa5996cbcd691b36a82771de4a527f24a8d7062476e71ac774a1988df0fde7bfe0c7c7d488dca34393ffaa9ace7c60438e7fe7144ad4bc64a530fa75133204dfad0c8f534c1c748937a7531a508ba5f5f75ce1ef0489b5d6f600bbfd3198022c48d5e4ee0faeb8cdf58c4b8be54f1dea0e7f1ed5c1c4723588e36cb9f5508ac67e631d8f69c270e4df692ff407752c6513f902becdb71c74e2d58f9a8f13a642d0c762c55125a4c2f34a309ef4593605c252527223d25bf1fcbe5fbfeb1d79b18369acb5a4f03ef078a31dbc8d889e1787b049098bbfc9520e9390bbaab80ad30c449e632b6f505120ef78c81958f919b8c9fbb36e311a8ea160773167389cb56bed30fdb389e7b9898eeac8d80632b152d34ecdfdd1a350f99aa94467120aec8efaea43ca5579d0ecacec9b866ef641877f564240e00704b5cb8031381ad3d6e3f8687020ebcade1e31c25bd07a96dc513fcd06fed6e1aef56f410900a601b7b15db9c431002289740ee7832d8247689c062143119b54c8fe8194fb919e1a1412acf3edc2ec5f755f3e7fc61b043140e93bd569383f9fc8185e76280ec40a6862786ebfcc4bc140cd43d25dfc8a664fb28c08ba01a82951abf97d656ba4988edcfd4db3ae0b6c428bc0492b57e9d5e662b9f3d14f23fecb1903d8f81003eb6b83574d1b2405cedc794332d3a1ff8582f8d43b483d5fe0c1b732e93a9267ab64f87ff5b5aeff39417c14ab42f2299350136f2bd4ed734bd5a8e61cabc0d190f81903befd7369bd12195656a27391c46d813efbe7f29962374ebb3b5c63866fdaed0de6882ae22e2e3fd6b25ae7a64c781a0497e20d46a8e14b9f300f6f471a2d5165bcd296b993176e42a024170a10e3c766ded286e193838b6dd131e0bade9fd9ca1ea9290227a401925310744c5b320737ba7566eb74947a02b5a1899a3823730f9f5deed1abcc59612f320d7c1faaada65ad4edfcb7148a5a9dc85e1ba98313f60f544a822be28b8628f0ac1fb071aac15fa9c6d93a07c739d551b26f0edfd5d17657df39d736124c6d2f2c50c05b70108bb3ee1dd6c8dcc8832e9a003e2ba33c680f83aa37a164dd800d5d7038d8dd642286e7b65219dd4b9f092f6ec79ab07eb5a2b98e89abcc5d648fb4dfab508ab0aebb6e3209cd9167aef93e3da6e0ea1b5b9f977d5a008d19a3dd1f3b88d7fb0abdfe2b3d712111a4c554f088076aa5035dfa5ec5fd4407727817f01db7bd8d60dde14bcf41662f4ad261632089d46536c780a4641484ab513541667bb57a50f14f49a709823634c04ab4c707dbcf53c5130c3409c89a358ea634af07c8e2711964e89b7e056af43e610bb9e3c8077b4e2ebe70a3521ff3439b3db210d5f18df96fdf259445ab8c98f48f8aad302d2982e1bded82a2f58d3af4e076d1641561dd22dadb07c9367a1992778a8d579029ad754d15552114aae2063a6985b706b7f6a875d3f6fc07dfa16d40f2b8ebd6559a5750314b4eaa541d948b58216e1d737e4065be1aea10914b04fb86773e03f1188ce9b8cbe10417436caa0419affc</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
-      <categories>
-        <category>job</category>
-      </categories>
-      <tags>
-        <tag>特征工程</tag>
-        <tag>lstm</tag>
-        <tag>bert</tag>
-        <tag>时间复杂度</tag>
-        <tag>时序特征</tag>
+        <tag>tensor</tag>
+        <tag>numpy</tag>
+        <tag>matmul</tag>
       </tags>
   </entry>
   <entry>
@@ -4943,29 +4907,6 @@ GELU(x) = xP(X \le x) = xΦ(x)
       </tags>
   </entry>
   <entry>
-    <title>深圳乐信软件技术有限公司</title>
-    <url>/2020/08/05/%E6%B7%B1%E5%9C%B3%E4%B9%90%E4%BF%A1%E8%BD%AF%E4%BB%B6%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="aeee2b868fecfed142e92acfdd50dfa127cc431ecd391b6895dd09bffe5b3848">5d20b81ac1f5d0b70e9113cacf134e1e134b19f000ba74e5186cbc353b77de2e102ebdb688b73a05bd8208bc29535182ff7cf0cbbe5f07bf01c20e725e9f5377b154d9a6a96784917bb5ced6f932c624e5b39d6ccebdb1c4055a1e20cd6214a7db11408f5cb7bb796db341b9217e75e8585c22fde09dec7a18fbea0fc80f8e65b62e360ba6a6b075270f8c6ad9f682592c1e92b91f1d6417051a7656ae2276540c872d56ea756e933d7834cdb90bfd0100ce145ddb7669ea78e18f1d552cbb96a2f433dbc8ffa58473964c6d895ec71836349e88b4fa7670dcd415536fffea9d0a6b009d83e5a0773f5a94ed35afa715beb25ff7ea63c6e11f236de40e85f673e3eee98a9486386e3b4f3aebbb8165c15540c6ca3ec4de2f31854b1831ac537753c69bdd55f116cfa76df2d4710a7c76c9df12b02e757286d0f18c3c9be24acb39051b1956a9c09b7d5b18c443a8ac82806a6469786f0f6d690b75b783a23b6a5cb5f25a01a623bba69f0723b56fbc9e72a3e2777a9b953508fdfb4cd1c743969401d786063da5fdb93935e36e96ffc1465a5051537f24371e94c69f2d4554a0a19e22d3cb370888c5c822cabff00148a3e03bd49c2beb47826d84b78932dc4a11a88342ea53096bca662ed4f3ef0e98b8cba375c51fd67d9582f96f7722c24a2be61b98a548c2c5256ddbcbb85f03836a3aab6c70fe0c086a931558d97516603a6a239afe5ac096a849d3a9f68e696e2051c4ae591619514df5d890e7d0f8de07ff7969386986e6b3c32786441ac02556cd70ed2c535648ca22443c1298751f8bfda3d2d9387587e62540a95dbbdc9ea152fd0a217331f40b8a5905e0fe4073ed455a7fe2a967597bfed0072ebddf761c98aca3c5eded0271761c23593ee3af4a9cb5fd7951224d33f288ed664cda714cb213617098e061a40a1ebb2763961fb8008f91eb4e4e2f6f7e560d0558e676228c83096d4873b7ca0ee3725c26457fcabdaa3370c8612b246536952a05e1deffd138c47e4bf44ce29684ffc08962513f3895e12cdf8f7412da3f3bdc60f52ffe2a7572c60bd5d37332fecb4373775f591a710a25a63ed90466386bd9e265479c0d1433e4f182b5b54e24b249c2a2f928c49142c951666bd2a1f1af85c6dd3b8a7842ff64160728f6de646ff377cbbe8d40937b6e89cc2f64c14b7a3ddb4014ca3a228e18997668ca4e6845f585ae99116e75fececb119552f5b5e487db26f0148e67d02325ec1b4e346beea5160fdad3713220790ca83dd5a99c8f22c520145074fd48d6dc476f0569c4ce667e97c05e59d40f44433822b0bf62d6910f9be6540db94051196f835fd108483af5bc00a042df8009f13edca8035a791a8b9149e66ab3e8e8318b1d17d8110f75ee3d3c82da079e4bf02fb6ed096b4629254a36edf62860953b54fb89d1c76a4f328bd07ea1995d950ed4bb85fdf262fd25cf644573f611e036a1b68f8f3bad8d2974c4c1962843b4feec5d071677a4fc073c6d0faf5b1af2b8b797249297caa49fdd29649cd54664e44588209b978b8ca1e90e4069f05c3c4027466170e000631688110393a3d3a3fb84b849a9d3c5830d1a45f6ad692a9a90508f20f5e2b1297a34535d362c3d9c1d91063449a84674c478ea267d6bd71073cac6c638808de063e8571997c3e4a9b4fc3566986d8454bee5de6cfeac6e2930f89e6b7a17952935d5c41c79fd747c4ba509a487f2cf72340ddd74061f994582c2244007db68409726cedc01e4b41609ad9a9fd599baec8e6b03125b11059e40b3586603da0f99b7ebdb39973529afb01c81e9dd54302cf43ac5e59344384503ca2b049283b0f8ec4b876768c3f2b7adf4cf046e31390a55deef7e6449ed0043351036ddac548c8c54556bf291a4e5a3b4e0869824366f86e2aceae304dce9cf69a11eb9cda1b8d3d7f7d144a63a2855c3d026841e8fda8b0a07214e8b1403d76b2d61ab604db880d2c31c46463ee9ffe4dfe780637541ba254c3d26f325aa3cfd8d5e6a5c5c58a06daaa83bca09dd2aefddf3ce142de5aa05417ac7e0620fa84ba485bd71d59cb585a23857ae38599a1c0132cb09df6e0ac8611e6d7887bb83022a3a8e61f530f00066ce7ce22bb6edfbefd6c1206225837c6901d9e25f528f9ddab79ef9c85d02135079e32bf4f216086531c5c11e1304c8efa410e2e2086b0c9ec34f83f0b93c0562c507e44bffc9fcf447813d4174d5110ba41d08cfb797b3561decea680d16e52da9af2e09c5cb6b78dd6f6fd768d976723e7c27b901b084c8ebb65da511e0dee7dde738eff702d2cd15ae92a9a76ada32acff54f507c400e590b38df8fc3c134629addc0d3a9dd8308e7d7c2884033b50adadff4380b700c3a34f0ad87b8ab46bca91ba9c7363a4c2acbfd1fd662855dcd4a2d6d108276b1507dad01f02a6e5005a8987e17976fd628f3d20b6a5186ec99f55a08ee6d85ea98cd01434f93442fecc783ef26a3813f60c33ef260d867fc6bb3800df3651bc4f51603fc461089da0ac198180b1c5292e2c5621c7d09c8b8b7924fe2b0a4d35d5d1fc71c1649952ea924798badf96b8ae34e7ac243031de2fcc0b6778a8dd4eec410b712ce622f3e1ea0914b191986d7b96205e7b8d2dd11b065cca0e46f1e5df6b63038ae63c3fe6da8a4949e952208bc78c2ee7b002dd62a3ba2a0a5dbe0f201f26a8d0e878f18063c7626c49f7968bd7df4fe54b1b8b87e3f38c942d0b9f5b774774162fb7e13a2971c1fe7156b2978f57909f06b2ebd44421b4ee3365b667956aa06be312fb7956402ecf8873de7dc0822a4b8c1567e46aa95651b7bd14e12c6e4456c5fe67ecca79eee82f13ab9ef08bf538b135277fcce2f09885eb8b29bd55db5da105411925ebb730c8a4d14b2f84583d16e3b85c528077e01c1de2b26c3eaca816c502d1645e86f628911e43c200fc269ca674e4c02f24fd438522c2400bd74b9c17bd8353c850d6df5b1345604c71e5dbce50a44e36094882597cbe40dcbf87978ec2bf</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
-      <categories>
-        <category>job</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>推荐系统</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>深圳追一科技有限公司</title>
     <url>/2020/08/03/%E6%B7%B1%E5%9C%B3%E8%BF%BD%E4%B8%80%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -4987,6 +4928,29 @@ GELU(x) = xP(X \le x) = xΦ(x)
         <tag>nlp</tag>
         <tag>rs todo</tag>
         <tag>nlp todo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深圳乐信软件技术有限公司</title>
+    <url>/2020/08/05/%E6%B7%B1%E5%9C%B3%E4%B9%90%E4%BF%A1%E8%BD%AF%E4%BB%B6%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="aeee2b868fecfed142e92acfdd50dfa127cc431ecd391b6895dd09bffe5b3848">5d20b81ac1f5d0b70e9113cacf134e1e134b19f000ba74e5186cbc353b77de2e102ebdb688b73a05bd8208bc29535182ff7cf0cbbe5f07bf01c20e725e9f5377b154d9a6a96784917bb5ced6f932c624e5b39d6ccebdb1c4055a1e20cd6214a7db11408f5cb7bb796db341b9217e75e8585c22fde09dec7a18fbea0fc80f8e65b62e360ba6a6b075270f8c6ad9f682592c1e92b91f1d6417051a7656ae2276540c872d56ea756e933d7834cdb90bfd0100ce145ddb7669ea78e18f1d552cbb96a2f433dbc8ffa58473964c6d895ec71836349e88b4fa7670dcd415536fffea9d0a6b009d83e5a0773f5a94ed35afa715beb25ff7ea63c6e11f236de40e85f673e3eee98a9486386e3b4f3aebbb8165c15540c6ca3ec4de2f31854b1831ac537753c69bdd55f116cfa76df2d4710a7c76c9df12b02e757286d0f18c3c9be24acb39051b1956a9c09b7d5b18c443a8ac82806a6469786f0f6d690b75b783a23b6a5cb5f25a01a623bba69f0723b56fbc9e72a3e2777a9b953508fdfb4cd1c743969401d786063da5fdb93935e36e96ffc1465a5051537f24371e94c69f2d4554a0a19e22d3cb370888c5c822cabff00148a3e03bd49c2beb47826d84b78932dc4a11a88342ea53096bca662ed4f3ef0e98b8cba375c51fd67d9582f96f7722c24a2be61b98a548c2c5256ddbcbb85f03836a3aab6c70fe0c086a931558d97516603a6a239afe5ac096a849d3a9f68e696e2051c4ae591619514df5d890e7d0f8de07ff7969386986e6b3c32786441ac02556cd70ed2c535648ca22443c1298751f8bfda3d2d9387587e62540a95dbbdc9ea152fd0a217331f40b8a5905e0fe4073ed455a7fe2a967597bfed0072ebddf761c98aca3c5eded0271761c23593ee3af4a9cb5fd7951224d33f288ed664cda714cb213617098e061a40a1ebb2763961fb8008f91eb4e4e2f6f7e560d0558e676228c83096d4873b7ca0ee3725c26457fcabdaa3370c8612b246536952a05e1deffd138c47e4bf44ce29684ffc08962513f3895e12cdf8f7412da3f3bdc60f52ffe2a7572c60bd5d37332fecb4373775f591a710a25a63ed90466386bd9e265479c0d1433e4f182b5b54e24b249c2a2f928c49142c951666bd2a1f1af85c6dd3b8a7842ff64160728f6de646ff377cbbe8d40937b6e89cc2f64c14b7a3ddb4014ca3a228e18997668ca4e6845f585ae99116e75fececb119552f5b5e487db26f0148e67d02325ec1b4e346beea5160fdad3713220790ca83dd5a99c8f22c520145074fd48d6dc476f0569c4ce667e97c05e59d40f44433822b0bf62d6910f9be6540db94051196f835fd108483af5bc00a042df8009f13edca8035a791a8b9149e66ab3e8e8318b1d17d8110f75ee3d3c82da079e4bf02fb6ed096b4629254a36edf62860953b54fb89d1c76a4f328bd07ea1995d950ed4bb85fdf262fd25cf644573f611e036a1b68f8f3bad8d2974c4c1962843b4feec5d071677a4fc073c6d0faf5b1af2b8b797249297caa49fdd29649cd54664e44588209b978b8ca1e90e4069f05c3c4027466170e000631688110393a3d3a3fb84b849a9d3c5830d1a45f6ad692a9a90508f20f5e2b1297a34535d362c3d9c1d91063449a84674c478ea267d6bd71073cac6c638808de063e8571997c3e4a9b4fc3566986d8454bee5de6cfeac6e2930f89e6b7a17952935d5c41c79fd747c4ba509a487f2cf72340ddd74061f994582c2244007db68409726cedc01e4b41609ad9a9fd599baec8e6b03125b11059e40b3586603da0f99b7ebdb39973529afb01c81e9dd54302cf43ac5e59344384503ca2b049283b0f8ec4b876768c3f2b7adf4cf046e31390a55deef7e6449ed0043351036ddac548c8c54556bf291a4e5a3b4e0869824366f86e2aceae304dce9cf69a11eb9cda1b8d3d7f7d144a63a2855c3d026841e8fda8b0a07214e8b1403d76b2d61ab604db880d2c31c46463ee9ffe4dfe780637541ba254c3d26f325aa3cfd8d5e6a5c5c58a06daaa83bca09dd2aefddf3ce142de5aa05417ac7e0620fa84ba485bd71d59cb585a23857ae38599a1c0132cb09df6e0ac8611e6d7887bb83022a3a8e61f530f00066ce7ce22bb6edfbefd6c1206225837c6901d9e25f528f9ddab79ef9c85d02135079e32bf4f216086531c5c11e1304c8efa410e2e2086b0c9ec34f83f0b93c0562c507e44bffc9fcf447813d4174d5110ba41d08cfb797b3561decea680d16e52da9af2e09c5cb6b78dd6f6fd768d976723e7c27b901b084c8ebb65da511e0dee7dde738eff702d2cd15ae92a9a76ada32acff54f507c400e590b38df8fc3c134629addc0d3a9dd8308e7d7c2884033b50adadff4380b700c3a34f0ad87b8ab46bca91ba9c7363a4c2acbfd1fd662855dcd4a2d6d108276b1507dad01f02a6e5005a8987e17976fd628f3d20b6a5186ec99f55a08ee6d85ea98cd01434f93442fecc783ef26a3813f60c33ef260d867fc6bb3800df3651bc4f51603fc461089da0ac198180b1c5292e2c5621c7d09c8b8b7924fe2b0a4d35d5d1fc71c1649952ea924798badf96b8ae34e7ac243031de2fcc0b6778a8dd4eec410b712ce622f3e1ea0914b191986d7b96205e7b8d2dd11b065cca0e46f1e5df6b63038ae63c3fe6da8a4949e952208bc78c2ee7b002dd62a3ba2a0a5dbe0f201f26a8d0e878f18063c7626c49f7968bd7df4fe54b1b8b87e3f38c942d0b9f5b774774162fb7e13a2971c1fe7156b2978f57909f06b2ebd44421b4ee3365b667956aa06be312fb7956402ecf8873de7dc0822a4b8c1567e46aa95651b7bd14e12c6e4456c5fe67ecca79eee82f13ab9ef08bf538b135277fcce2f09885eb8b29bd55db5da105411925ebb730c8a4d14b2f84583d16e3b85c528077e01c1de2b26c3eaca816c502d1645e86f628911e43c200fc269ca674e4c02f24fd438522c2400bd74b9c17bd8353c850d6df5b1345604c71e5dbce50a44e36094882597cbe40dcbf87978ec2bf</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>job</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>推荐系统</tag>
       </tags>
   </entry>
   <entry>
@@ -5036,27 +5000,54 @@ GELU(x) = xP(X \le x) = xΦ(x)
       </tags>
   </entry>
   <entry>
-    <title>manjaro配置</title>
-    <url>/2022/03/19/manjaro%E9%85%8D%E7%BD%AE/</url>
-    <content><![CDATA[<p>本文记录manjaro使用过程中的一些配置！</p>
-<span id="more"></span>
-<h1 id="zsh-配置">zsh 配置</h1>
-<h2 id="安装">安装</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh</span><br><span class="line">sh install.sh</span><br></pre></td></tr></table></figure>
-<h2 id="themes">themes:</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.zshrc</span><br><span class="line">ZSH_THEME=<span class="string">&quot;ys2&quot;</span></span><br></pre></td></tr></table></figure>
-<p>其中<code>~/.oh-my-zsh/themes/ys2.zsh-theme</code>的部分内容如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Conda info</span></span><br><span class="line"><span class="built_in">local</span> conda_info=<span class="string">&#x27;$(conda_prompt_info)&#x27;</span></span><br><span class="line"><span class="function"><span class="title">conda_prompt_info</span></span>() &#123;</span><br><span class="line">  <span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$CONDA_DEFAULT_ENV</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(<span class="variable">$CONDA_DEFAULT_ENV</span>) &quot;</span></span><br><span class="line">  <span class="keyword">else</span> </span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(base) &quot;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PROMPT=<span class="string">&quot;</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[blue]%&#125;#%&#123;<span class="variable">$reset_color</span>%&#125; \</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[yellow]%&#125;%~%&#123;<span class="variable">$reset_color</span>%&#125;\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;hg_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;git_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;svn_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;venv_info&#125;</span>\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$fg</span>[yellow]%&#125; <span class="variable">$&#123;conda_info&#125;</span>\</span></span><br><span class="line"><span class="string">\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[red]%&#125;$ %&#123;<span class="variable">$reset_color</span>%&#125;&quot;</span></span><br></pre></td></tr></table></figure>
-<p><code>~/.condarc</code>中增加：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">changeps1: False</span><br></pre></td></tr></table></figure>
-<h2 id="所有可读目录颜色">所有可读目录颜色</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.dir_colors</span><br><span class="line">OTHER_WRITABLE 01;34</span><br><span class="line"></span><br><span class="line">vim ~/.zshrc</span><br><span class="line"><span class="built_in">eval</span> `dircolors <span class="variable">$HOME</span>/.dir_colors`</span><br></pre></td></tr></table></figure>
-]]></content>
+    <title>上海天壤智能科技有限公司</title>
+    <url>/2020/07/19/%E4%B8%8A%E6%B5%B7%E5%A4%A9%E5%A3%A4%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="0af94974f7a9039ba7a6041fe5da6541ed91ead1804c20660ea5984729929d36">5d20b81ac1f5d0b70e9113cacf134e1ebc8ffd03f4a917696faa51abfbe5fca7341999c5d88f9101d6c86be741db1e77b91f8c3b808b62850cc3beb489fea67fba4cdc5c00b6951c4ddc80a08bff8b819c8f60d9dc0a9fe6c287031269e6f1f43da2ec6b2dd346527937cc080c1d283ac20743de9b8934dfefef41ae45cd04c4ce6943d953ae40cc77e4d5dd4e7f35a834eb8dec3586e1722ff3d2abe46a5543e55e1f0bc08415402fe1183c043b871c5fc0ffb71f7ff21a109210ed95772f3b655eaad5bed7ae6a3994323ab1e800c79e605d971622ad68929b3560873edd20bab180de001f09b9ff63a7ebe91f7a6bc93e731d18d9fa1a6608026527d57541deb1cd77d84923105dc60fa6f25165d56d5a7ed2732e8e34e0c1c070d59dc9ce6aafd2fc1f50d230c18f8d3a4551269cb7375398311defd1d52b9554182af0aa93f2fe63ae10a580841240919062fdea1633b951ca02320f6d353d7799375ca8dff7357254e9418698b92ce771147b9ba76036dfa049faa010875bd1fea38ea28fb17c7524b2f68ff81e8bb3aaf5b45b9ea0512dd731081640d4d822e98f08341fca15240af37805e88a77a1e7608e80985a20e7d98f640bad9f05888a559fb1a40a444561e97ec8ea67915960da115f62503e0dc3ff1432c00dab7c586ee1f645a31ce98de8cdea326597aaae1ca60aa58b2d0358525841536ebb06911ca2d4606ccbae7ce8af95dd9001de779c45b7ddfdd1599f4e9b72ea3ccc377cee36b0a29d0f03809203f1272c11f7df13a0699e1e3e3fa0d6360ff70d3442262f783fa78617c447c454c450acce584acd4752fa85fc05071be125840ec58dc48dbb4444a96ffcc9e90849304d6904311f1edac85b41baaf7543a067bd39086dff0c0b780eef42d0a3389951c8dd822b4aee5284dbf180867be610dd4d2dd6ae923f536444a6c526e2ab33838853d7dd6788026152110a10edaf95e019d5c9e04d88a2ad7bea8ea32094ee2ca563cc9ce11204a74d3676731c0020de8b1934ff6c00062d42a5709a20df042a81da417bc12c60b2cfa66a2b4b10e61b5fb465466fa123c46cb1dc1d0541dc56b8acdf201de7f0a26b94e49f82d59b933be44c0e78b98645d7f5f63eb51d87ceaca308e31a9cabe5f6adc7654b9ea75da923c42cfb4d10f3e4420df8f3048637fa2e92c215d9418233ac7b08e65baf4894e0a522b64bd38a270c7be5fef710c7e94c47147ee168de797ea8db3e8244dde894b56d041c581d4c1a15fad24e658f89950b8eae8f26a29315cea03ed88b2fd5f85833cdf8bc7d8b45d9b868d1159749d67d50980753c07291a176f5e6dd5c9b11491613a0a3644efa1b53d437aa103f0f13290a65fb2479d936f5f79887334eaf1bf718adeaced7cd55a66fb62b025594c63a9f35dd2ba5c1e789ae2565cce438f7e5cded5362718538e20d04b06bd54ccdc46ed95fd7716b26275ec00cf19e64eeb9b0eb65cb6889c77cdfe096e1a68c1c784a7d228bcf59b59c51a50ec628f7c2d4121d3800351c527614eaf36cb6af8706099a116f373bcfa25377ff8fd4b72954312db9c5f301b671f8e7eb1ea2979dfd8a058336476b0bdf331d1ea6a01e03bd4455ae85dfae6b3a9b00fd42879f652d4495853a92b52304f02000a5f71816dcf006c14e233113bc299b360172c9d415628077520bfe92f3aed854aa1a18ec7de271d43b6afe6216ece78487d2b7b5a9189afb8cc5b62400db168c807282f82f4889601178cc12710feda7ef4815163bec16f977cde18c21f823b6c99463eeecacc03a2acf475e9c33f414a0d6112984c5d97ae4e5183e982e428a4cecd7e76c131d525a1751475ec7e0f7aee103b172d2118b9ee4ce16ca8c33be189c8b0c4a2fe823e22411bec1b442d293d9431cd49a6fd7494fab4d0b97eddeac9c16cbd646c8779ce8688ffc25f9a9f9a29c9ad05e615a6349cbbf3411cf385be77a9befff543578a6c6b5cb9bd81f5f5b459f7e85dd2a85ba1f5b8f640af1027b562ae656732bbb4151d2595c5ee50144ce64d481ead9c428d260c4fdda8682cb73b0d17771db8759f7c4e52abaf4d09ed96e4aac915953ab59b3fae5f251fd97aecf5d05b4b9070775a3a58d86fa36d038884487cf5499fda49ec6e37b5d34bb1650fd2d99aa8e22ef165e1d08e5ee225599261d1c20728297f1ec19b2e38c5b5dccd160dadbc35036d34962752b89a51d0659dc2fc6ab6bda4632be5e205bb62db0eda01ffe5df184ac193d2d70c1ae651319436806e9002a688fd0bdf5743ff9f54df021a56d35dcf2cedd3ff8fc44b951a9087e80c8e8925ccb0930e1be7788ca17941178f028474a3c83b0ee36962ab3930eab57fce213bcc09ea84e7906af42d18f5c690222604257ed7a6c15d2768514806351cb90bdaea2df808614860f54cbdc74785fef36dcdc649aac4dd41c4ee573d38099b9263778e480b6e292d090d2d283f452ddd6991670edc4010e9a27fdc95327eeea6f974ebf561e876908208d9b35c84297a226b65e03ae62629eac435800d138346f5eff9bcfbbded9028fafb3ffa382fbea7e23bb32ef3a85587bfbf602e1527d78b7cab2e18b6291f0c842fe2f8907472a48f6509bc79ff4786e20f426ace9c6f736fdf539ae187932129f33c79a5e170075c8d31b32073c764d717d11cfbbdfefe56ca9092f18c5189dbabbb34205ef4b0977c1d08526df55c8e70f59bc9158073ade65ad28c69e0f53deea1d8e55070dca1338190b2bfe93cbd0470072e972e890083b0197118980d8a2d22acf0b2d3753fb2ba8200acd59da7af2a0d51482b3a3f6e81badd9a168db55599f6bb7fcaab651cffa90b383145cb8c1075e32b5f371fe39b1410521272007ee99714db4b4e4cdd9ec63681b3854ed0dfd2a3aa4c9fd843adf8a2bfa8a03ce1a013e3c006540ffe652dee383768c9d80fd15189bac0f36e2c53d679e37414ad5cb74a138c5670529123f89b8fb00e9ee5108013dbdbdeb0913752dc97782e7708ccff5e30bfef7b1147b562dbfbe101a6ca8623428c1b0e272b15f185e9f05a034502f984cbdcb66463b005e09df13b24789a8723930cfb264f009b316a62b37fe49aab5715129356aeef103b0fed5ac0ca5e0d34ee738a8129bf6a257a7e390d6f4b80b76437ce4736990c636afecdf4740588f0895b8e82d09710700e07534a05046992cc758e2300576333f246df7b21a2e77d0963bf2d0ed3653ca8bb83417055f9f154bb6c49d85e267d7ab26e5c442decaa4a06c086b5758b8c007e0ee9a188fa02d6f555594d65a4c55089cf78f167dd9c325ccf84bfb18a31cf5a7c31cfe9bb5e2efae2c4c54b8af2ce5449250a94ef90546a7ac1e12d93c9731709ff58c91b188704e7f015cbdbf1419d5004bc446cad6af3a3c3f5401dae3a9956eec0fc528cf04388b39bd6ef48b337ef2543215b155794754a9ea63fc36f87802ee3e0d59d6fdb27291f68a16be87d4cf200f75af7b1f89b8ca58e3e66263b32c1c3f14c16b80ae6cfab792e4a366c0b1537b0335c81cba0bd0190f0df0c5b6f0fa04acbe3664336e19f7978b02d18d3c45684f3d3cbd609e84c1d96fc48df539d2a8e658093f72edd98a9e7ec28182cfa92cac7a69064651000d9c4c293e2d98d15b396a8a061fc41096a50b4c91f83c2909e94e5816f58fbb4781edd643ff8b5476d4d2bcdda663fe181228484cfecf91aaad072480026b15a1107475d593ab592b357beff7201e6a9cd7debf436e50c5df358f05a8f312b830005694d5cb3758fc233f907cae861fdd81077e25ff6fbe048481210fcf5883eaeba6dc7f8680e20c11163f3f762f9b0edff0ec0bc4e52f9c85d894f53a43a7f590e59e7201fb6f721326e28674083b07ad2e55155de182861c2c3a75b389d8a6c4a107b39055882f432bafbdb222ed4a8648809131b7372894e18698b61f439f1b0681cc759119d38cd62833a989e97c08f6d1766dc65d1eeed14ce070b72d288a8be3223d83c41d2170db945bd06ab0c739619e5c9c8093c8a7b73d3c8bf60dd3dc85598676987486476d303f7f476b420f8997bd732bdf7c8678f1a0e66ce21e4e29e2ab2a9fc57402d2590d035ab3718d53d99ea81d0e70cc4a16366306f3545dd5a5600e0b51ac9513df813c3e9eb0409ff4fa45d354fd0a4adc97c00fb0681f5b397767130497363333521e78ae6b269e2df07d6415782112010b7732da866bc61f42239145e0d20e33d2b8a04319dfabb5cb738ebc073083a1d7ce3897c3fabaf353522ab78072f548d2fbea4b95651dadf53862f1958905cc1cf6bcbced6942d1f04266710eb7f09b77d8c2b1f891d9e15bad22849102d18feda5c88e6e4bb8a43537d7846e842adeb69a25b90cef38323ac806a1a6d58170199edbb6c4ce74f4f62da22ed6294d6fe6600ae1714beb1fec79bf960cbfdcaacbca03d6be3fe78b51a2f683255fe09bdf53f9bda361cc2da1f7b48fb75ef35075791858bfccced08656cbea23b81388edb791e00b815b78709199e74bba2eefb1b4b0c3671300a1ed2d5f101a4b8c045c683f3c9e22619da9460e475b7ab7427db0d689aed99aea94f3b5ff56e91ea2e1c05a86fd5190a193a01225ff2d357642c5dc164d2501968297b32ae31a7090fbf673a5eaa07147441934e1c8d9d6fdb7de9732087befafe45a70b1ee35a75a0ec2fc786efb138c2939b99106e6f2498f404cd0e05ffdd05665967747c9303b6e8f8fdfce1fcdcbdc0f7848c095b9cb84e903a5edf3a657e9affd67d990898000dca23bc41b70b3c6e873301e58f0d8da346df93db9daaf813358281a74b83532a6ff73047cfc41cc3706a98f41ca57965fe771a4aac3a021552c11160fcaab01df7e601e08fe92d79fd721a8dbb7e33af09ab478b9636169513ab05aa8f0f97db8c64a6eb22be1bdde895cd61796a3072b92df84daa9b26144354b7b740fd9948b912964b2d75e8d5cb1de97e64ae141e30da4a99d18da661b21110dc48f4045723270bc72817f2b96627701f04127587b5cc4bfffec1f242e97a214c5deb2e8af7f0d5e476ba735932a6bf7774869bfeca274759d2daa9732860d092d39126a1912a5877d25bd06db279c4343ba6cbfcb44a24fb53e1d6431f212adcb75a43b378ac4149e69f5a6ffe8bc71f66d4977f6ea68fc8ca039541a729c77a002d47ac2ab8da0319ad366d116c926089720cdb6155c090bab2b20226d347fb6b4908f708e5dad7861ecdc257c381839ad52c7c6badad7b8a0b6cd6af31d5bbc7883068841bd27f08fc09ab3c78814fef33f61a0c36054e95577d9e9672952b07d315f8a2ed075a74b627787ae68c7e9a7783fb978f7f77dbe13cf4e4753115240d4e83595d3be912a4155d83054cdf421a9bca5cb650337d91864209bff8de4a03edb8dd95c68998637d25d6a8fcb33a40786d69109f90bf01a2c132a8f4a8b03c139d68586b316f7c855f757ca4476d2425864ae6b82aeb7b6b6c5d4e371dc9633a4d84f3770c878979c8bc69167506a32b1b1b2a31ece69993d3a93a059b7f030135c9d337a731fed64111f12d44a713325a26f72c1d5f6562cd68b90fa1f9665d94e36fdef53974c3f72280593df436c4335d6fead542385c86600d52035b0955475f1d0d0d3cf667ec164152f5d33b11ef00b6040f3ad24f0ea1d1836abed98d733dd2c4476212814179ade70595f783d2664426e72b275f59aa0166bfcb5ec478a4b34e3301ef6d2b9bee39b04a382d14232a1d982f257441807f2619adfa78a32d8dcbc2e3509f8115d39bf8cbf8326fa053d9f71475e81ac34ef0ea90a549eff04a92939531b784a21697f963d5bace8db97d4752c57879ac4f81655d248cfb4f891546c59bd30589296abdeeb2e75ff164f0df7fd8903237691349368a07f68c47a6d205c529d6709c07c0543ea19b6c5af8e34c1e7c4103505cf2d2ea6cd5f4174c5e6a382f731263ff1bbbc76b7c38f4883950aa5e9b29aa792290c593c9234bfa264bb6d71947c559d86b12367c77c8b8aafd1eb4eddaddfff56b9b78e7ab24125882283a4c7a744ee959aaab78467c98a7e579c3c65ce4b169f809e670b9144ce46e58bf88b7add8537e778fc6a346ed248fa2c948e783ceb6b8aba3d65c3d78319049ec12a419e8399342dd57fa6e033bce0879a5bc996e9956bb0e6f250bcb0c4c983de8fb0c1fcb8e2d107e1e473973d4000b2f9c47fb1085e0702013edcfe21477870278107aa5606ad5c5b38b73fce3acd795e34afdf296919a67eda5224547e4121cc580ff3b7108f362af2b055863a93a7be88e52de59ac9dece083ef458c60224342eba99e52f4fd8e046635d88c3b5ecfe8106be16205011868b873dc22bc40eb234fa84584c6bd75849c7b708503b5f0333746dc5c57276db51934d63c9a48188f59e5cf5ba9effe4b7e1f20903baff2dc6b7bf68b95779b1e2a805b3692be903ee29b290809b5e17fce537ca8434b4788db994d0d51fde77c114f458b0173227294e295351303dbf68e46c07a328ee4f710e5f9a8b88f52a9f9a739a9eca38089496f6c855619c8a735618435006933e18af0ea0ad439d635e0425ec05fc50a86dfeaaadcfd0a064f8c22beac262e8a4fa152fd4491ae862b3607259d9efa32063366a4e1d5c6ce89941d7a25711076a6a3c261c0bb258e329b38f20ba454b31d318ee89bb5dd8911a765f1e6756e5a7a730e90487f924f455333c4227e12f5952b266ad9aef010a90312be123f51966f3e9f8f82e0f4a0b63db1736244e74151a426549d95ae3d1575083dbc25029effbf9a94b73b2dcf4f696b17c2248219c8f8dd6bb1b88e9d04f1fd42fff7d61ce79d20dbd75498d547e02f5dcbd091f9471a62bfcd932d956dbbbaf386d35bf4f446ab17c069da2129666f73132cdfa0dc9f183020c4f8b4dd3349fa653377ede68f36b8c7de4606f48fbf7cd1d64ab0c4218000cbf4843f812a1e24a49288801ad84bc7ddc103aae2170e6d597ad09d7694fa790c2f7e9757cbe0688a38e66c47b4afc06cc83be7105650829e0b99dd179bdfa65269bcbe651c73425b6dfcfd89918a036b008f808b40f86c0282a0ded9cee862074c55dd678a8e22e451372dfdbc09097a725f01a9185cae508398f8c7e0d79c57ba4955d3d692134657a078a6d08a470a9c9cea6ccd74e5b7a17e223d21a2169c9b04a6894c9ed0e922e3d9d4e49e404c2f5c8ba35aebf2b6d6d38e8ad21062c2e95a262677bd490a1365ba49244b8d191a52a4261679e3cc64269eb0a69ce2c43b13282d7de0be4e9e3f3000fabe109c77b5dbd27baf08eedf9b13055539afa1a962aef6b1dde246133cbc754d5c77a63ecef9f57cf2dca25743e9f279d4ed17727f2118cc389bece5a29d769d712392bac49901a46f68a83a05b6913543f5a07198768fc463282f8c7b80320cd4de63e205ba390eb5cdcfa5bea678ecb0a37b86eaf918c38946669b82835d1e1ca81e629a539ca929f1b038e50a25bf8d63653f1c8b2f3e31287bd578f89bda0dd6ef8bb9e96febe19df2b53ae3d5491fd12e1cf07c062ed3d568ecfd16c6a65938964c88f23e8311e54ff5deaee424dbb6ef74ca6bf74b859f8529e088afe3d21fa51010154ccadb12e73ec82545f511d3f24a5abb7e361ed3e4b196bf670bef47a7d31e0c28cde00cb2de919986f53803c4f00027a3bc1560287064fea4fb644c9186e7a542ca7d51f2a6d153d6d51e3eeb28f89575608138dc2b8d769f2be1111cac43638088a21853fa74273548eb46ce88215954f20e43b3fd61bdca246a1e1defd0b0d53978beecf79535e731cfd5b2317987f182a24eed0924a79c826bec481505696028ad1452e26587c3ba31727e6f99644b8160468a9c338bd6d9b292776a998e0a30388d451cce3f3db6f1026da127f3dec74f72dcf0b5633743a62e6e7d022aaae55b55c47cf5e4721304ac40c27b5a98e224f0eabed83e336b0ee8053cd66042a8181f6420a7d3ff67e386c048bc8ff788416d52f3753477f965057a39d57e9890802448fb48ba041f75f07f9a62d38a8101eef2dd9791a65caf0263116c2f26924721bcd082404b059e5e4698cb089d360b3c6ccff4eb49868d599e1b8d96df94042eca27c86da4bb9b67b6c57cdbf93a54cb59e7f916d82f586ca9dbd27e5f95ab66fba5f8f6e340c0244706d619ee6eae33ca99e086acf0c96d9582ee769add7b80f85dd6e08291852a0c2b3e987a13849ef30d9ecaef676107a4780c283dcab7154cef986665ba746bfc70b55dc63801f0679441e9462f77804198349d974408cbf76a0950724b7445e37f8d74a9bb1d85208948ca69582326a6f125c34432fe342180f4f7b6226d186d3022a483ade64edf933448a094fb3c31c1ebd24f045c5deba73dbc4b7b699d1081c84269a646fe835bee68892899b74ad43366c92be4974310ab5535c56b1b72fe3e17be87741122f3d24b9d2d891ece36059b053df2c923ff0e08619ba35874a5b29bc4eaa091d6b4436a0f0afa95f027e1b1acf8795e57ccc7e401a88e0229a151e500e5aa960ae65bbaf4c3666c24af3b0a6993fb275de69d91985d09e0883a062c4b7b6d45fb5ebb70c74045b3e61683d9d87e24152f0134a3645fd2c3750ae9b72ce4c1dbbeb92242466ab8382c8cc8f74edceac9f5cc546d7e42f6854c109ec46891ef8dd9b405d186bc7d3e3e64711ac506db8f6fd5f4904d82c2ef9dca247f6f924bc89eaddda376000519fba83beb555fe8fffc20426bff8778be6bdb5bbf516b2527eb9aa57c9a1f2fbd0e2e8cf92d258e5e93473e34b25fbc377119d0221a3ea3c548929bab58442939983f72e2016076107be585e443ff7f417b101bb380e74b455071ad16876a009714e6bce26f342e2dcdd241bdf409e063312a51c2ab9da0a6018a34bcb4d10dcce854efc5015af50b095e8ac957c31c7f9f387c5a7f3029333bbd6b1afefa6cb71cdfe960c3b4d31aa1d835bd352d05fef07d97b81a63eac7b6cbeaed82e35063c08399e889c100ebee6d528617f50cc0eff71acbf8717abe047a465c2e4fc91ccd242bb5b872b7b27919945634d3cc077b7654f95f7a5dd7d6d27890ed07a1dd724e3b825950a26fae3882b9e2c2b17404994ac2bb1c2d3fde8a7c18f651fd42b708e843e2840b24de82fdff9b0642265c6d7a74983fdf89ff160335077c9f1d11f2cf27ec50db048f606d866ad84521b04dd1cfd1e3702696f505b1e904eee837b5edcc98645c30cf02f9eb88ffbe765f33c3954e19499bf81c0f814129f7f203c635b2649abd6c6102aab3e5a88d06e2fb660fc5abf03baa05520df5f3503f412ff6152c4f474cc05a45c2a986a765c1f1d6f05226c07e4d68cc4d74c187515405b9f724d590b482529a8012664b10a43305487728ee3811bd431c476154f83e3414f97f55a23aa7815377896dafd47463b26c9031cd528ebafaa50751ebf67bc7c866101ae88eff197872108569d4666eb20aaa63eecc0af0fb2fcca32c0ca939b79d8edfbb33599910ff644ce1f7354d6ee269a7add8b95e680f5ba171bbd256387f6b01e2b8ffc95b18edfa35dc420cfcc8d059eee9f34e6f48c748ee7267d601467d35ddca453b23c9c8a38005dd4afd2a71e2b3074c8cb3992cb6bb407adef70ca2a54957fee153615e914def2395426f463d10001b0dc2ee4fd5131baf905756e2e16fcb1732f32fbd71f83e68051fd84888b365b0ba43d9bdd3a7c82ecbbe9a51e8db15dc9c5cbea40773b6a0212e23d13049a52cb7752f29ab331ccb2269265e19ee972eb27b6e557b33a1a40ddf43b982e01e7e4258e685fd9978622a190336030a54052482c296f37ec9d5ae3639405e695068eb30b6827b1ae29b9d950dc1e872026b277b24a15f255d4ec5cbe09c8d10252434f51a41b02079c1191a9b6a52592e26b65afdd99f64618984b25e3212ddcd2f5c3252c92f2ace5e9f22b6faba94c0989b33d0c362fc90dc3b9bf31d46b4b2af56a4fddf3fc67d79cea4ed2a52cb078dd2e5dc7f685c946773ec05fa5121c18dd8ce72b85091f742ef4f7beef09d873ba24159d65aaf37875ae1a388936f0c19fbf2f43de22929eef55af4cb40235305e8652a400bcd2222d8c8ae4ca9f7c5c92481e80fea75234169b78c6f4a982d88675d0a226536b328d5ec10b87c30b3b0a2908fe4139839146cf9da9841bca1d5079c895ca18a9ba9b3c1946d5978e053b68962d224e8daa6366089ca02b83a273ff6acd7a27dcd27ea216a0af4b832a0fa28b3b0fc4eefe1a2c4f53f89de6c36cc50cc57e1ba89d1eecfd82fd9ed761743f689f95355b8c1d39ca9e15f430b9c00f965b1410bfc4ccf6ac099528c5929055ea86dba8b4daab8900eb319124fa9ea41dc1aefecbc9f0c69cb98c26a975e9d9c88ddc1e8bb6fbd1220315dc9efd9ffe4bb5972d7c4abd274014e19125f3d80c93e5831e5142c0564cb46c6b5e2e31b66c69c27adf2e279ad59625cdc4d3f76bd0b19d317efc998310c84a273f0445eb7c483255452c424226642714b4aa614030f3c9bd356e145c5394704d4ca5a62286facef2faf41c3bb007631f64ae1ad460e509be4151979baad342e25c042e2f80d8cae6938e48f206b0dea95c5ecd6c333ea85515d9be0257948644d51b600d7d75b65ab85a37ef95c33247b4e101c06ca5f7dd91115a9347fbea5ba6a84cf933b5274446bb99a27735b3bf5d7223d0fd09d9ae90257f5cf4241a2e93a9c0dceeaa379cc9fb68ab306e051ea8a2927eec1a467aeea6a661992aa3e9233b529f219f310c00d13456ea603f33ee1bf7efa899580be02a9825e8bb25046a6604ab6adfc6f4473b80203b950866ac2d6b76dfdd98cbc55d12edae52f02d12232feca504c2618c9edae5d2813a311d51ca969d12c16977d1fdb6573849fb9b0c9d079a8d01ac582855ca8da984fab6daf2ebfa519252d4e9a116d24c1662b52e8f0775d71b62446bb56ff6af0d5643e5d070e8d4325ed6093c72a306b90a97bfea281c94294b54c92db9b23af21844fd9a1deddba17e45a4161ee9a85ea9429c2acb3428f53267b19dee5e8ea6fe86182bdb0c73a2a38c00a36def2172c60e3f3e0fd3e1cb2cd786805558ad4c25dadee63a29c20d0c7c9e1f15c5326ebd829e90e3792d6a665f06d8ea4b30574c14b15d747bb907da0ddb2b3c6b70e907505ed79f1522d92eb26cba2604a9a78a607abde631eb33193c2d80617800034a7b19d48712e48338f2b18abee45588eb95c71b05713a0dacccfd2ae7f6b3d9048e4b67fcb2ab610b4b52bdc927771102208133e628c64aa0e78633a4fec6f97541dd457be815dfb0a676278acf160f99371f7debce1a658451e48443c579194ec40b406939daa8fb733d45bb794253e85d904111e998400f82c91d16424698de258f94f09ec58073836273e06e124674f5e85fee7003f9af27d08442a8561b13d272123fdcb2d5dd281a0162a9d111345d44fd729f703fe929b966bf3e294bbe69559e5b48b0a0ac2cf4d1b8b59f15b8d237d530f8ff438597f6e685d13a03748fecc86108c91272817025ba4e0aefbe2783945b58e69485f2a89edd4de4ed4d9211173107be6cd9332c0ecd4e50cdaf87ae1556f5a5d4dbe1d39f390e0825631026ed28669d7a4c1dd69c53f701b7715f38ac24f60268029ee370263adc97fada7f5692ba9902f7123f5ecd5f7b35d53ad1009c6ccfce3fcd893594aaa86c39ffc9838ff90f8659b1407e2b18695b5650151e81c2bdbb2099504dad65d17c7972e5f1b20101954bc9070adc0bbdba681c100c9e4a1e14521ec4d72a5ea436d700a0559b2305fb0a473035fb1b4001c0558919f54e908d9dcf9628b58570f335daf5ba7c80145e4297e3e82bb368a6ef6712170849fd382e439895a4916649110cdf20ce87b6abf617610eeeedc70ba51491f30a418f1414a5dccc57ec5a90f35394e5fc611cf74b6e33e25f165b377fda04ecc32ee433156a78c0a5c8d67215ce8f768fb7e613caff9c83c3b2b2b9a669a8fdcce5ff7dd238899a675af102739d8a0698aa96ec298a63d25d39e1ce92c3e6b2b688ab193e3d71fa2400d36a87c9178e18a420ae1d9acfec5bb55ac863978c2b64d10fa34a7bf926d37923774415776d275da60536d21461edc45349ce69a31f61fb873bcb05bdf61f98f65138d31aee680fe205c243becf692b3b9e43e3971184fcaa3fd61f6f19df8f62c70227a3c0369afbba3bdcc512ab656b77949111b0b2e3da3f3e8e41c61768d1f185ce5200ec34f2b2d3e630444572cc3bf08799c3df77555371ad953d35b3faf8005479fe1e760d276ce39c79751d212cea17f912f6d2a8178f26d9f5ecda5fd06eea100e8b00237d8b1ee4b84b8174be753302c42dd2b1d27475f3d211957b37dc82e4704b1fc081f905e140ad26086e209623631ae5070da6227bea9612bd76817151f14268f3c167ff3ff234966d24eed4c44f6751d16e8391800c521ad1219b802120ffcdb2e742b320f218682878fec1d1df5bcdf38426cd8ad77ae13adfeab034778debf2a1eb6ce8e4873027fd15f4196475e293d8ca9d57a2b0735cf8ef273623cd3c47c1f8dad3cc01c910d93ae4b35ae5838ee572c8707a39a0a941bdf78b79e4210d3e619df1ea4bf7bf884200ffa2201363a805e29a99ae01e4179c2531a1efe99f034c671fc5dad26b8c16ed71604d660e70b80f75732004b9a62c4bbc488492647f61af1bccdff51817f9d6ac70b1fd96a042c4f568c27ee2b389dee3484fe847fcf463cf2ff6257049951a32a4f2212315ece05e80f3df9c21a3235415b9ac86b75a44753691b5a7e5f722ba1002772149b7fe8bf0510e587a83d330a2f12c2eedce9bf148e658216bc53ef426cc9609d6f641a78be2742175607baa2ee30dbb0d061594b55770ffb8be9521d98cbebb2a188bd4e8c1e082794b5da8f051c829f0d6c7758ff225124384be650e679fb76830a8751bbe0338e5372032a395b114382db71c260edba8ed26c4573f242466f6fac6f64f34a8656dba3cb3e771aec463e8f75f76a8f1852cea6c9ba20c472da02b3487cf66c6d8328ad40dad2a699d3c24b472a6d008cd113cdfdcf2d0d59bdb5935d82724f96b2ae35abd5800805dca1baf9a38c90a05f9084c11610f18bbbdd2718b176292083d1bad4ee40a2da704139baae5b37740b313c9c1c35fce168a1cb74fabe5abc192a6d8ebba6706ca45f0ed84aea078a8b5775b9379f198bf7e38aedd8539fd2b4e46c07f1bb5a729691d7e088b7477a332ed45b33e82b988fcdbe1504338b947cc7a64c6ff6dbdc0d57223d7ef0cebc5363b02534873676f72a2308a904196683493bcaf241e367a0acdb02303826e6cded904ba6d3d41e39277a7aae403e8851d6f1deff21df1cc16c7c2cf818e218ee187a69b2813474d20c363cfc0503251642c3a2b2d6bec1de317caaaa77624872add49396beefec3e880539543eefceb108c85aaae6c5812b1aff7395adc145d96f2755235daf199036fe86253523066f2f945fe379823712e70de6948fbe691ae30d52c1c1f5834c9b0f91cc38d39445a36c612a1830a24cd6c7198c94642ce51498e9011e58a6c123278a239e5865e77e213b4b0e7942df6578e2a2d4f7c3b1c9dc0f2f525db44270c0a7ef88fd330297c6029fdda407ac4798fe10118d0d1a6643c4fccbe2bc373787c250501c07ab1607bc6c8d57ac7eb5582a39ccb1b640101960bef616cb25a9ae3bfa6613f321f338bcc3d5e69154098a50592ef7676d355d88b9cbdfca02fd1dceadf4d3131b8e6c54a8f955bf63f84c0a6837cd62eb13be3aca3b8f28f8fc2cd2ede6aead8721c96252540eab0ddbe11a019bf1d9b5e1f208a51f1ecf7d770</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
       <categories>
-        <category>tools</category>
+        <category>job</category>
       </categories>
       <tags>
-        <tag>manjaro</tag>
+        <tag>Map Reduce</tag>
+        <tag>XGBoost</tag>
+        <tag>数据倾斜</tag>
+        <tag>LR</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深圳极光联盟</title>
+    <url>/2020/07/22/%E6%B7%B1%E5%9C%B3%E6%9E%81%E5%85%89%E8%81%94%E7%9B%9F/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="0a5afce902152c2ddf39e32be1db9bbfc39484c661cdeb2759d0e569a781bf7e">5d20b81ac1f5d0b70e9113cacf134e1e0631fbdeb95d2e18e69242aada9459a8c4c9d289ad03a9e0d8b9f5577febb77a1289a33b1c1aa2858f144d451fa114f747046125a80d333e7f74639abb23edd296e3a35fa6fdff280e60a8019e1454fb126c13f07ac42adff90d0c5bebd0a04eeb91fef6f80753bd7b0b5ddc92f75ee0b3eb94ef17633917e2e7b7df33a15624c9c91c2820c584149baa1c0bbeec1a8c1eb6639ccf6eb658ee5e93c4d82ce4936cbcaf7824dad203b6f24fafff576184268e163eb69a51b01bdcf2b9f732a3627fb33e5080e176c63bf468caab4065375ca78fcc4dd0b38de40f693a40bea847907080291ba2ee3f30ac8aedcb500b09f6235409c6fbcd6d733a4eadd700ee6089e36314d8017f9be10c8948e9b849ba03667d919fba86efb7217f72869361f9ed30565d0ba9bf3b294fc692c357da3e45a96494b94b334caaf612bdbd9f41bdbc7bfdc104090fe9bbde7556ebb63d6dc3fdef51379f3b60d0c374f22003298e8c966c857ca069cb9b8cc4e85a47cb8dd02aa08f0ef00f7813c2119bdd75eefada083067dd078cc70d5858b73ec00d0fd1d6dba7cce5aa94153a6b45f328b6e42ee3d4b42d23610c7497339e883559afd1e4e49eb840751749f6a34789c4b75813cd95bbca2e693bc8b7220e384247b022da76d94643c79f0be643d8736a773388ca2e1301be47dfc5c66d8a6fe47b6ea222c78fbb94c58774c27ea06186a3b0eaf63f8ad636d190df97b7f83e42bea460e3541c90e699382a3d57f4083af10f34d9672d30c048e9d91da52efc5b60ca548a99af43aa713706301001637c272ef4c4a0029346784e3561c624301e8965b48f82f9e084140c7370daabbca5b4f3f7c91de8bdf38f330a58a4b07136871abc316a132020395b8dc6a54eb443e88f53dd60dacac2936d3e2152ec81844ae164d0b5c63b21d7611eb09f76029d566c179c849491a5acbd8819e397a30ac5830aed04491220a9c178df2a713f6c7032ab0234fc608862a7f21ddf6cb38fadffbf0062c586ab0fbb524d19c5e1e0fb5303a918da812e47ebae67ead3ec728e4df5dfd990d070f8209de1d2943e39dae1c08bbbdbfe4a43f93912a1b154357240d4c9a1fb77b0f9a2d57be19e576c58a80438bfcf5c20a016b3b2e2fd3a21eff190dfe6522b1807f6a9e588beeee8aa723de1016eb3d63b12fed192774b65b341f7c0b3d9bfa49a8e43020389289b9a8f2b49ef67e7d2ff0fc51558c9571f394a2e584e8c3b5c2deb22f76c690cdb0c08caa66ae07eba69899077fedd87a767fc0f550fa207a1e4e0193995410a2a2445c6108748e3f66e68f932c9e3c3d21e85a30e3971b6fa7dc1189f781ba24efb2671046fd8503c9a3a0c4d082056e6d53c489f38adc671c5774858e36b853788c5c0fd9a8ad78241738051d125fbe15b9610ac0fb207e5d19ccfd1110435d34610e0d9c6b6e2078f404a98bda334ab97b43d00369ee53e496ae84d33ea0d469db8b4e1d80e09db9ac2eba97b74ca0e0a1ad28e7686b5f5d1d49e55de8b798041f000220b761b5239abe16db87a95caea773a849c8ea58c8649cb9396c6e5416f062c28cf232802dba884e51a6abed8de484d7bb836ae08aad80ca4dcb04d31d77b30fbb8602fc564197cb3b3debf43cf6b6edb3e78454c061a3446603dedee655b4d30a929c22302341ea703c94256d805270ffb89ee32e9dd7ed9ae316a7d2321133f2afce8558af1335173b3feb11798456b7d33c77435fd0d2f659861b3bc12b937df614ecdfedf3a6ce41f0da1c76a14bc9626175fa3a71ff8ef28ef126d34bbb2284d2cfc3e4f26c7240c56931e848f5b4cee3659b0005ca0e2f4393ef297a9fb9d284a830153f740e4dc967dab45f6a65d1f1f3af5f097e65704c2dec7be7f950c168522a6bfb32fe0cff154ad2f6cc19ce591a07adbc96ebf06a4a4b1093fd1993a367158a5ce5bf9cfbed819e17adf351b54d3d876b474f296a3be91b3ecdfecebd569627fd839afa8b8655808c96b8f8612c924db4442d3a1fafb353410f48de56c6b842669d7ce3b84f9e21f0db4573b06858e65ce46349bc4edea92261e6d3cf457bbbfb3f2cefdad3c369d7828c2193420d16b8b980380be6f7d73b17fbd4e783ca3cf026c47f904b9ff45471a35b7b51d980ec3a701ce71b29c125c56efc37987ff91ee65b89477ddda99e73ccbaf98c1269179095cd3441d438c68be1c0de88296e27c5a649a8bbf477822d02c2e3273d613dac31b57fbd8196fe13f942353ee48c1cab869f04f2af8d0e8c94b0ad5df12b31f298d8cfa134fbd3ad105fc0e5964cc726eaf45dd407b7cd128c8612971d8c76f806a15fd273b18229a996a15d9d3454e8db9f4dd808bf302b073ae6dc92cc348ab416d1fabd5ce7bac0378fdca4f813d57f1df36ac3e851e9c23180ea61cd24f74f914c59327401dd9e85fabab426c1601f42af62ffab8b55b3911c1ac8a954bd4c4286ff4801e18d181ce876d37d1b82e1551264c9aca74cdea740053de89fa279bdf98e192972537c736b3a8451455aadccee011fe5a40f91b76028a41be531ba5b2ad05340b806d17515c4b2d6f862c79408b9dca6f3b6e308fdadfd26c13f2ba749c5d0aa045dcd7a08388662ebd5edc6885f7a07bf513850c47a21a8987b9db841d4151a70a132f7ba2bdfc3ffff396e07e436a1595620ef5a3131889316e7c3ef2890b026f3549f68b877d881837cabfee300191e467303d2043a4e49aeec2e2baf4041534c921effd10cab654898586ef8ea69db60747aacb34fdae4c3fcf23e71e3ab2d73853d50233ec963e85ca0b77b157925830155878b9239a5e328ced06b48655dfe5105bca0756cc0a5b584c9b86a55115b75237f6e4dcb46ac92125f9f15d89be022140d4c01face17b0b0644737b3b3fd0b9dee7015b35b0e199d22cf9f851b38ca31e10a491b68f2bc2676e5c9312f57a97e5090f6b8088be3d4ee57d37c8ad920e069ba9cfcff103d134fcb34d0a0b29266569a1416279376fed5fede1de47f7784993d16b269bb0538f7a29c31ad18c02733c0ea5c03a42468d87e0b8ffa2d09c801c0aa537d69822c48343996cafd2b86c3351656165510d694e275c11a24a211c4938fce9cdccdfca8971da8894a198af531a486d0d9bcda0955f4ae97032855e140a9d1c7e93b54a15856dc0465866e77d5234225d444f82430e4ea7e8c2cb33d76fa58f2d755464f794d6b4ff89406415fc9a0d850b59db6b28d1e816c4b983ccba7289ac1366038f42886a5bebd82a1ce4416239b1798779600c08efcd27c0e70def96c1a7cd58dfa0a7e3194ffa047c1c339d8740e4d6b6e7b0f5ba4fea0102bdddbd0dbd2c638f492223c6f5d42ebf8a0723573fe03a836867de1ef5625541b8b30263a8831fda3f436afcc46a425532879ec33a428a190c9ebcd7dd42d185bfd2fd8ce8e584d253aa99c848ba31184b1db82c06be20fbb491a80e9406f0978dbbf49fdda1f169b666aff7378d7265b344496fac6ece885ccd885de2b6ace28335db6da0403c306979c80ac419fb6595857c674ebe945208b6a5ad1c73778fae31722d18f72ded75da209cdee1ad38f3fbda3bf334685a8eed71116f5c1b8b73ae46c478f5e4cd26c02f6b4e556e1a5bfe3075d000a4d4eb0705e408236be4b10134d8e89f3a8658634937b51c484a03999a498cdc056e3f67911148d6eda0b4831a206708c5ba18fee7282b14e3dd3d930567aadede3d4b78bbfe30f08f76bbf273a3535cdbd4ba1deff16d8f867a89be1f1c88ef488f5ee3c61fd9b0613a6de20fbeea851624afc497a91f4f2c13b5ffb8db33b8fee649f42aebd083aebded096fc298141fcb73c029850e081246954cf2f9fe83029f9bee6e460a6f64b425ddcb25347919cfb67833d3916c827318e8573612cec34a537a2f4ad0b20fffb5039982083629deaf4082f8bfcd9ab354ed29b6d1ef8fe425d216c1e63fe9839e5f0f6d2be880f02acc0ab2c31a8bdef7cb86f3271299550d0dac4866a50a4cf1153ce91f158497eee378784e20f16b31725f03e0c08a8b8d78b63a21800d9ab0234a3cdd483f6124f49c362bcda270c4431b0a6c417e47e28f7168cf52d7c15b161a226c8f86c66eb60cf778f83848066ceb1544125a30fdaac0ee757a764f234bc23c2f271636d8b98381d68dbbab7896401932763601cb0c9d46db2854bf5b2fc9665fec8507b99e9499aeb99a6c6c6849a5104f0e8ff03b1ad0766c8a8c0485347c2ca5d845ae78fe4fb705a707a5726f5c17ade542135b248ef5487d3dc9f74ffc48acf6e03ae41e1e7d784e2fad163b902b0929d1ff3ef1f90213276d7c31aba67b89cc6f1d47f9df4e3cd1da622bdf617141be4b8f2dd79cd8a54445c99f2aec2e05fd8758f1a1c202c07168e4f4f5ae6f7c69838675d311c8f9e6a5a9a6cdf5228e54bd41b8188304a929ce2507831c765a1c115c945783fddf7bfb150fe76f40763e9462fe0b244dac18fcc67e8938e857b6646e12aca0a737f56ec38d88f006f2206a8fc3c61ff795171f0c0b243de530e19f041b73f97320e31ef21ada33d3da032b9ed2c13f54fb8961c2025db910ddd60b516932de61bbc5ee1ee175d814778797f20502f304199957ea82bd0ca19475ce017c4b7e1eae91bee6e8f3e69a2ae8b47c3393a794467b86b6074e145fa4b00945a84abb5395870d5c80bddd68ebb27bd6c6e9ebc2b4e4f4c7f572c5b7fd15fc38eef524959167364fa11a4a2b6c5bca780e946af0713abe2a5a88943c32834fc6aa0313e4cb80b75ce5a91db4a2928edc98e9993925100a8474afb47c479036c9832fddb0486d0e3e84ea27ab5dedbe51c7c65d8cfe78144253bd8fb8d0833070af9f79dae6c2a810d21797e0c8a727328bec85fa7e776766c0260403c183ab40033fb9b909b7aceefbd487d06bfa1ef88ca1e911d2f364e553b9bc3fffad26735c3e0f75ec500bc1dd10dae2c54a92d44ef52bd5de0664e84cc44da401cfbbe6f4d30a3535c84c6cbe32294985b28b28951a87b6581a61039ccf1e082c345654d683ae50fa386cb0999012ef1f9858aa3c381b48af68fcdedf51706b6b1ca02aa0402f6947361a9840fc5a8e218e2e2c6f92b0af2facbe645027e30fd6766cde5e78857c044b02fb26cfeec3bfacd0efa5328ebfa9ed1f62a0625ad2af92efbbddbaba816cd0ec828159df167e5bb8243b8ca4634f9ff21b8993790bcd03be431b769cf0768101d5796ce9ea563934b4bc2cbd1d72bfe22ea662339667fdef2dd3b7336dd555aead71fbb3ac1f4fc6bb722133007c4fca997b700ad9fc290f56fcaaab10fa879a8955e6f4f4b188b7055c764caa28f04681f9510814006c13e3a4042380c866db53aea38d50e6ff871e97de2f6a9edb9327f7151ea9f83c39984dffcef0b64b62fe180a135f8459013060a62e796adb8bc610641fd8c92585f43552a721c267edf394d77f818c11eb410ec3f71dbe2df1eee00c7927aa669f0b85f639123b369464309396f3d939492335dabe5ac8fd7e88b52260b882a1f904698019be40efce2b82c3ae2574acfe869798d082650820499f645a9570a6a2649b7dc63540f0f90da81f5aedb1fd2b493b46bf65b98d40b99797ef2a557dbaff7083e7ebb8e567171c57e30b2595190d06a62d6fcbe8e20899b9c986b90c62080171063802c51fef1c79ae9b3ced28a5c80d8e46c9b7b2efadf0d8a91767952b05d2c3c67ee8918e3e144a2b1d1ecb6290b4236034ce2074f5efe8ac30ac32776890155eb5313b1c3cbb9265fd72c759b01b158c39e109290421b0df8ccc2435c8e3de00624c0253860aba9e95db05a7ace9938925c633a330418d4d5f0531089ea81fb5e9b8e3851ffea9249b9160908b84141ad5020f524ea529b92696fec7d3ba1f63fde4ccc71fc762f1ad242caa1e24ccdfa3ee54d36d1e49478a5dfbd1cd0c91c8fa0b9491f43dfaea610978fdfbadbf015f3486bbd1270c43d69ffded5e9ccc4187eb47634d2b1d9b506cd36a48bfc4531079725e8503bf65c0612e96dcfb12546a2b15878f10b8153f449bca1f5dc181c9e60b716e328d4563894c6d8c651ed8da54b5ce29175745c1df9f4620b36b53fbba91744b30a771484dfd556f669461c149077f585df17c64ce13a17d0a44ce4209120c858e32caaaa3d4f1637348731230ef760a642c027121c0b6d6261afca351d02d71abb4e1121d954d68d822a9b66a2573dceae723d2d0edaba0315d9a588d5ba4d02b5c022f6cb6c6f2505cd70591a42ff3edafcb3b5cc9ccb69362e257559215c999985fed74d62116f5dc40c2b71724c466981eb00a2108eaa60851f1c7770b7842178e3c9cec2a7792930ed4c37b5a4bcafc54cede2b2230fa824cd7fedc1caf775db3eb9e555ed4d3c6fa4ab4b81c2c2c6e126d8b5c55094d62e5602aae9ab5a0c8611433325609e5e60c3c04d5d9d45426b07dc986193cf6856dd5883bcc383ad42cad297ac140ca1598922b94792747fe2cfd4e52e84f364a5ac2660524d5796029bcbe689f80d7991bafe4045eced16047293e0a80de5ff357833ec3883d554c131003752e98ec9c07d85299ec19fab53fb319969cba0c78a8c909988ab9cd102e1df22a149dc5b7c3f7e952eab436b3200a87d1370aecd2d6294134deb1f8fb7f5b22198b73f38c30419f79ced25305f6586102d3ee6d3917d5ab2fecc30a62b0c63093206105e01ef7edfce72bbe91d9df2e6520dfbf724a14692f1095a038eead049c47f5b65578c8297efe801724ef24e477b37e5e2bd4d3c7341653b1ccceaa3f28de5bd354968171b27c34d5fd2968dee17497befe8959d16311172229115de7f3104a05ec876e9dc6ad8c55aec7f58f35dc4acbc86a65acb2c6e92d94eaaec9c4b58e94b13734bd5f735586e91df63be08b3e6c0a64818245bfb37a160954f816f6750bbf9fb3569d02ad94523b9142811ff976eb2477cfe181002a2ad69a79cafd14207793972323bb4ae205baeba83118f6eaee5eb045bba688a3b1000e1a3fbf94e43b1ada1a0a8964bed377a80d88b019cc39a214abed44a0bf5c13a3d09e0e9f6da199d53e1b6a9a6253c1ed739d6b70ed7032992e67c9234bacaf31d8307a80878f00ed9c30e7c10e9d2dc2700acef4052051ee5561643dd28c24a84f2d7ac861ed467d49b6923f6412a81a457659a846f8493bb06736bdbc92b4f8c9095cbf57b5b831322d66616ccea9d1a2fb438713df47da5ceddaec042d0e555f5e96bd1df133a57bdd89bbc1358735e1d42ec89ba9c96be4c8ed6f6162300641aff076a542d99736287bb77684ab4cb949f9ea1e51c430d10a871d4e2d3224895d398fab1f28db4f0b95356bf22145583bf8fc9b27d5ce6d3d011db0e1ff8172dc5ec49d52de25cc44a354299d9d4df4a831403a3f99ff47ffe1ac723419cca699c97d392672748faf2f409ceeb21710863d81e668faace29e37fd3d5d08c7f2f38732da647428f0dcd598e635d6cae67c04944b4c9dee042676ee3512482201297a0786d699c26a6ffa01ceb296d32b7c4241dbd93855b15d3b26f25616e0422e5e0e81bf6708831b744268d7c3ca2a23a5c8815aa8f3c0861fbc0d0c052a9979a6d7e40fe3ef73342786f0b4b260a67290967db11ef327798aff4442e1e2858ced0ae6827e004b1bffd370d2ac3a20f23d3d90a6be4c35ca9662ef5035ef10da08511e1d9361f47c9413d59f2b84c42526e61815796d4cbfa90db0f156f7f3db578ee2dc44bf556d80394849efd19567bb73253934b3b50bb85168768d03a16d5c1db33f94fd3e87c530346e6a7a2d9e739c4d8ea2878da44a322afd5d1215b0c30fa99f77b008e7a4374cc102bf9c738720607e2b23473dbbee1aa1a1972fd71d90ba43843672b39a88ee955cbbac3e8dae57d42f4d1afb2b158fcc73f34872dde2d7b36fb536db36194eaadd872f3f3d84849b8852c438d9045b5279f6956159d493720d0a8164da53869247756de38c9d944374138926ed1a6be4ca3d21ceb9dd1e823c32808577920a27a9c48a2306ced20b864e183584c9bdb10935147bafc8182e46c2ca42b2e86773400789bfc5adc5fa3fb2eb66c83acd063fd6b3cba165f5f747361e09389e9b4c562f6366674afadb736aed9d34e971b15f9786e319772cd8dfd9a8c047ec27710f9e475f3dca6093b0403b48ef60f03c36db447411408380d46f1b873834712ea971e47b7a4cb2b267f8bd744deb17de262493307a605b1b53c9ea4e408fc99467acab2a56162b480d05b1d65ae76db946f2df78e377e591df5f312e4bed291b4184cd2b5c4ca3fd0a56619d1734cbfaf92640a912aee1996c77ccd62238c093ce60d43831e6b08ae3619d60a9140c2c3ca3d136c8d9e30ee11f97a1805f8e8e62475931c9a8b9c8eb679915c62a3a433c999e09580d8edab25c2355517551ac1a3033c646a609f3884e323fd549af76d85bf0913b204793edb388c819fa4492444dbb5ab0bf7dcaf4e0f5c576be046292772fd85745d749f173645a4a732aef74d63336e08987f3fa14fd9fa491c876af4a16ec7ad5d9de52a159062cfbdba37bb420b2871b96ba4bf3b956cf20a3818368640b3e191ebe7024737b35d486e40a77a59b288f50ba12c3c1b273cfdfa0b2f2f846dc6c82673546e84b11b4b826d65d990ef9a349ff67fef33389e76e13a13badd75d67116973555500c6ed4fdc4b5090e9d505c8590d59ccf447edc17cbec79b74fffcd0bc84ff4a9bed7c7196f6dff977d309a865f36856d22b2c7fc7d432f1380a89c323a06af220b2c119f2a6cfbaf52be73845cec7c3395ee77f486a7a6fd9f80bfbc5efd60f783a39487aba98b041a405ebb65e3bf51fa83ad2e4363838369a9decda488f1930668d974278b5fe64a8f065d94fbed663a329b89874f8aa854749a2dcac9f5bdcb142c74a75ab68061e7f4b58e4dfaabadd4272280ef19c26e9a40b9f5024ae962b20ff37afe7c22e4bcc71a54866d49926021c8fca99537a4378fe8dbf0f4b6ceb47fd19ad007a6b521d17c7f092abd8b569d20e1d4abee6446a692932c7f29bb36956fbdbefce841d8f10c6116efeca7bd7c71ce8a0ee5374c7665c08ac90a9d54491e04b43928f6a58ec80d823003aac1aeffb0528b6e9e8094447537f4a1ac4a1137a3e7eb088a919c3985154ec21ab422225d247d20143ff2b1be8a2e432cd2a59b023ae071de41e58a99f7ce8ca08391333ccfe39cfe1e5d9a7807769e6bf4e84ac2c098fafb885f81328f1e02d0b41f7026f32e0bb579aaefa5996cbcd691b36a82771de4a527f24a8d7062476e71ac774a1988df0fde7bfe0c7c7d488dca34393ffaa9ace7c60438e7fe7144ad4bc64a530fa75133204dfad0c8f534c1c748937a7531a508ba5f5f75ce1ef0489b5d6f600bbfd3198022c48d5e4ee0faeb8cdf58c4b8be54f1dea0e7f1ed5c1c4723588e36cb9f5508ac67e631d8f69c270e4df692ff407752c6513f902becdb71c74e2d58f9a8f13a642d0c762c55125a4c2f34a309ef4593605c252527223d25bf1fcbe5fbfeb1d79b18369acb5a4f03ef078a31dbc8d889e1787b049098bbfc9520e9390bbaab80ad30c449e632b6f505120ef78c81958f919b8c9fbb36e311a8ea160773167389cb56bed30fdb389e7b9898eeac8d80632b152d34ecdfdd1a350f99aa94467120aec8efaea43ca5579d0ecacec9b866ef641877f564240e00704b5cb8031381ad3d6e3f8687020ebcade1e31c25bd07a96dc513fcd06fed6e1aef56f410900a601b7b15db9c431002289740ee7832d8247689c062143119b54c8fe8194fb919e1a1412acf3edc2ec5f755f3e7fc61b043140e93bd569383f9fc8185e76280ec40a6862786ebfcc4bc140cd43d25dfc8a664fb28c08ba01a82951abf97d656ba4988edcfd4db3ae0b6c428bc0492b57e9d5e662b9f3d14f23fecb1903d8f81003eb6b83574d1b2405cedc794332d3a1ff8582f8d43b483d5fe0c1b732e93a9267ab64f87ff5b5aeff39417c14ab42f2299350136f2bd4ed734bd5a8e61cabc0d190f81903befd7369bd12195656a27391c46d813efbe7f29962374ebb3b5c63866fdaed0de6882ae22e2e3fd6b25ae7a64c781a0497e20d46a8e14b9f300f6f471a2d5165bcd296b993176e42a024170a10e3c766ded286e193838b6dd131e0bade9fd9ca1ea9290227a401925310744c5b320737ba7566eb74947a02b5a1899a3823730f9f5deed1abcc59612f320d7c1faaada65ad4edfcb7148a5a9dc85e1ba98313f60f544a822be28b8628f0ac1fb071aac15fa9c6d93a07c739d551b26f0edfd5d17657df39d736124c6d2f2c50c05b70108bb3ee1dd6c8dcc8832e9a003e2ba33c680f83aa37a164dd800d5d7038d8dd642286e7b65219dd4b9f092f6ec79ab07eb5a2b98e89abcc5d648fb4dfab508ab0aebb6e3209cd9167aef93e3da6e0ea1b5b9f977d5a008d19a3dd1f3b88d7fb0abdfe2b3d712111a4c554f088076aa5035dfa5ec5fd4407727817f01db7bd8d60dde14bcf41662f4ad261632089d46536c780a4641484ab513541667bb57a50f14f49a709823634c04ab4c707dbcf53c5130c3409c89a358ea634af07c8e2711964e89b7e056af43e610bb9e3c8077b4e2ebe70a3521ff3439b3db210d5f18df96fdf259445ab8c98f48f8aad302d2982e1bded82a2f58d3af4e076d1641561dd22dadb07c9367a1992778a8d579029ad754d15552114aae2063a6985b706b7f6a875d3f6fc07dfa16d40f2b8ebd6559a5750314b4eaa541d948b58216e1d737e4065be1aea10914b04fb86773e03f1188ce9b8cbe10417436caa0419affc</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>job</category>
+      </categories>
+      <tags>
+        <tag>特征工程</tag>
+        <tag>lstm</tag>
+        <tag>bert</tag>
+        <tag>时间复杂度</tag>
+        <tag>时序特征</tag>
       </tags>
   </entry>
   <entry>
@@ -5137,6 +5128,30 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
       </categories>
   </entry>
   <entry>
+    <title>manjaro配置</title>
+    <url>/2022/03/19/manjaro%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<p>本文记录manjaro使用过程中的一些配置！</p>
+<span id="more"></span>
+<h1 id="zsh-配置">zsh 配置</h1>
+<h2 id="安装">安装</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh</span><br><span class="line">sh install.sh</span><br></pre></td></tr></table></figure>
+<h2 id="themes">themes:</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.zshrc</span><br><span class="line">ZSH_THEME=<span class="string">&quot;ys2&quot;</span></span><br></pre></td></tr></table></figure>
+<p>其中<code>~/.oh-my-zsh/themes/ys2.zsh-theme</code>的部分内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Conda info</span></span><br><span class="line"><span class="built_in">local</span> conda_info=<span class="string">&#x27;$(conda_prompt_info)&#x27;</span></span><br><span class="line"><span class="function"><span class="title">conda_prompt_info</span></span>() &#123;</span><br><span class="line">  <span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$CONDA_DEFAULT_ENV</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(<span class="variable">$CONDA_DEFAULT_ENV</span>) &quot;</span></span><br><span class="line">  <span class="keyword">else</span> </span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(base) &quot;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PROMPT=<span class="string">&quot;</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[blue]%&#125;#%&#123;<span class="variable">$reset_color</span>%&#125; \</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[yellow]%&#125;%~%&#123;<span class="variable">$reset_color</span>%&#125;\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;hg_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;git_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;svn_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;venv_info&#125;</span>\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$fg</span>[yellow]%&#125; <span class="variable">$&#123;conda_info&#125;</span>\</span></span><br><span class="line"><span class="string">\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[red]%&#125;$ %&#123;<span class="variable">$reset_color</span>%&#125;&quot;</span></span><br></pre></td></tr></table></figure>
+<p><code>~/.condarc</code>中增加：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">changeps1: False</span><br></pre></td></tr></table></figure>
+<h2 id="所有可读目录颜色">所有可读目录颜色</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.dir_colors</span><br><span class="line">OTHER_WRITABLE 01;34</span><br><span class="line"></span><br><span class="line">vim ~/.zshrc</span><br><span class="line"><span class="built_in">eval</span> `dircolors <span class="variable">$HOME</span>/.dir_colors`</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>tools</category>
+      </categories>
+      <tags>
+        <tag>manjaro</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>面试问题2</title>
     <url>/2022/07/19/%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98-cj/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -5182,6 +5197,25 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
       </tags>
   </entry>
   <entry>
+    <title>tensorflow常见问题汇总</title>
+    <url>/2022/08/31/tensorflow%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<p>tensorflow 常见问题汇总</p>
+<span id="more"></span>
+<h2 id="save-flags">save flags</h2>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">save_configuration</span>(<span class="params">FLAGS, filepath</span>):</span></span><br><span class="line">    flag_dict=&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> name,value <span class="keyword">in</span> FLAGS.__flags.items():</span><br><span class="line">        value = value.value</span><br><span class="line">        flag_dict[name] = value</span><br><span class="line">    json_str = json.dumps(flag_dict, indent=<span class="number">4</span>)</span><br><span class="line">    tf.logging.info(json_str)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(filepath, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf8&#x27;</span>) <span class="keyword">as</span> fw:</span><br><span class="line">        fw.write(json_str)</span><br></pre></td></tr></table></figure>
+<h2 id="logging-twice">logging twice</h2>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">logger = tf.get_logger()</span><br><span class="line">logger.propagate=<span class="literal">False</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>tensorflow</category>
+      </categories>
+      <tags>
+        <tag>tensorflow</tag>
+        <tag>logging</tag>
+        <tag>config</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>jupyter notebook配置</title>
     <url>/2022/04/02/jupyter-notebook%E9%85%8D%E7%BD%AE/</url>
     <content><![CDATA[<p>本文记录使用jupyter notebook过程中的配置问题！</p>
@@ -5222,6 +5256,15 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
       </tags>
   </entry>
   <entry>
+    <title>recurrent neural network</title>
+    <url>/2022/04/26/recurrent-neural-network/</url>
+    <content><![CDATA[<h1 id="gru">GRU</h1>
+]]></content>
+      <tags>
+        <tag>todo</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>梯度消失和梯度爆炸</title>
     <url>/2022/04/26/%E6%A2%AF%E5%BA%A6%E6%B6%88%E5%A4%B1%E5%92%8C%E6%A2%AF%E5%BA%A6%E7%88%86%E7%82%B8/</url>
     <content><![CDATA[
@@ -5241,125 +5284,6 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
       </categories>
       <tags>
         <tag>mlc</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>recurrent neural network</title>
-    <url>/2022/04/26/recurrent-neural-network/</url>
-    <content><![CDATA[<h1 id="gru">GRU</h1>
-]]></content>
-      <tags>
-        <tag>todo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>tensorflow常见问题汇总</title>
-    <url>/2022/08/31/tensorflow%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
-    <content><![CDATA[<p>tensorflow 常见问题汇总</p>
-<span id="more"></span>
-<h2 id="save-flags">save flags</h2>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">save_configuration</span>(<span class="params">FLAGS, filepath</span>):</span></span><br><span class="line">    flag_dict=&#123;&#125;</span><br><span class="line">    <span class="keyword">for</span> name,value <span class="keyword">in</span> FLAGS.__flags.items():</span><br><span class="line">        value = value.value</span><br><span class="line">        flag_dict[name] = value</span><br><span class="line">    json_str = json.dumps(flag_dict, indent=<span class="number">4</span>)</span><br><span class="line">    tf.logging.info(json_str)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(filepath, <span class="string">&#x27;w&#x27;</span>, encoding=<span class="string">&#x27;utf8&#x27;</span>) <span class="keyword">as</span> fw:</span><br><span class="line">        fw.write(json_str)</span><br></pre></td></tr></table></figure>
-<h2 id="logging-twice">logging twice</h2>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">logger = tf.get_logger()</span><br><span class="line">logger.propagate=<span class="literal">False</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>tensorflow</category>
-      </categories>
-      <tags>
-        <tag>tensorflow</tag>
-        <tag>logging</tag>
-        <tag>config</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>同时配置两个github账户</title>
-    <url>/2023/06/26/%E5%90%8C%E6%97%B6%E9%85%8D%E7%BD%AE%E4%B8%A4%E4%B8%AAgithub%E8%B4%A6%E6%88%B7/</url>
-    <content><![CDATA[<p>配置两个github账号，使用时互不干扰！</p>
-<span id="more"></span>
-<h1 id="生成两个ssh-key">生成两个SSH key</h1>
-<p>生成两个key的具体命令： <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t ed25519 -C <span class="string">&quot;one@gmail.com&quot;</span></span><br><span class="line">ssh-keygen -t ed25519 -C <span class="string">&quot;two@gmail.com&quot;</span></span><br></pre></td></tr></table></figure>
-注意在输入文件名时将两个文件进行区分</p>
-<h1 id="创建config文件并配置">创建config文件并配置</h1>
-<p>继续在 ​​<code>.ssh</code>​​ 目录下创建 <code>config</code> 文件，在
-<code>config</code> 文件中添加以下内容：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># one(one@gmail.com)</span></span><br><span class="line">Host github.com</span><br><span class="line">HostName github.com</span><br><span class="line">PreferredAuthentications publickey</span><br><span class="line">IdentityFile ~/.ssh/id_ed25519_one</span><br><span class="line">User one</span><br><span class="line">    </span><br><span class="line"><span class="comment"># two(two@gmail.com)</span></span><br><span class="line">Host two.github.com</span><br><span class="line">HostName github.com</span><br><span class="line">PreferredAuthentications publickey</span><br><span class="line">IdentityFile ~/.ssh/id_ed25519_two</span><br><span class="line">User two</span><br></pre></td></tr></table></figure>
-<h1 id="部署-ssh-key">部署 SSH key</h1>
-<p>将各自的ssh key写入到github账户</p>
-<h1 id="远程测试">远程测试</h1>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh -T git@one.github.com</span><br><span class="line">ssh -T git@two.github.com</span><br></pre></td></tr></table></figure>
-<p>运行命令后如果出现<code>​​Hi xxxx! You’ve successfully authenticated, but GitHub does not provide shell access.​​</code>时，恭喜你，配置成功了~</p>
-<h1 id="使用">使用</h1>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> git@github.com: one的用户名/learngit.git</span><br><span class="line">git <span class="built_in">clone</span> git@two.github.com: two的用户名/learngit.git</span><br></pre></td></tr></table></figure>
-<p>如果设置了全局的email和username，此时提交到两个仓库的内容均为同一个user，如需设置不同的user，可以取消全局设置，仅在各个项目中设置user和email。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 取消全局 用户名/邮箱 配置</span></span><br><span class="line">git config --global --<span class="built_in">unset</span> user.name</span><br><span class="line">git config --global --<span class="built_in">unset</span> user.email</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 单独为每个repo设置 用户名/邮箱</span></span><br><span class="line">git config user.name <span class="string">&quot;one_name&quot;</span> ; git config user.email <span class="string">&quot;one_email&quot;</span></span><br><span class="line">git config user.name <span class="string">&quot;two_name&quot;</span> ; git config user.email <span class="string">&quot;two_email&quot;</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>tools</category>
-      </categories>
-      <tags>
-        <tag>github</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>cmder配置</title>
-    <url>/2023/06/26/cmder%E9%85%8D%E7%BD%AE/</url>
-    <content><![CDATA[<p>本文记录cmder的一些配置情况！</p>
-<span id="more"></span>
-<h1 id="配置环境变量">配置环境变量</h1>
-<p>设置以下环境变量： -
-<code>CMDER_ROOT=D:\ProgramData\cmder_mini</code> -
-<code>PATH=%CMDER_ROOT%</code></p>
-<h1 id="添加到右键菜单">添加到右键菜单</h1>
-<p>以管理员身份打开cmd</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> %CMDER_ROOT%</span><br><span class="line">Cmder.exe /REGISTER ALL</span><br></pre></td></tr></table></figure>
-<h1 id="解决中文乱码">解决中文乱码</h1>
-<p>在设置中找到<code>startup -&gt; Environment</code>，追加以下命令：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> PATH=%ConEmuBaseDir%\Scripts;%PATH%</span><br><span class="line"><span class="built_in">set</span> LANG=zh_CN.UTF-8</span><br><span class="line"><span class="built_in">set</span> LC_ALL=zh_CN.utf8</span><br><span class="line">chcp utf-8</span><br></pre></td></tr></table></figure>
-<h1 id="修改提示符符号">修改提示符符号</h1>
-<p>Cmder 中的提示符符号默认为
-λ，可能会导致某些bug，修改提示符时，需要修改
-<code>%CMDER_ROOT%\config\cmder_prompt_config.lua</code>，搜索<code>λ</code>，替换成<code>$</code></p>
-<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">prompt_lambSymbol = <span class="string">&quot;$&quot;</span></span><br><span class="line">prompt_singleLine = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-<h1 id="添加自定义命令">添加自定义命令</h1>
-<p>修改<code>%CMDER_ROOT%\config\user-aliases.cmd</code></p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ll=ls -lh --show-control-chars --color $*</span><br></pre></td></tr></table></figure>
-<h1 id="win11下vim不可用问题">Win11下vim不可用问题</h1>
-<ol type="1">
-<li><p><code>任务栏</code> --&gt; <code>debug</code> --&gt;
-<code>properties</code> --&gt; <code>使用旧版控制台</code></p></li>
-<li><p><code>Setting</code> --&gt; <code>Startup</code> --&gt;
-<code>Command line</code></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">%windir%\system32\bash.exe ~ -cur_console:p:n</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h1 id="防止字体重叠">防止字体重叠</h1>
-<p>去掉<code>Setting -&gt; Main -&gt; Fonts</code>中的<code>Monospace</code>勾选项</p>
-<h1
-id="将pycharm中的terminal替换成cmder">将Pycharm中的terminal替换成cmder</h1>
-<p>打开pycharm设置，settings&gt;tool&gt;terminal中修改shell path。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;cmd.exe&quot;</span> /k <span class="string">&quot;&quot;</span>D:\ProgramData\cmder\vendor\init.bat<span class="string">&quot;&quot;</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>tools</category>
-      </categories>
-      <tags>
-        <tag>cmder</tag>
-        <tag>tools</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Unified Language Model Pre-training</title>
-    <url>/2023/03/30/Unified-Language-Model-Pre-training/</url>
-    <content><![CDATA[<figure>
-<img src="UniLM.png" alt="UniLM" />
-<figcaption aria-hidden="true">UniLM</figcaption>
-</figure>
-]]></content>
-      <categories>
-        <category>nlp</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>unlm</tag>
       </tags>
   </entry>
   <entry>
@@ -5439,6 +5363,97 @@ arXiv:2203.13450 (2022).</a></p>
       </tags>
   </entry>
   <entry>
+    <title>Unified Language Model Pre-training</title>
+    <url>/2023/03/30/Unified-Language-Model-Pre-training/</url>
+    <content><![CDATA[<figure>
+<img src="UniLM.png" alt="UniLM" />
+<figcaption aria-hidden="true">UniLM</figcaption>
+</figure>
+]]></content>
+      <categories>
+        <category>nlp</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>unlm</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>cmder配置</title>
+    <url>/2023/06/26/cmder%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<p>本文记录cmder的一些配置情况！</p>
+<span id="more"></span>
+<h1 id="配置环境变量">配置环境变量</h1>
+<p>设置以下环境变量： -
+<code>CMDER_ROOT=D:\ProgramData\cmder_mini</code> -
+<code>PATH=%CMDER_ROOT%</code></p>
+<h1 id="添加到右键菜单">添加到右键菜单</h1>
+<p>以管理员身份打开cmd</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> %CMDER_ROOT%</span><br><span class="line">Cmder.exe /REGISTER ALL</span><br></pre></td></tr></table></figure>
+<h1 id="解决中文乱码">解决中文乱码</h1>
+<p>在设置中找到<code>startup -&gt; Environment</code>，追加以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> PATH=%ConEmuBaseDir%\Scripts;%PATH%</span><br><span class="line"><span class="built_in">set</span> LANG=zh_CN.UTF-8</span><br><span class="line"><span class="built_in">set</span> LC_ALL=zh_CN.utf8</span><br><span class="line">chcp utf-8</span><br></pre></td></tr></table></figure>
+<h1 id="修改提示符符号">修改提示符符号</h1>
+<p>Cmder 中的提示符符号默认为
+λ，可能会导致某些bug，修改提示符时，需要修改
+<code>%CMDER_ROOT%\config\cmder_prompt_config.lua</code>，搜索<code>λ</code>，替换成<code>$</code></p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">prompt_lambSymbol = <span class="string">&quot;$&quot;</span></span><br><span class="line">prompt_singleLine = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h1 id="添加自定义命令">添加自定义命令</h1>
+<p>修改<code>%CMDER_ROOT%\config\user-aliases.cmd</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ll=ls -lh --show-control-chars --color $*</span><br></pre></td></tr></table></figure>
+<h1 id="win11下vim不可用问题">Win11下vim不可用问题</h1>
+<ol type="1">
+<li><p><code>任务栏</code> --&gt; <code>debug</code> --&gt;
+<code>properties</code> --&gt; <code>使用旧版控制台</code></p></li>
+<li><p><code>Setting</code> --&gt; <code>Startup</code> --&gt;
+<code>Command line</code></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">%windir%\system32\bash.exe ~ -cur_console:p:n</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="防止字体重叠">防止字体重叠</h1>
+<p>去掉<code>Setting -&gt; Main -&gt; Fonts</code>中的<code>Monospace</code>勾选项</p>
+<h1
+id="将pycharm中的terminal替换成cmder">将Pycharm中的terminal替换成cmder</h1>
+<p>打开pycharm设置，settings&gt;tool&gt;terminal中修改shell path。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;cmd.exe&quot;</span> /k <span class="string">&quot;&quot;</span>D:\ProgramData\cmder\vendor\init.bat<span class="string">&quot;&quot;</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>tools</category>
+      </categories>
+      <tags>
+        <tag>cmder</tag>
+        <tag>tools</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>同时配置两个github账户</title>
+    <url>/2023/06/26/%E5%90%8C%E6%97%B6%E9%85%8D%E7%BD%AE%E4%B8%A4%E4%B8%AAgithub%E8%B4%A6%E6%88%B7/</url>
+    <content><![CDATA[<p>配置两个github账号，使用时互不干扰！</p>
+<span id="more"></span>
+<h1 id="生成两个ssh-key">生成两个SSH key</h1>
+<p>生成两个key的具体命令： <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t ed25519 -C <span class="string">&quot;one@gmail.com&quot;</span></span><br><span class="line">ssh-keygen -t ed25519 -C <span class="string">&quot;two@gmail.com&quot;</span></span><br></pre></td></tr></table></figure>
+注意在输入文件名时将两个文件进行区分</p>
+<h1 id="创建config文件并配置">创建config文件并配置</h1>
+<p>继续在 ​​<code>.ssh</code>​​ 目录下创建 <code>config</code> 文件，在
+<code>config</code> 文件中添加以下内容：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># one(one@gmail.com)</span></span><br><span class="line">Host github.com</span><br><span class="line">HostName github.com</span><br><span class="line">PreferredAuthentications publickey</span><br><span class="line">IdentityFile ~/.ssh/id_ed25519_one</span><br><span class="line">User one</span><br><span class="line">    </span><br><span class="line"><span class="comment"># two(two@gmail.com)</span></span><br><span class="line">Host two.github.com</span><br><span class="line">HostName github.com</span><br><span class="line">PreferredAuthentications publickey</span><br><span class="line">IdentityFile ~/.ssh/id_ed25519_two</span><br><span class="line">User two</span><br></pre></td></tr></table></figure>
+<h1 id="部署-ssh-key">部署 SSH key</h1>
+<p>将各自的ssh key写入到github账户</p>
+<h1 id="远程测试">远程测试</h1>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh -T git@one.github.com</span><br><span class="line">ssh -T git@two.github.com</span><br></pre></td></tr></table></figure>
+<p>运行命令后如果出现<code>​​Hi xxxx! You’ve successfully authenticated, but GitHub does not provide shell access.​​</code>时，恭喜你，配置成功了~</p>
+<h1 id="使用">使用</h1>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> git@github.com: one的用户名/learngit.git</span><br><span class="line">git <span class="built_in">clone</span> git@two.github.com: two的用户名/learngit.git</span><br></pre></td></tr></table></figure>
+<p>如果设置了全局的email和username，此时提交到两个仓库的内容均为同一个user，如需设置不同的user，可以取消全局设置，仅在各个项目中设置user和email。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 取消全局 用户名/邮箱 配置</span></span><br><span class="line">git config --global --<span class="built_in">unset</span> user.name</span><br><span class="line">git config --global --<span class="built_in">unset</span> user.email</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 单独为每个repo设置 用户名/邮箱</span></span><br><span class="line">git config user.name <span class="string">&quot;one_name&quot;</span> ; git config user.email <span class="string">&quot;one_email&quot;</span></span><br><span class="line">git config user.name <span class="string">&quot;two_name&quot;</span> ; git config user.email <span class="string">&quot;two_email&quot;</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>tools</category>
+      </categories>
+      <tags>
+        <tag>github</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>江浙沪四日行程</title>
     <url>/2024/08/01/%E6%B1%9F%E6%B5%99%E6%B2%AA%E5%9B%9B%E6%97%A5%E8%A1%8C%E7%A8%8B/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -5508,62 +5523,6 @@ GPT-2</a>：对Transformer的视觉描述非常好。</li>
       <tags>
         <tag>todo</tag>
         <tag>llm</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>激活函数</title>
-    <url>/2024/12/30/%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<p>激活函数介绍。</p>
-<span id="more"></span>
-<figure>
-<img src="activation.png" alt="Activation" />
-<figcaption aria-hidden="true">Activation</figcaption>
-</figure>
-<ul>
-<li><p>ReLU <span class="math display">\[
-ReLU(x) = max(0, x)
-\]</span></p></li>
-<li><p>GELU <span class="math display">\[
-GELU(X) = x P(X &lt;= x)  = x \times \Phi(x)
-\]</span>
-GELU函数的导数是连续的，这使得在训练深度神经网络时可以更容易地传播梯度，避免了ReLU函数在
-处的导数不连续的问题，从而减少了训练过程中出现的梯度消失问题。</p>
-<p>GELU函数在激活函数的非线性变换中引入了类似于sigmoid函数的变换，这使得GELU函数的输出可以落在一个更广的范围内，有助于加速模型的收敛速度。</p></li>
-<li><p>Swish <span class="math display">\[
-Swish(x) =x * sigmoid(\beta x)
-\]</span> ß
-为可学习参数。Swish可以比ReLU激活函数更好，因为它在0附近提供了更平滑的转换，这可以带来更好的优化。</p></li>
-<li><p>GLU <span class="math display">\[
-GLU(x) = sigmoid(W_1 x + b)\otimes(Vx+c)
-\]</span>
-GLU可以有效地捕获序列中的远程依赖关系，同时避免与lstm和gru等其他门控机制相关的一些梯度消失问题。</p></li>
-<li><p>SwiGLU <span class="math display">\[
-SwiGLU(x) = Swish(W_1 x + b)\otimes(Vx+c)
-\]</span>
-SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的swish</p>
-<ul>
-<li>Swish对于负值的响应相对较小克服了 ReLU
-某些神经元上输出始终为零的缺点</li>
-<li>GLU
-的门控特性，这意味着它可以根据输入的情况决定哪些信息应该通过、哪些信息应该被过滤。这种机制可以使网络更有效地学习到有用的表示，有助于提高模型的泛化能力。</li>
-<li>计算效率相比某些较复杂的激活函数（如
-GELU）更高，同时仍能保持较好的性能。</li>
-</ul>
-<figure>
-<img src="swiglu.png" alt="SwiGLU" />
-<figcaption aria-hidden="true">SwiGLU</figcaption>
-</figure>
-<p>当β趋近于0时，Swish函数趋近于线性函数<span class="math inline">\(y =
-x^2\)</span> ；当β 趋近于无穷大时，Swish函数趋近于ReLU函数；当β
-取值为1时，Swish函数是光滑且非单调的。</p></li>
-</ul>
-]]></content>
-      <categories>
-        <category>nlp</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>activation</tag>
       </tags>
   </entry>
   <entry>
@@ -5701,6 +5660,62 @@ for our larger models. <img src="gqa.png" alt="GQA" />
         <tag>todo</tag>
         <tag>llm</tag>
         <tag>llama</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>激活函数</title>
+    <url>/2024/12/30/%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0/</url>
+    <content><![CDATA[<p>激活函数介绍。</p>
+<span id="more"></span>
+<figure>
+<img src="activation.png" alt="Activation" />
+<figcaption aria-hidden="true">Activation</figcaption>
+</figure>
+<ul>
+<li><p>ReLU <span class="math display">\[
+ReLU(x) = max(0, x)
+\]</span></p></li>
+<li><p>GELU <span class="math display">\[
+GELU(X) = x P(X &lt;= x)  = x \times \Phi(x)
+\]</span>
+GELU函数的导数是连续的，这使得在训练深度神经网络时可以更容易地传播梯度，避免了ReLU函数在
+处的导数不连续的问题，从而减少了训练过程中出现的梯度消失问题。</p>
+<p>GELU函数在激活函数的非线性变换中引入了类似于sigmoid函数的变换，这使得GELU函数的输出可以落在一个更广的范围内，有助于加速模型的收敛速度。</p></li>
+<li><p>Swish <span class="math display">\[
+Swish(x) =x * sigmoid(\beta x)
+\]</span> ß
+为可学习参数。Swish可以比ReLU激活函数更好，因为它在0附近提供了更平滑的转换，这可以带来更好的优化。</p></li>
+<li><p>GLU <span class="math display">\[
+GLU(x) = sigmoid(W_1 x + b)\otimes(Vx+c)
+\]</span>
+GLU可以有效地捕获序列中的远程依赖关系，同时避免与lstm和gru等其他门控机制相关的一些梯度消失问题。</p></li>
+<li><p>SwiGLU <span class="math display">\[
+SwiGLU(x) = Swish(W_1 x + b)\otimes(Vx+c)
+\]</span>
+SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的swish</p>
+<ul>
+<li>Swish对于负值的响应相对较小克服了 ReLU
+某些神经元上输出始终为零的缺点</li>
+<li>GLU
+的门控特性，这意味着它可以根据输入的情况决定哪些信息应该通过、哪些信息应该被过滤。这种机制可以使网络更有效地学习到有用的表示，有助于提高模型的泛化能力。</li>
+<li>计算效率相比某些较复杂的激活函数（如
+GELU）更高，同时仍能保持较好的性能。</li>
+</ul>
+<figure>
+<img src="swiglu.png" alt="SwiGLU" />
+<figcaption aria-hidden="true">SwiGLU</figcaption>
+</figure>
+<p>当β趋近于0时，Swish函数趋近于线性函数<span class="math inline">\(y =
+x^2\)</span> ；当β 趋近于无穷大时，Swish函数趋近于ReLU函数；当β
+取值为1时，Swish函数是光滑且非单调的。</p></li>
+</ul>
+]]></content>
+      <categories>
+        <category>nlp</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>activation</tag>
       </tags>
   </entry>
   <entry>
@@ -5924,6 +5939,171 @@ D_{KL}(Q||P)\)</span>，这个指标并不满足交换律。</p>
         <tag>熵</tag>
         <tag>交叉熵</tag>
         <tag>KL散度</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DeepSeek技术报告</title>
+    <url>/2025/02/20/DeepSeek%E6%8A%80%E6%9C%AF%E6%8A%A5%E5%91%8A/</url>
+    <content><![CDATA[<p>DeepSeek相关技术报告</p>
+<span id="more"></span>
+<h1 id="deepseek-v2">DeepSeek V2</h1>
+<h2 id="architecture">Architecture</h2>
+<h3 id="multi-head-latent-attention">Multi-head Latent Attention</h3>
+<h3 id="decoupled-rope-todo">Decoupled Rope（<font color='red'> todo
+</font>）</h3>
+<p>为了解决原始 RoPE 与低秩压缩不兼容的问题，DeepSeek-V2 提出了
+Decoupled RoPE（解耦旋转位置编码）。其核心思想是：</p>
+<ul>
+<li><strong>解耦 Query 和 Key 的位置编码：</strong>将 Query 和 Key
+分为两部分：
+<ol type="1">
+<li>压缩部分：用于低秩压缩，不包含位置信息。</li>
+<li>位置编码部分：专门用于存储位置信息，不参与压缩。</li>
+</ol></li>
+<li>具体实现：
+<ol type="1">
+<li>引入额外的 Query 和 Key 向量（ <span
+class="math inline">\(q_t^R\)</span> 和 <span
+class="math inline">\(k_t^R\)</span> ），专门存储位置信息。</li>
+<li>使用独立的权重矩阵 $W^{QR} <span class="math inline">\(和\)</span>
+W^{KR}$ 将输入投影到位置编码部分。</li>
+<li>对位置编码部分应用 RoPE，而压缩部分保持不变。</li>
+<li>将压缩部分和位置编码部分拼接起来，形成完整的 Query 和 Key。</li>
+</ol></li>
+</ul>
+<h3 id="deepseekmoe">DeepSeekMoE</h3>
+]]></content>
+      <categories>
+        <category>llm</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>deepseek</tag>
+        <tag>MLA</tag>
+        <tag>Decoupled Rope</tag>
+        <tag>position encoding</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DeepSpeed</title>
+    <url>/2025/03/05/DeepSpeed/</url>
+    <content><![CDATA[<p>Deepspeed训练大模型细节</p>
+<span id="more"></span>
+<h1 id="训练大模型的方法">训练大模型的方法</h1>
+<h2 id="mmap">MMAP</h2>
+<p><strong>设计目的：</strong></p>
+<ul>
+<li><p><strong>高效I/O性能</strong>：通过内存映射技术，数据在训练时可按需读取到显存，减少内存占用并避免重复加载开销。</p></li>
+<li><p><strong>分布式训练支持</strong>：在多GPU或多节点场景下，MMAP文件支持并行访问，不同GPU可独立读取数据的不同部分，提升数据吞吐量。</p></li>
+<li><p><strong>兼容性与扩展性</strong>：适用于不同分词器（如BPE、SentencePiece）生成的Token化结果，并能处理动态增长的训练数据。</p></li>
+</ul>
+<p><strong>数据格式：</strong></p>
+<ul>
+<li><strong>二进制编码</strong>：文本数据经过分词（Tokenization）后，将每个Token转换为固定长度的整数（如int32或int64），并按顺序存储为二进制流。</li>
+<li><strong>索引文件</strong>：通常伴随一个索引文件（如<code>idx</code>），记录每个数据块的起始位置和长度，便于快速随机访问或分片加载。</li>
+<li><strong>分块存储</strong>：大型数据集会被切分为多个MMAP文件块（例如每块1GB），便于分布式训练时按需加载。</li>
+</ul>
+<h2 id="zerozero-redundancy-optimizer">ZeRO(Zero Redundancy
+Optimizer)</h2>
+<ul>
+<li>a memory efficient form of data parallelism</li>
+<li>leverage CPU and NVMe memory</li>
+<li></li>
+</ul>
+<h2 id="d-parallelism">3D Parallelism</h2>
+<ul>
+<li>tensor-slicing, pipeline-parallelism, and data parallelism</li>
+<li></li>
+</ul>
+]]></content>
+      <categories>
+        <category>tool</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>分布式并行训练</title>
+    <url>/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/</url>
+    <content><![CDATA[<p>为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。</p>
+<span id="more"></span>
+<h1 id="数据并行">数据并行</h1>
+<figure>
+<img src="matmul_data_paralelism.png" alt="数据并行" />
+<figcaption aria-hidden="true">数据并行</figcaption>
+</figure>
+<p><strong>运行步骤：</strong></p>
+<ul>
+<li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w
+是完整的、一致的。</li>
+<li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a
+href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>当数据集较大，模型较小时</li>
+</ul>
+<h1 id="模型并行">模型并行</h1>
+<figure>
+<img src="matmul_model_paralelism.png" alt="模型并行" />
+<figcaption aria-hidden="true">模型并行</figcaption>
+</figure>
+<p><strong>运行步骤：</strong></p>
+<ul>
+<li>所谓的模型并行，就是每个设备上的数据是完整的、一致的，而模型 w
+被切分到了各个设备上，每个设备只拥有模型的一部分，所有计算设备上的模型拼在一起，才是完整的模型。</li>
+<li>模型并行的好处是，省去了多个设备之间的梯度
+AllReduce；但是，由于每个设备都需要完整的数据输入，因此，数据会在多个设备之间进行广播，产生通信代价。</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>神经网络巨大，梯度同步代价大，甚至网络参数无法放倒单一设备上。</li>
+<li>通信占比高，适合在机器内做模型并行。</li>
+</ul>
+<h1 id="流水并行">流水并行</h1>
+<figure>
+<img src="realy.png" alt="流水并行" />
+<figcaption aria-hidden="true">流水并行</figcaption>
+</figure>
+<p><strong>运行步骤：</strong></p>
+<ul>
+<li><p>流水并行指将网络切为多个阶段，并分发到不同的计算设备上，各个计算设备之间以“接力”的方式完成训练。</p></li>
+<li><p>4层网络被切分到2个计算设备上，其中 <code>GPU0</code> 上进行
+<code>T1</code> 与 <code>T2</code> 的运算，<code>GPU1</code> 上进行
+<code>T3</code> 与 <code>T4</code> 的计算。</p></li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>流水线并行，训练设备容易出现空闲状态，加速效率没有数据并行高；但能减少通信边界支持更多的层数，适合在机器间使用。</li>
+</ul>
+<h1 id="混合并行">混合并行</h1>
+<figure>
+<img src="gpt3-overview.png" alt="GPT3 训练架构" />
+<figcaption aria-hidden="true">GPT3 训练架构</figcaption>
+</figure>
+<ol type="1">
+<li>它首先被分为 64 个阶段，进行流水并行。每个阶段都运行在 6 台 DGX-A100
+主机上；</li>
+<li>在6台主机之间，进行的是数据并行训练；</li>
+<li>每台主机有 8 张 GPU 显卡，同一台机器上的8张 GPU
+显卡之间是进行模型并行训练。</li>
+</ol>
+<h1 id="参考文献">参考文献</h1>
+<blockquote>
+<ol type="1">
+<li><a
+href="https://docs.oneflow.org/master/parallelism/01_introduction.html">常见的分布式并行策略</a></li>
+</ol>
+</blockquote>
+]]></content>
+      <categories>
+        <category>framework</category>
+      </categories>
+      <tags>
+        <tag>并行训练</tag>
+        <tag>数据并行</tag>
+        <tag>模型并行</tag>
       </tags>
   </entry>
 </search>
