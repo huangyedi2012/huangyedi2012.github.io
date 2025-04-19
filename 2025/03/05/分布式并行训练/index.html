@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/realy.png">
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/gpt3-overview.png">
 <meta property="article:published_time" content="2025-03-05T06:59:55.000Z">
-<meta property="article:modified_time" content="2025-03-06T03:29:56.527Z">
+<meta property="article:modified_time" content="2025-03-26T09:52:33.123Z">
 <meta property="article:tag" content="并行训练">
 <meta property="article:tag" content="数据并行">
 <meta property="article:tag" content="模型并行">
@@ -146,7 +146,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text">数据并行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.</span> <span class="nav-text">模型并行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E5%B9%B6%E8%A1%8C"><span class="nav-number">3.</span> <span class="nav-text">流水并行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%B9%B6%E8%A1%8C"><span class="nav-number">4.</span> <span class="nav-text">混合并行</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83%E7%9A%84%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">并行训练的评价指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#flopsgpu-%E5%88%A9%E7%94%A8%E7%8E%87"><span class="nav-number">1.1.</span> <span class="nav-text">FLOPs&#x2F;GPU 利用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%95%88%E7%8E%87"><span class="nav-number">1.2.</span> <span class="nav-text">吞吐量与并行效率</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">并行方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.1.</span> <span class="nav-text">数据并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.2.</span> <span class="nav-text">模型并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.3.</span> <span class="nav-text">流水并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.4.</span> <span class="nav-text">混合并行</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -233,7 +233,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-03-06 11:29:56" itemprop="dateModified" datetime="2025-03-06T11:29:56+08:00">2025-03-06</time>
+      <time title="修改时间：2025-03-26 17:52:33" itemprop="dateModified" datetime="2025-03-26T17:52:33+08:00">2025-03-26</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -256,7 +256,42 @@
     
     <div class="post-body" itemprop="articleBody"><p>为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。</p>
 <span id="more"></span>
-<h1 id="数据并行">数据并行</h1>
+<h1 id="并行训练的评价指标">并行训练的评价指标</h1>
+<h2 id="flopsgpu-利用率"><strong>FLOPs/GPU 利用率</strong></h2>
+<p>关注计算性能是否充分发挥：</p>
+<ul>
+<li><strong>FLOPs（浮点运算次数）</strong>：计算模型训练过程中执行的浮点运算次数，通常以
+TFLOPs（TeraFLOPs）或 PFLOPs（PetaFLOPs）衡量。</li>
+<li><strong>FLOPs 利用率（FLOPs Utilization）</strong>：实际执行的 FLOPs
+与硬件理论峰值 FLOPs 的比值，衡量计算资源利用率。</li>
+<li><strong>GPU 利用率（GPU Utilization）</strong>：统计 GPU
+计算核心的使用情况，反映 GPU 是否被充分利用。</li>
+</ul>
+<h2 id="吞吐量与并行效率"><strong>吞吐量与并行效率</strong></h2>
+<p>关注扩展性是否合理：</p>
+<ul>
+<li><strong>吞吐量（Throughput）</strong>：每秒处理的样本数（samples/sec）或
+tokens/sec，通常用于衡量训练速度。</li>
+<li><strong>加速比（Speedup）</strong>：<span class="math inline">\(S(N)
+= \frac{T(1)}{T(N)}\)</span>其中$ T(1)$ 是单 GPU 训练时间，<span
+class="math inline">\(T(N)\)</span> 是 N 个 GPU 训练时间。</li>
+<li><strong>并行效率（Scaling Efficiency）</strong>:<span
+class="math inline">\(E(N) = \frac{S(N)}{N} = \frac{T(1)}{N \cdot
+T(N)}\)</span>.衡量并行扩展性，理想情况下应接近 100%。</li>
+</ul>
+<blockquote>
+<p>Megatron-LM的实验中：</p>
+<p>We sustain 15.1 PetaFLOPs with 512 V100 GPUS across the entire
+application with <strong>76% scaling efficiency</strong> when compared
+to a strong single GPU baseline that sustains 39 TeraFLOPs, which is 30%
+of peak FLOPs.</p>
+<p>计算过程：</p>
+<p>1 PetaFLOPs = 1000 TeraFLOPs</p>
+<p>39 * 512 =19,968 TeraFLOPS</p>
+<p>15.1 / 20.0 = 75.5 %</p>
+</blockquote>
+<h1 id="并行方法">并行方法</h1>
+<h2 id="数据并行">数据并行</h2>
 <figure>
 <img src="matmul_data_paralelism.png" alt="数据并行" />
 <figcaption aria-hidden="true">数据并行</figcaption>
@@ -272,7 +307,7 @@ target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/u
 <ul>
 <li>当数据集较大，模型较小时</li>
 </ul>
-<h1 id="模型并行">模型并行</h1>
+<h2 id="模型并行">模型并行</h2>
 <figure>
 <img src="matmul_model_paralelism.png" alt="模型并行" />
 <figcaption aria-hidden="true">模型并行</figcaption>
@@ -289,7 +324,7 @@ AllReduce；但是，由于每个设备都需要完整的数据输入，因此�
 <li>神经网络巨大，梯度同步代价大，甚至网络参数无法放倒单一设备上。</li>
 <li>通信占比高，适合在机器内做模型并行。</li>
 </ul>
-<h1 id="流水并行">流水并行</h1>
+<h2 id="流水并行">流水并行</h2>
 <figure>
 <img src="realy.png" alt="流水并行" />
 <figcaption aria-hidden="true">流水并行</figcaption>
@@ -305,7 +340,7 @@ AllReduce；但是，由于每个设备都需要完整的数据输入，因此�
 <ul>
 <li>流水线并行，训练设备容易出现空闲状态，加速效率没有数据并行高；但能减少通信边界支持更多的层数，适合在机器间使用。</li>
 </ul>
-<h1 id="混合并行">混合并行</h1>
+<h2 id="混合并行">混合并行</h2>
 <figure>
 <img src="gpt3-overview.png" alt="GPT3 训练架构" />
 <figcaption aria-hidden="true">GPT3 训练架构</figcaption>
