@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -14,11 +14,10 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="熵通常用来评价随机变量的不确定性；交叉熵是评价两个概率分布之间的差异；KL散度是评价两个概率分布之间的相对熵差。">
 <meta property="og:type" content="article">
@@ -38,7 +37,6 @@
 <link rel="canonical" href="https://huangyedi2012.github.io/2024/09/23/%E7%86%B5%E3%80%81%E4%BA%A4%E5%8F%89%E7%86%B5%E3%80%81KL%E6%95%A3%E5%BA%A6/">
 
 
-
 <script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2024/09/23/%E7%86%B5%E3%80%81%E4%BA%A4%E5%8F%89%E7%86%B5%E3%80%81KL%E6%95%A3%E5%BA%A6/","path":"2024/09/23/熵、交叉熵、KL散度/","title":"熵、交叉熵、KL散度"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
@@ -49,6 +47,31 @@
 
 
 
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
 
 
 
@@ -90,7 +113,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -101,25 +124,25 @@
 
 
   <div class="search-pop-overlay">
-    <div class="popup search-popup"><div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" maxlength="80"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close" role="button">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div class="search-result-container no-result">
-  <div class="search-result-icon">
-    <i class="fa fa-spinner fa-pulse fa-5x"></i>
-  </div>
-</div>
-
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -141,7 +164,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%86%B5"><span class="nav-number">1.</span> <span class="nav-text">熵</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E5%8F%89%E7%86%B5"><span class="nav-number">2.</span> <span class="nav-text">交叉熵</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#kl%E6%95%A3%E5%BA%A6"><span class="nav-number">3.</span> <span class="nav-text">KL散度</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">熵</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">交叉熵</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">KL散度</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -245,66 +268,54 @@
     
     <div class="post-body" itemprop="articleBody"><p>熵通常用来评价随机变量的不确定性；交叉熵是评价两个概率分布之间的差异；KL散度是评价两个概率分布之间的相对熵差。</p>
 <span id="more"></span>
-<h1 id="熵">熵</h1>
+<h1>熵</h1>
 <p>上世纪，人们用电报来传输信息，但电报里的字越多，花费的钱越多。为了节约成本，我们需要尽可能的缩短电报内容长度。</p>
-<p>在天气预报场景中，如果我们有2种天气（好、坏），我们可以用过一位的二进制编码来表示，如果有4中天气（晴天、刮风、下雨、下雪），我们可以用2位编码来表示，即总天气数取对数<span
-class="math inline">\(log_2N\)</span>即可。</p>
+<p>在天气预报场景中，如果我们有2种天气（好、坏），我们可以用过一位的二进制编码来表示，如果有4中天气（晴天、刮风、下雨、下雪），我们可以用2位编码来表示，即总天气数取对数$log_2N$即可。</p>
 <p><strong>熵与平均编码长度</strong></p>
-<p>如果我们知道每种天气的出现概率，那么就可以计算出编码的平均长度。
-<span class="math display">\[
-L_N = p(x) * log_2{N}
-\]</span> 一般情况下，如果某种天气出现的概率是<span
-class="math inline">\(P\)</span>，对应平均分布概率种类数为<span
-class="math inline">\(log_2{\frac{1}{P}} =
--log_2P\)</span>，因此，当这种天气的编码长度是<span
-class="math inline">\(−log_2P\)</span>时，整个编码方案是最优的，此时最有平均编码长度为：
-<span class="math display">\[
-H(P) = -\sum_iP(i)log_2P(i)
-\]</span></p>
+<p>如果我们知道每种天气的出现概率，那么就可以计算出编码的平均长度。<br>
+$$<br>
+L_N = p(x) * log_2{N}<br>
+$$<br>
+一般情况下，如果某种天气出现的概率是$P$，对应平均分布概率种类数为$log_2{\frac{1}{P}} = -log_2P$，因此，当这种天气的编码长度是$−log_2P$时，整个编码方案是最优的，此时最有平均编码长度为：<br>
+$$<br>
+H(P) = -\sum_iP(i)log_2P(i)<br>
+$$</p>
 <blockquote>
 <ul>
 <li>在这个公式里，由于被累加的情况是离散的，我们使用了求和符号。对于连续的情况，要把求和变成求积分。</li>
-<li>上述解释为理想情况下的情况，<span
-class="math inline">\(-log_2{P}\)</span>可能不为整数，而离散种类数必须为整数，因此“编码长度”为较为抽象的概念。</li>
+<li>上述解释为理想情况下的情况，$-log_2{P}$可能不为整数，而离散种类数必须为整数，因此“编码长度”为较为抽象的概念。</li>
 </ul>
 </blockquote>
-<p>最后，再对熵的公式做一个补充。一般情况下，算熵时，对数的底不是2，而是自然常数e。由换底公式
-<span class="math display">\[
-log_2x = \frac{log_ex}{log_e2}
-\]</span>
+<p>最后，再对熵的公式做一个补充。一般情况下，算熵时，对数的底不是2，而是自然常数e。由换底公式<br>
+$$<br>
+log_2x = \frac{log_ex}{log_e2}<br>
+$$<br>
 可知，对数用不同的底只是差了一个常数系数而已，使用什么数为底并不影响其相对大小。在使用熵时，我们也只关心多个熵的相对大小，而不怎么会关注绝对数值。</p>
 <blockquote>
 <p>以2为底时，熵的单位是比特。以e为底时，熵的单位是奈特（nat）。</p>
 </blockquote>
-<h1 id="交叉熵">交叉熵</h1>
+<h1>交叉熵</h1>
 <p>假设电报员正在和气象中心商量天气的编码方式。可是，这个电报员刚来这个城市不久，不知道这里是晴天比较多，还是下雨比较多。于是，对于晴天、刮风、下雨、下雪这四种天气，他采用了最朴素的平均法，让每种天气的编码都占2位。</p>
 <p>大概100天后，电报员统计出了每种天气的出现频率。他猛然发现，这个城市大部分时间都在下雨。如果让下雨的编码只占1位，会节省得多。于是，他连忙修改了编码的方式。</p>
 <p>这时，他开始后悔了：“要是早点用新的编码就好了。两种方案的平均编码长度差了多少呢？”</p>
-<p>假设真实天气的概率分布为<span
-class="math inline">\(P\)</span>，该电报员估计的概率分布为<span
-class="math inline">\(Q\)</span>，这种较差的编码的平均编码长度为： <span
-class="math display">\[
-H(P,Q) = -\sum_iP(i)log_2Q(i)
-\]</span>
+<p>假设真实天气的概率分布为$P$，该电报员估计的概率分布为$Q$，这种较差的编码的平均编码长度为：<br>
+$$<br>
+H(P,Q) = -\sum_iP(i)log_2Q(i)<br>
+$$<br>
 上式即为<strong>交叉熵</strong>的公式，用来评估编码方案的优劣。</p>
 <p>交叉熵有一个很重要的性质：交叉熵一定不小于熵。熵是最优的编码长度，你估计出来的编码方案，一定不会比最优的更好。所有交叉熵的应用基本上都是利用了这一性质。</p>
-<p>在机器学习中，我们会为分类任务使用交叉熵作为损失函数。这正是利用了交叉熵不比熵更大这一性质。模型输出的概率分布就是交叉熵公式里的<span
-class="math inline">\(Q\)</span>，实际的概率分布（one-hot编码）就是交叉熵公式里的<span
-class="math inline">\(P\)</span>。由于熵是0（样本的概率一定），交叉熵的值一定大于等于0。因此，交叉熵的值可以表示它和熵——最优的概率分布的信息量——之间的差距。</p>
-<h1 id="kl散度">KL散度</h1>
-<p>用交叉熵算出旧方案的平均编码长度后，电报员打算统计一下旧编码浪费了多少编码量。既然熵是最优编码的编码长度，那么交叉熵减去熵就能反映出旧编码平均浪费了多少编码长度。这个计算过程如下：
-<span class="math display">\[
-\begin{align}
-D_{KL}(P||Q) &amp;= H(P,Q) - H(P) \\\\
-&amp;=-\sum_iP(i)log_2Q(i) - (-\sum_iP(i)log_2P(i))\\\\
-&amp;= \sum_{i}P(i)log_2\frac{P(i)}{Q(i)}
-\end{align}
-\]</span>
-这个公式描述的量叫做<strong>相对熵</strong>，又叫做<strong>KL散度</strong>。KL散度的定义非常易懂，它只不过是交叉熵和熵的差而已，反映了一个分布与另一个分布的差异程度。最理想情况下，<span
-class="math inline">\(P=Q\)</span>，则KL散度为0。</p>
-<p>KL散度不是一个距离指标。从公式中能够看出，<span
-class="math inline">\(D_{KL}(P||Q)≠
-D_{KL}(Q||P)\)</span>，这个指标并不满足交换律。</p>
+<p>在机器学习中，我们会为分类任务使用交叉熵作为损失函数。这正是利用了交叉熵不比熵更大这一性质。模型输出的概率分布就是交叉熵公式里的$Q$，实际的概率分布（one-hot编码）就是交叉熵公式里的$P$。由于熵是0（样本的概率一定），交叉熵的值一定大于等于0。因此，交叉熵的值可以表示它和熵——最优的概率分布的信息量——之间的差距。</p>
+<h1>KL散度</h1>
+<p>用交叉熵算出旧方案的平均编码长度后，电报员打算统计一下旧编码浪费了多少编码量。既然熵是最优编码的编码长度，那么交叉熵减去熵就能反映出旧编码平均浪费了多少编码长度。这个计算过程如下：<br>
+$$<br>
+\begin{align}<br>
+D_{KL}(P||Q) &amp;= H(P,Q) - H(P) \\<br>
+&amp;=-\sum_iP(i)log_2Q(i) - (-\sum_iP(i)log_2P(i))\\<br>
+&amp;= \sum_{i}P(i)log_2\frac{P(i)}{Q(i)}<br>
+\end{align}<br>
+$$<br>
+这个公式描述的量叫做<strong>相对熵</strong>，又叫做<strong>KL散度</strong>。KL散度的定义非常易懂，它只不过是交叉熵和熵的差而已，反映了一个分布与另一个分布的差异程度。最理想情况下，$P=Q$，则KL散度为0。</p>
+<p>KL散度不是一个距离指标。从公式中能够看出，$D_{KL}(P||Q)≠ D_{KL}(Q||P)$，这个指标并不满足交换律。</p>
 
     </div>
 
@@ -363,6 +374,12 @@ D_{KL}(Q||P)\)</span>，这个指标并不满足交换律。</p>
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
   <div class="back-to-top" role="button" aria-label="返回顶部">
     <i class="fa fa-arrow-up fa-lg"></i>
     <span>0%</span>
@@ -371,37 +388,6 @@ D_{KL}(Q||P)\)</span>，这个指标并不满足交换律。</p>
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
-<script src="/js/third-party/search/local-search.js"></script>
-
-
-
-
-  <script src="/js/third-party/fancybox.js"></script>
-
-
-
-  
-
-
-
-
-  
-
-  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
-<script src="/js/third-party/math/mathjax.js"></script>
-
-
 
 </body>
 </html>

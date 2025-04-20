@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -14,11 +14,10 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。">
 <meta property="og:type" content="article">
@@ -47,7 +46,6 @@
 <link rel="canonical" href="https://huangyedi2012.github.io/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/">
 
 
-
 <script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/","path":"2021/12/08/高维矩阵乘法/","title":"高维矩阵乘法"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
@@ -58,6 +56,31 @@
 
 
 
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
 
 
 
@@ -99,7 +122,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -110,25 +133,25 @@
 
 
   <div class="search-pop-overlay">
-    <div class="popup search-popup"><div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" maxlength="80"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close" role="button">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div class="search-result-container no-result">
-  <div class="search-result-icon">
-    <i class="fa fa-spinner fa-pulse fa-5x"></i>
-  </div>
-</div>
-
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -150,7 +173,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">高维矩阵可视化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E8%BF%90%E7%AE%97"><span class="nav-number">2.</span> <span class="nav-text">高维矩阵运算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">高维矩阵可视化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">高维矩阵运算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -260,47 +283,28 @@
     
     <div class="post-body" itemprop="articleBody"><p>NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。</p>
 <span id="more"></span>
-<h1 id="高维矩阵可视化">高维矩阵可视化</h1>
-<p><strong>一维:</strong>
-首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
+<h1>高维矩阵可视化</h1>
+<p><strong>一维:</strong> 首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="yiwei.jpg" alt="一维矩阵" />
-<figcaption aria-hidden="true">一维矩阵</figcaption>
-</figure>
-<p><strong>二维:</strong>shape=[2,3]的二维矩阵可视化如下</p>
+<p><img src="yiwei.jpg" alt="一维矩阵"></p>
+<p>**二维:**shape=[2,3]的二维矩阵可视化如下</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">[<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="erwei.jpg" alt="二维" />
-<figcaption aria-hidden="true">二维</figcaption>
-</figure>
+<p><img src="erwei.jpg" alt="二维"></p>
 <p>为方便展示三维矩阵，旋转角度如下:</p>
-<figure>
-<img src="erwei2.jpg" alt="二维" />
-<figcaption aria-hidden="true">二维</figcaption>
-</figure>
-<p><strong>三维:</strong>一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
+<p><img src="erwei2.jpg" alt="二维"></p>
+<p>**三维:**一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">  [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line"> </span><br><span class="line"> [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="sanwei.jpg" alt="三维" />
-<figcaption aria-hidden="true">三维</figcaption>
-</figure>
+<p><img src="sanwei.jpg" alt="三维"></p>
 <p>切片展示如下:</p>
-<figure>
-<img src="sanwei2.jpg" alt="三维" />
-<figcaption aria-hidden="true">三维</figcaption>
-</figure>
-<p><strong>四维:</strong>shape=[2,2,2,3]的四维矩阵可视化如下:</p>
+<p><img src="sanwei2.jpg" alt="三维"></p>
+<p>**四维:**shape=[2,2,2,3]的四维矩阵可视化如下:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">   [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line">  </span><br><span class="line">  [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">   [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]],</span><br><span class="line">  </span><br><span class="line">  [[[<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>],</span><br><span class="line">    [<span class="number">16</span>,<span class="number">17</span>,<span class="number">18</span>]],</span><br><span class="line">   </span><br><span class="line">  [[<span class="number">19</span>,<span class="number">20</span>,<span class="number">21</span>],</span><br><span class="line">  [<span class="number">22</span>,<span class="number">23</span>,<span class="number">24</span>]]]]</span><br></pre></td></tr></table></figure>
-<figure>
-<img src="siwei.jpg" alt="四维" />
-<figcaption aria-hidden="true">四维</figcaption>
-</figure>
-<h1 id="高维矩阵运算">高维矩阵运算</h1>
+<p><img src="siwei.jpg" alt="四维"></p>
+<h1>高维矩阵运算</h1>
 <p>从上面的结论可以看出:<strong>所有大于二维的，最终都是以二维为基础堆叠在一起的！！</strong></p>
 <p>所以在矩阵运算的时候，其实最后都可以转成我们常见的二维矩阵运算，遵循的原则是：<strong>在多维矩阵相乘中，需最后两维满足shape匹配原则，最后两维才是有数据的矩阵，前面的维度只是矩阵的排列而已！</strong></p>
 <p><strong>相乘必须满足以下两个条件：</strong></p>
-<ol type="1">
+<ol>
 <li>两个n维数组的前n-2维必须完全相同。例如（3,2,4,2）（3,2,2,3）前两维必须完全一致；</li>
 <li>最后两维必须满足二阶矩阵乘法要求。例如（3,2,4,2）（3,2,2,3）的后两维可视为（4,2）x（2,3）满足矩阵乘法。</li>
 </ol>
@@ -310,24 +314,16 @@
 <p>比如两个三维的矩阵相乘，分别为shape=[2,2,3]和shape=[2,3,2]</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">a = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>  <span class="number">3.</span>]</span><br><span class="line">  [ <span class="number">4.</span>  <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>  <span class="number">9.</span>]</span><br><span class="line">  [<span class="number">10.</span> <span class="number">11.</span> <span class="number">12.</span>]]]</span><br><span class="line"></span><br><span class="line">b = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>]</span><br><span class="line">  [ <span class="number">3.</span>  <span class="number">4.</span>]</span><br><span class="line">  [ <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"></span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>]</span><br><span class="line">  [ <span class="number">9.</span> <span class="number">10.</span>]</span><br><span class="line">  [<span class="number">11.</span> <span class="number">12.</span>]]]</span><br></pre></td></tr></table></figure>
 <p>计算的时候把a的第一个shape=[2,3]的矩阵和b的第一个shape=[3,2]的矩阵相乘，得到的shape=[2,2]，即</p>
-<figure>
-<img src="matmul1.jpg" alt="matmul1" />
-<figcaption aria-hidden="true">matmul1</figcaption>
-</figure>
+<p><img src="matmul1.jpg" alt="matmul1"></p>
 <p>同理，再把a，b个字的第二个shape=[2,3]的矩阵相乘，得到的shape=[2,2]。</p>
-<figure>
-<img src="matmul2.jpg" alt="matmul2" />
-<figcaption aria-hidden="true">matmul2</figcaption>
-</figure>
+<p><img src="matmul2.jpg" alt="matmul2"></p>
 <p>最终把结果堆叠在一起，就是2个shape=[2,2]的矩阵堆叠在一起，结果为：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[[[ <span class="number">22.</span>  <span class="number">28.</span>]</span><br><span class="line">  [ <span class="number">49.</span>  <span class="number">64.</span>]]</span><br><span class="line"></span><br><span class="line"> [[<span class="number">220.</span> <span class="number">244.</span>]</span><br><span class="line">  [<span class="number">301.</span> <span class="number">334.</span>]]]</span><br></pre></td></tr></table></figure>
-<h1 id="参考文献">参考文献</h1>
+<h1>参考文献</h1>
 <blockquote>
-<ol type="1">
-<li><a
-target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
 </ol>
 </blockquote>
 
@@ -388,6 +384,12 @@ target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45459911/artic
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
   <div class="back-to-top" role="button" aria-label="返回顶部">
     <i class="fa fa-arrow-up fa-lg"></i>
     <span>0%</span>
@@ -396,37 +398,6 @@ target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45459911/artic
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
-<script src="/js/third-party/search/local-search.js"></script>
-
-
-
-
-  <script src="/js/third-party/fancybox.js"></script>
-
-
-
-  
-
-
-
-
-  
-
-  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
-<script src="/js/third-party/math/mathjax.js"></script>
-
-
 
 </body>
 </html>

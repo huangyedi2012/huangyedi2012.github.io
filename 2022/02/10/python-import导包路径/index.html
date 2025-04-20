@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -14,11 +14,10 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="本文主要分析python中import文件路径的问题。">
 <meta property="og:type" content="article">
@@ -35,7 +34,6 @@
 <link rel="canonical" href="https://huangyedi2012.github.io/2022/02/10/python-import%E5%AF%BC%E5%8C%85%E8%B7%AF%E5%BE%84/">
 
 
-
 <script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2022/02/10/python-import%E5%AF%BC%E5%8C%85%E8%B7%AF%E5%BE%84/","path":"2022/02/10/python-import导包路径/","title":"python import导包路径"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
@@ -46,6 +44,31 @@
 
 
 
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
 
 
 
@@ -87,7 +110,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -98,25 +121,25 @@
 
 
   <div class="search-pop-overlay">
-    <div class="popup search-popup"><div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" maxlength="80"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close" role="button">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div class="search-result-container no-result">
-  <div class="search-result-icon">
-    <i class="fa fa-spinner fa-pulse fa-5x"></i>
-  </div>
-</div>
-
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -138,7 +161,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%90%9C%E7%B4%A2%E8%B7%AF%E5%BE%84"><span class="nav-number">2.</span> <span class="nav-text">搜索路径</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#import%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.</span> <span class="nav-text">import步骤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B8%E5%AF%B9%E5%AF%BC%E5%85%A5%E4%B8%8E%E7%BB%9D%E5%AF%B9%E5%AF%BC%E5%85%A5"><span class="nav-number">4.</span> <span class="nav-text">相对导入与绝对导入</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">搜索路径</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">import步骤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">相对导入与绝对导入</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -248,64 +271,57 @@
     
     <div class="post-body" itemprop="articleBody"><p>本文主要分析python中import文件路径的问题。</p>
 <span id="more"></span>
-<h1 id="基本概念">基本概念</h1>
+<h1>基本概念</h1>
 <ul>
 <li><code>module</code>：一个<code>.py</code>文件</li>
 <li><code>package</code>：一个包含<code>.py</code>文件的文件夹</li>
 </ul>
-<h1 id="搜索路径">搜索路径</h1>
+<h1>搜索路径</h1>
 <p>python导入其他包或者模块时，会根据<code>sys.path</code>中的路径进行搜索，这些路径主要为一下三种:</p>
-<ol type="1">
+<ol>
 <li>当前执行脚本所在路径</li>
 <li>python内置标准库路径，PYTHONPATH</li>
 <li>安装的第三方模块路径。</li>
 </ol>
-<h1 id="import步骤">import步骤</h1>
+<h1>import步骤</h1>
 <p>python所有加载的module信息都存放在<code>sys.modules</code>结构中，当import一个模块时:</p>
-<ol type="1">
+<ol>
 <li>如果是<code>import A</code>，检查<code>sys.modules</code>中是否有A，如果有则不加载，如果没有，则为A创建module对象，并加载A</li>
-<li>如果是 <code>from A import B</code>，先为 A 创建 module
-对象，再解析A，从中寻找B并填充到 A 的 <code>__dict__</code>中</li>
+<li>如果是 <code>from A import B</code>，先为 A 创建 module 对象，再解析A，从中寻找B并填充到 A 的 <code>__dict__ </code>中</li>
 </ol>
-<h1 id="相对导入与绝对导入">相对导入与绝对导入</h1>
+<h1>相对导入与绝对导入</h1>
 <p><strong>绝对导入与相对导入的形式：</strong></p>
 <ul>
-<li><p>绝对导入的格式为 <code>import A.B</code> 或
-<code>from A import B</code></p></li>
-<li><p>相对导入格式为 <code>from . import B</code> 或
-<code>from ..A import B</code>，.代表当前模块，..代表上层模块，...代表上上层模块，依次类推。</p></li>
+<li>
+<p>绝对导入的格式为 <code>import A.B</code> 或 <code>from A import B</code></p>
+</li>
+<li>
+<p>相对导入格式为 <code>from . import B</code> 或 <code>from ..A import B</code>，.代表当前模块，…代表上层模块，…代表上上层模块，依次类推。</p>
+</li>
 </ul>
 <p><strong>顶层结构：</strong></p>
-<p>在没有明确指定包结构的情况下，Python 是根据
-<code>__name__</code>来决定一个模块在包中的结构的:</p>
+<p>在没有明确指定包结构的情况下，Python 是根据 <code>__name__ </code>来决定一个模块在包中的结构的:</p>
 <ul>
-<li>如果是 <code>__main__</code>则它本身是顶层模块，没有包结构</li>
+<li>如果是 <code>__main__ </code>则它本身是顶层模块，没有包结构</li>
 <li>如果是A.B.C 结构，那么顶层模块是 A。</li>
 </ul>
 <blockquote>
-<p><strong><code>__name__</code>变量</strong>作为python的内置变量，是每个python模块必备的属性，可以取两种值:</p>
+<p><strong><code>__name__ </code>变量</strong>作为python的内置变量，是每个python模块必备的属性，可以取两种值:</p>
 <ul>
-<li>当你直接执行一段脚本的时候，这段脚本的
-<strong><strong>name</strong></strong>变量等于
-<strong>'<strong>main</strong>'</strong></li>
-<li>当这段脚本被导入其他程序的时候，<strong><strong>name</strong></strong>
-变量等于脚本本身的名字。</li>
+<li>当你直接执行一段脚本的时候，这段脚本的 **<strong>name</strong>**变量等于 <strong>‘<strong>main</strong>’</strong></li>
+<li>当这段脚本被导入其他程序的时候，<strong><strong>name</strong></strong> 变量等于脚本本身的名字。</li>
 </ul>
 </blockquote>
 <p><strong>导包原则：</strong></p>
-<ol type="1">
+<ol>
 <li>如果是绝对导入，一个模块只能导入自身的子模块或和它的顶层模块同级别的模块及其子模块</li>
 <li>如果是相对导入，一个模块必须有包结构且只能导入它的顶层模块内部的模块</li>
 </ol>
 <p>如果一个模块被直接运行，则它自己为顶层模块，不存在层次结构，找不到其他的相对路径，因此存在相对导入语句的模块，不能直接运行。</p>
-<p>Python2.x 缺省为相对路径导入，Python3.x
-缺省为绝对路径导入。绝对导入可以避免导入子包覆盖掉标准库模块（由于名字相同，发生冲突）。如果在
-Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语句：</p>
+<p>Python2.x 缺省为相对路径导入，Python3.x 缺省为绝对路径导入。绝对导入可以避免导入子包覆盖掉标准库模块（由于名字相同，发生冲突）。如果在 Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语句：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> __future__ <span class="keyword">import</span> absolute_import</span><br></pre></td></tr></table></figure>
-<p>**from __future__ import absolute_import**</p>
-<p>这句 import 并不是指将所有的导入视为绝对导入，而是指禁用
-<code>implicit relative import</code>（隐式相对导入）, 但并不会禁掉
-<code>explicit relative import</code>（显示相对导入）。</p>
+<p><strong>from _<em>future</em>_ import absolute_import</strong></p>
+<p>这句 import 并不是指将所有的导入视为绝对导入，而是指禁用 <code>implicit relative import</code>（隐式相对导入）, 但并不会禁掉 <code>explicit relative import</code>（显示相对导入）。</p>
 <p><strong>关于隐式相对导入、显示相对导入和绝对导入</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">thing</span><br><span class="line">├── books</span><br><span class="line">│ ├── adventure.py</span><br><span class="line">│ ├── history.py</span><br><span class="line">│ ├── horror.py</span><br><span class="line">│ ├── __init__.py</span><br><span class="line">│ └── lovestory.py</span><br><span class="line">├── furniture</span><br><span class="line">│ ├── armchair.py</span><br><span class="line">│ ├── bench.py</span><br><span class="line">│ ├── __init__.py</span><br><span class="line">│ ├── screen.py</span><br><span class="line">│ └── stool.py</span><br><span class="line">└── __init__.py</span><br></pre></td></tr></table></figure>
 <p>如果在 stool 中引用 bench，则有如下几种方式:</p>
@@ -368,6 +384,12 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
   <div class="back-to-top" role="button" aria-label="返回顶部">
     <i class="fa fa-arrow-up fa-lg"></i>
     <span>0%</span>
@@ -376,37 +398,6 @@ Python2.x 中要默认使用绝对导入，可以在文件开头加入如下语�
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
-<script src="/js/third-party/search/local-search.js"></script>
-
-
-
-
-  <script src="/js/third-party/fancybox.js"></script>
-
-
-
-  
-
-
-
-
-  
-
-  <script class="next-config" data-name="enableMath" type="application/json">false</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
-<script src="/js/third-party/math/mathjax.js"></script>
-
-
 
 </body>
 </html>

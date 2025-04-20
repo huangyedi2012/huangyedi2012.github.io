@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -14,11 +14,10 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。">
 <meta property="og:type" content="article">
@@ -32,7 +31,7 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/realy.png">
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/gpt3-overview.png">
 <meta property="article:published_time" content="2025-03-05T06:59:55.000Z">
-<meta property="article:modified_time" content="2025-03-26T09:52:33.123Z">
+<meta property="article:modified_time" content="2025-04-19T10:00:38.813Z">
 <meta property="article:tag" content="并行训练">
 <meta property="article:tag" content="数据并行">
 <meta property="article:tag" content="模型并行">
@@ -41,7 +40,6 @@
 
 
 <link rel="canonical" href="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/">
-
 
 
 <script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/","path":"2025/03/05/分布式并行训练/","title":"分布式并行训练"}</script>
@@ -54,6 +52,31 @@
 
 
 
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
 
 
 
@@ -95,7 +118,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -106,25 +129,25 @@
 
 
   <div class="search-pop-overlay">
-    <div class="popup search-popup"><div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" maxlength="80"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close" role="button">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div class="search-result-container no-result">
-  <div class="search-result-icon">
-    <i class="fa fa-spinner fa-pulse fa-5x"></i>
-  </div>
-</div>
-
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -146,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83%E7%9A%84%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">并行训练的评价指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#flopsgpu-%E5%88%A9%E7%94%A8%E7%8E%87"><span class="nav-number">1.1.</span> <span class="nav-text">FLOPs&#x2F;GPU 利用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%95%88%E7%8E%87"><span class="nav-number">1.2.</span> <span class="nav-text">吞吐量与并行效率</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">并行方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.1.</span> <span class="nav-text">数据并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.2.</span> <span class="nav-text">模型并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.3.</span> <span class="nav-text">流水并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.4.</span> <span class="nav-text">混合并行</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">并行训练的评价指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FLOPs-GPU-%E5%88%A9%E7%94%A8%E7%8E%87"><span class="nav-number">1.1.</span> <span class="nav-text">FLOPs&#x2F;GPU 利用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%95%88%E7%8E%87"><span class="nav-number">1.2.</span> <span class="nav-text">吞吐量与并行效率</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">并行方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.1.</span> <span class="nav-text">数据并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.2.</span> <span class="nav-text">模型并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.3.</span> <span class="nav-text">流水并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%B9%B6%E8%A1%8C"><span class="nav-number">2.4.</span> <span class="nav-text">混合并行</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -233,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-03-26 17:52:33" itemprop="dateModified" datetime="2025-03-26T17:52:33+08:00">2025-03-26</time>
+      <time title="修改时间：2025-04-19 18:00:38" itemprop="dateModified" datetime="2025-04-19T18:00:38+08:00">2025-04-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -256,68 +279,47 @@
     
     <div class="post-body" itemprop="articleBody"><p>为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。</p>
 <span id="more"></span>
-<h1 id="并行训练的评价指标">并行训练的评价指标</h1>
-<h2 id="flopsgpu-利用率"><strong>FLOPs/GPU 利用率</strong></h2>
+<h1>并行训练的评价指标</h1>
+<h2 id="FLOPs-GPU-利用率"><strong>FLOPs/GPU 利用率</strong></h2>
 <p>关注计算性能是否充分发挥：</p>
 <ul>
-<li><strong>FLOPs（浮点运算次数）</strong>：计算模型训练过程中执行的浮点运算次数，通常以
-TFLOPs（TeraFLOPs）或 PFLOPs（PetaFLOPs）衡量。</li>
-<li><strong>FLOPs 利用率（FLOPs Utilization）</strong>：实际执行的 FLOPs
-与硬件理论峰值 FLOPs 的比值，衡量计算资源利用率。</li>
-<li><strong>GPU 利用率（GPU Utilization）</strong>：统计 GPU
-计算核心的使用情况，反映 GPU 是否被充分利用。</li>
+<li><strong>FLOPs（浮点运算次数）</strong>：计算模型训练过程中执行的浮点运算次数，通常以 TFLOPs（TeraFLOPs）或 PFLOPs（PetaFLOPs）衡量。</li>
+<li><strong>FLOPs 利用率（FLOPs Utilization）</strong>：实际执行的 FLOPs 与硬件理论峰值 FLOPs 的比值，衡量计算资源利用率。</li>
+<li><strong>GPU 利用率（GPU Utilization）</strong>：统计 GPU 计算核心的使用情况，反映 GPU 是否被充分利用。</li>
 </ul>
 <h2 id="吞吐量与并行效率"><strong>吞吐量与并行效率</strong></h2>
 <p>关注扩展性是否合理：</p>
 <ul>
-<li><strong>吞吐量（Throughput）</strong>：每秒处理的样本数（samples/sec）或
-tokens/sec，通常用于衡量训练速度。</li>
-<li><strong>加速比（Speedup）</strong>：<span class="math inline">\(S(N)
-= \frac{T(1)}{T(N)}\)</span>其中$ T(1)$ 是单 GPU 训练时间，<span
-class="math inline">\(T(N)\)</span> 是 N 个 GPU 训练时间。</li>
-<li><strong>并行效率（Scaling Efficiency）</strong>:<span
-class="math inline">\(E(N) = \frac{S(N)}{N} = \frac{T(1)}{N \cdot
-T(N)}\)</span>.衡量并行扩展性，理想情况下应接近 100%。</li>
+<li><strong>吞吐量（Throughput）</strong>：每秒处理的样本数（samples/sec）或 tokens/sec，通常用于衡量训练速度。</li>
+<li><strong>加速比（Speedup）</strong>：$ S(N) = \frac{T(1)}{T(N)} $其中$ T(1)$ 是单 GPU 训练时间，$T(N)$ 是 N 个 GPU 训练时间。</li>
+<li><strong>并行效率（Scaling Efficiency）</strong>:$ E(N) = \frac{S(N)}{N} = \frac{T(1)}{N \cdot T(N)} $.衡量并行扩展性，理想情况下应接近 100%。</li>
 </ul>
 <blockquote>
 <p>Megatron-LM的实验中：</p>
-<p>We sustain 15.1 PetaFLOPs with 512 V100 GPUS across the entire
-application with <strong>76% scaling efficiency</strong> when compared
-to a strong single GPU baseline that sustains 39 TeraFLOPs, which is 30%
-of peak FLOPs.</p>
+<p>We sustain 15.1 PetaFLOPs with 512 V100 GPUS across the entire application with <strong>76% scaling efficiency</strong> when compared to a strong single GPU baseline that sustains 39 TeraFLOPs, which is 30% of peak FLOPs.</p>
 <p>计算过程：</p>
 <p>1 PetaFLOPs = 1000 TeraFLOPs</p>
 <p>39 * 512 =19,968 TeraFLOPS</p>
 <p>15.1 / 20.0 = 75.5 %</p>
 </blockquote>
-<h1 id="并行方法">并行方法</h1>
+<h1>并行方法</h1>
 <h2 id="数据并行">数据并行</h2>
-<figure>
-<img src="matmul_data_paralelism.png" alt="数据并行" />
-<figcaption aria-hidden="true">数据并行</figcaption>
-</figure>
+<p><img src="matmul_data_paralelism.png" alt="数据并行"></p>
 <p><strong>运行步骤：</strong></p>
 <ul>
-<li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w
-是完整的、一致的。</li>
-<li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a
-target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
+<li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w 是完整的、一致的。</li>
+<li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
 </ul>
 <p><strong>适用场景：</strong></p>
 <ul>
 <li>当数据集较大，模型较小时</li>
 </ul>
 <h2 id="模型并行">模型并行</h2>
-<figure>
-<img src="matmul_model_paralelism.png" alt="模型并行" />
-<figcaption aria-hidden="true">模型并行</figcaption>
-</figure>
+<p><img src="matmul_model_paralelism.png" alt="模型并行"></p>
 <p><strong>运行步骤：</strong></p>
 <ul>
-<li>所谓的模型并行，就是每个设备上的数据是完整的、一致的，而模型 w
-被切分到了各个设备上，每个设备只拥有模型的一部分，所有计算设备上的模型拼在一起，才是完整的模型。</li>
-<li>模型并行的好处是，省去了多个设备之间的梯度
-AllReduce；但是，由于每个设备都需要完整的数据输入，因此，数据会在多个设备之间进行广播，产生通信代价。</li>
+<li>所谓的模型并行，就是每个设备上的数据是完整的、一致的，而模型 w 被切分到了各个设备上，每个设备只拥有模型的一部分，所有计算设备上的模型拼在一起，才是完整的模型。</li>
+<li>模型并行的好处是，省去了多个设备之间的梯度 AllReduce；但是，由于每个设备都需要完整的数据输入，因此，数据会在多个设备之间进行广播，产生通信代价。</li>
 </ul>
 <p><strong>适用场景：</strong></p>
 <ul>
@@ -325,38 +327,31 @@ AllReduce；但是，由于每个设备都需要完整的数据输入，因此�
 <li>通信占比高，适合在机器内做模型并行。</li>
 </ul>
 <h2 id="流水并行">流水并行</h2>
-<figure>
-<img src="realy.png" alt="流水并行" />
-<figcaption aria-hidden="true">流水并行</figcaption>
-</figure>
+<p><img src="realy.png" alt="流水并行"></p>
 <p><strong>运行步骤：</strong></p>
 <ul>
-<li><p>流水并行指将网络切为多个阶段，并分发到不同的计算设备上，各个计算设备之间以“接力”的方式完成训练。</p></li>
-<li><p>4层网络被切分到2个计算设备上，其中 <code>GPU0</code> 上进行
-<code>T1</code> 与 <code>T2</code> 的运算，<code>GPU1</code> 上进行
-<code>T3</code> 与 <code>T4</code> 的计算。</p></li>
+<li>
+<p>流水并行指将网络切为多个阶段，并分发到不同的计算设备上，各个计算设备之间以“接力”的方式完成训练。</p>
+</li>
+<li>
+<p>4层网络被切分到2个计算设备上，其中 <code>GPU0</code> 上进行 <code>T1</code> 与 <code>T2</code> 的运算，<code>GPU1</code> 上进行 <code>T3</code> 与 <code>T4</code> 的计算。</p>
+</li>
 </ul>
 <p><strong>适用场景：</strong></p>
 <ul>
 <li>流水线并行，训练设备容易出现空闲状态，加速效率没有数据并行高；但能减少通信边界支持更多的层数，适合在机器间使用。</li>
 </ul>
 <h2 id="混合并行">混合并行</h2>
-<figure>
-<img src="gpt3-overview.png" alt="GPT3 训练架构" />
-<figcaption aria-hidden="true">GPT3 训练架构</figcaption>
-</figure>
-<ol type="1">
-<li>它首先被分为 64 个阶段，进行流水并行。每个阶段都运行在 6 台 DGX-A100
-主机上；</li>
+<p><img src="gpt3-overview.png" alt="GPT3 训练架构"></p>
+<ol>
+<li>它首先被分为 64 个阶段，进行流水并行。每个阶段都运行在 6 台 DGX-A100 主机上；</li>
 <li>在6台主机之间，进行的是数据并行训练；</li>
-<li>每台主机有 8 张 GPU 显卡，同一台机器上的8张 GPU
-显卡之间是进行模型并行训练。</li>
+<li>每台主机有 8 张 GPU 显卡，同一台机器上的8张 GPU 显卡之间是进行模型并行训练。</li>
 </ol>
-<h1 id="参考文献">参考文献</h1>
+<h1>参考文献</h1>
 <blockquote>
-<ol type="1">
-<li><a
-target="_blank" rel="noopener" href="https://docs.oneflow.org/master/parallelism/01_introduction.html">常见的分布式并行策略</a></li>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://docs.oneflow.org/master/parallelism/01_introduction.html">常见的分布式并行策略</a></li>
 </ol>
 </blockquote>
 
@@ -414,6 +409,12 @@ target="_blank" rel="noopener" href="https://docs.oneflow.org/master/parallelism
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
   <div class="back-to-top" role="button" aria-label="返回顶部">
     <i class="fa fa-arrow-up fa-lg"></i>
     <span>0%</span>
@@ -422,37 +423,6 @@ target="_blank" rel="noopener" href="https://docs.oneflow.org/master/parallelism
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
-<script src="/js/third-party/search/local-search.js"></script>
-
-
-
-
-  <script src="/js/third-party/fancybox.js"></script>
-
-
-
-  
-
-
-
-
-  
-
-  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
-<script src="/js/third-party/math/mathjax.js"></script>
-
-
 
 </body>
 </html>

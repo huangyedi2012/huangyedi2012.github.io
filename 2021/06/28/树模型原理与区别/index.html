@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width">
-<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
@@ -14,11 +14,10 @@
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="RF,GBDT,XGBoost,lightGBM都属于集成学习（Ensemble Learning），集成学习的目的是通过结合多个基学习器的预测结果来改善基本学习器的泛化能力和鲁棒性。">
 <meta property="og:type" content="article">
@@ -29,15 +28,14 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-06-28T14:40:47.000Z">
 <meta property="article:modified_time" content="2024-08-01T08:33:45.898Z">
-<meta property="article:tag" content="todo">
 <meta property="article:tag" content="XGBoost">
+<meta property="article:tag" content="todo">
 <meta property="article:tag" content="GBDT">
 <meta property="article:tag" content="随机森林">
 <meta name="twitter:card" content="summary">
 
 
 <link rel="canonical" href="https://huangyedi2012.github.io/2021/06/28/%E6%A0%91%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%8C%BA%E5%88%AB/">
-
 
 
 <script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2021/06/28/%E6%A0%91%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86%E4%B8%8E%E5%8C%BA%E5%88%AB/","path":"2021/06/28/树模型原理与区别/","title":"树模型原理与区别"}</script>
@@ -50,6 +48,31 @@
 
 
 
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
 
 
 
@@ -91,7 +114,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -102,25 +125,25 @@
 
 
   <div class="search-pop-overlay">
-    <div class="popup search-popup"><div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off" maxlength="80"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close" role="button">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div class="search-result-container no-result">
-  <div class="search-result-icon">
-    <i class="fa fa-spinner fa-pulse fa-5x"></i>
-  </div>
-</div>
-
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -142,8 +165,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E6%A3%AE%E6%9E%97randomforest"><span class="nav-number">1.</span> <span class="nav-text">随机森林（RandomForest）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gbdt-gradient-boosting-decision-tree"><span class="nav-number">2.</span> <span class="nav-text">GBDT (Gradient Boosting
-Decision Tree)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#xgboost"><span class="nav-number">3.</span> <span class="nav-text">XGBoost</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">随机森林（RandomForest）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">GBDT (Gradient Boosting Decision Tree)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">XGBoost</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -251,20 +273,18 @@ Decision Tree)</span></a></li><li class="nav-item nav-level-1"><a class="nav-lin
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>RF,GBDT,XGBoost,lightGBM都属于集成学习（Ensemble
-Learning），集成学习的目的是通过结合多个基学习器的预测结果来改善基本学习器的泛化能力和鲁棒性。</p>
+    <div class="post-body" itemprop="articleBody"><p>RF,GBDT,XGBoost,lightGBM都属于集成学习（Ensemble Learning），集成学习的目的是通过结合多个基学习器的预测结果来改善基本学习器的泛化能力和鲁棒性。</p>
 <span id="more"></span>
-<h1 id="随机森林randomforest">随机森林（RandomForest）</h1>
+<h1>随机森林（RandomForest）</h1>
 <p><strong>原理：</strong></p>
-<p>Random Forest（随机森林）是Bagging的扩展变体，它在以决策树
-为基学习器构建Bagging集成的基础上，进一步在决策树的训练过程中引入了随机特征选择。</p>
+<p>Random Forest（随机森林）是Bagging的扩展变体，它在以决策树 为基学习器构建Bagging集成的基础上，进一步在决策树的训练过程中引入了随机特征选择。</p>
 <p>因此可以概括RF包括四个部分：</p>
 <p>1、随机选择样本（放回抽样）；</p>
 <p>2、随机选择特征属性；</p>
 <p>3、构建决策树；</p>
 <p>4、随机森林投票（平均）， 因此防止过拟合能力更强，降低方差。</p>
 <p><strong>优点：</strong></p>
-<ol type="1">
+<ol>
 <li>随机森林算法能解决分类与回归两种类型的问题，表现良好，由于是集成学习，方差和偏差都比较低，泛化性能优越；</li>
 <li>随机森林对于高维数据集的处理能力很好，它可以处理成千上万的输入变量，并确定最重要的变量，因此被认为是一个不错的降维方法。此外，该模型能够输出特征的重要性程度，这是一个非常实用的功能。</li>
 <li>可以应对缺失数据；</li>
@@ -274,52 +294,53 @@ Learning），集成学习的目的是通过结合多个基学习器的预测结
 </ol>
 <p><strong>缺点：</strong></p>
 <p>随机森林在解决回归问题时并没有像它在分类中表现的那么好，这是因为它并不能给出一个连续型的输出。当进行回归时，随机森林不能够作出超越训练集数据范围的预测，这可能导致在对某些还有特定噪声的数据进行建模时出现过度拟合。</p>
-<h1 id="gbdt-gradient-boosting-decision-tree">GBDT (Gradient Boosting
-Decision Tree)</h1>
+<h1>GBDT (Gradient Boosting Decision Tree)</h1>
 <p><strong>原理：</strong></p>
 <p>GradientBoosting算法关键是利用损失函数的负梯度方向在当前模型的值作为残差的近似值，进而拟合一棵CART回归树。</p>
-<p>GBDT会累加所有树的结果，而这种累加是无法通过分类完成的，因此GBDT的树都是<strong>CART回归树</strong>，而不是分类树（尽管GBDT调整后也可以用于分类但不代表GBDT的树为分类树)
-因为Gradient Boosting
-需要按照损失函数的梯度近似的拟合残差，这样拟合的是连续数值，因此只有回归树。</p>
+<p>GBDT会累加所有树的结果，而这种累加是无法通过分类完成的，因此GBDT的树都是<strong>CART回归树</strong>，而不是分类树（尽管GBDT调整后也可以用于分类但不代表GBDT的树为分类树) 因为Gradient Boosting 需要按照损失函数的梯度近似的拟合残差，这样拟合的是连续数值，因此只有回归树。</p>
 <p><strong>优点：</strong></p>
-<ol type="1">
+<ol>
 <li>它能灵活的处理各种类型的数据；</li>
 <li>在相对较少的调参时间下，预测的准确度较高。</li>
 </ol>
 <p><strong>缺点：</strong></p>
 <p>当然由于它是Boosting，因此基学习器之前存在串行关系，难以并行训练数据。</p>
-<h1 id="xgboost">XGBoost</h1>
+<h1>XGBoost</h1>
 <p>XGBoost与GBDT的区别： 在了解了XGBoost原理后容易理解二者的不同</p>
-<ol type="1">
-<li><p><strong>损失函数的改变：</strong>（导数和正则项的认识）</p>
+<ol>
+<li>
+<p><strong>损失函数的改变：</strong>（导数和正则项的认识）</p>
 <p>传统的GBDT以CART树作为基学习器，XGBoost还支持线性分类器，这个时候XGBoost相当于L1和L2正则化的逻辑斯蒂回归（分类）或者线性回归（回归）；</p>
 <p>传统的GBDT在优化的时候只用到一阶导数信息，XGBoost则对代价函数进行了二阶泰勒展开，得到一阶和二阶导数；</p>
-<p>XGBoost在代价函数中加入了正则项，用于控制模型的复杂度。从权衡方差偏差来看，它降低了模型的方差，使学习出来的模型更加简单，防止过拟合，这也是XGBoost优于传统GBDT的一个特性；</p></li>
-<li><p><strong>工具的优化</strong>：（趋势值和并行的认识）</p>
-<p>shrinkage（缩减），相当于学习速率（XGBoost中的eta）。</p></li>
-<li><p><strong>列抽样</strong>：XGBoost借鉴了随机森林的做法，支持列抽样，不仅防止过
-拟合，还能减少计算；</p></li>
-<li><p><strong>对缺失值的处理</strong>：对于特征的值有缺失的样本，XGBoost还可以自动学习出它的分裂方向；</p></li>
-<li><p><strong>XGBoost工具支持并行</strong></p>
+<p>XGBoost在代价函数中加入了正则项，用于控制模型的复杂度。从权衡方差偏差来看，它降低了模型的方差，使学习出来的模型更加简单，防止过拟合，这也是XGBoost优于传统GBDT的一个特性；</p>
+</li>
+<li>
+<p><strong>工具的优化</strong>：（趋势值和并行的认识）</p>
+<p>shrinkage（缩减），相当于学习速率（XGBoost中的eta）。</p>
+</li>
+<li>
+<p><strong>列抽样</strong>：XGBoost借鉴了随机森林的做法，支持列抽样，不仅防止过 拟合，还能减少计算；</p>
+</li>
+<li>
+<p><strong>对缺失值的处理</strong>：对于特征的值有缺失的样本，XGBoost还可以自动学习出它的分裂方向；</p>
+</li>
+<li>
+<p><strong>XGBoost工具支持并行</strong></p>
 <p>注意XGBoost的并行不是tree粒度的并行，XGBoost也是一次迭代完才能进行下一次迭代的（第t次迭代的代价函数里包含了前面t-1次迭代的预测值）。</p>
-<p>XGBoost的并行是在特征粒度上的。我们知道，决策树的学习最耗时的一个步骤就是对特征的值进行排序（因为要确定最佳分割点），XGBoost在训练之前，预先对数据进行了排序，然后保存为block结构，后面的迭代
-中重复地使用这个结构，大大减小计算量。</p>
-<p>这个block结构也使得并行成为了可能，在进行节点的分裂时，需要计算每个特征的增益，最终选增益最大的那个特征去做分裂，那么各个特征的增益计算就可以开多线程进行。</p></li>
+<p>XGBoost的并行是在特征粒度上的。我们知道，决策树的学习最耗时的一个步骤就是对特征的值进行排序（因为要确定最佳分割点），XGBoost在训练之前，预先对数据进行了排序，然后保存为block结构，后面的迭代 中重复地使用这个结构，大大减小计算量。</p>
+<p>这个block结构也使得并行成为了可能，在进行节点的分裂时，需要计算每个特征的增益，最终选增益最大的那个特征去做分裂，那么各个特征的增益计算就可以开多线程进行。</p>
+</li>
 </ol>
 <p><strong>缺点</strong></p>
-<ol type="1">
-<li>level-wise
-建树方式对当前层的所有叶子节点一视同仁，有些叶子节点分裂收益非常小，对结果没影响，但还是要分裂，加重了计算代价。</li>
+<ol>
+<li>level-wise 建树方式对当前层的所有叶子节点一视同仁，有些叶子节点分裂收益非常小，对结果没影响，但还是要分裂，加重了计算代价。</li>
 <li>预排序方法空间消耗比较大，不仅要保存特征值，也要保存特征的排序索引，同时时间消耗也大，在遍历每个分裂点时都要计算分裂增益(不过这个缺点可以被近似算法所克服)</li>
 </ol>
-<h1 id="参考文献">参考文献</h1>
+<h1>参考文献</h1>
 <blockquote>
-<ol type="1">
-<li><a
-target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/62207593">RandomForest、GBDT、XGBoost、lightGBM
-原理与区别</a></li>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/142413825">机器学习 |
-XGBoost详解</a></li>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/62207593">RandomForest、GBDT、XGBoost、lightGBM 原理与区别</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/142413825">机器学习 | XGBoost详解</a></li>
 </ol>
 </blockquote>
 
@@ -331,8 +352,8 @@ XGBoost详解</a></li>
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/todo/" rel="tag"># todo</a>
               <a href="/tags/XGBoost/" rel="tag"># XGBoost</a>
+              <a href="/tags/todo/" rel="tag"># todo</a>
               <a href="/tags/GBDT/" rel="tag"># GBDT</a>
               <a href="/tags/%E9%9A%8F%E6%9C%BA%E6%A3%AE%E6%9E%97/" rel="tag"># 随机森林</a>
           </div>
@@ -381,6 +402,12 @@ XGBoost详解</a></li>
   </footer>
 
   
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
   <div class="back-to-top" role="button" aria-label="返回顶部">
     <i class="fa fa-arrow-up fa-lg"></i>
     <span>0%</span>
@@ -389,37 +416,6 @@ XGBoost详解</a></li>
 <noscript>
   <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
 </noscript>
-
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.33/fancybox/fancybox.umd.js" integrity="sha256-+2+qOqR8CKoHh/AsVR9k2qaDBKWjYNC2nozhYmv5j9k=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pangu/4.0.7/pangu.min.js" integrity="sha256-j+yj56cdEY2CwkVtGyz18fNybFGpMGJ8JxG3GSyO2+I=" crossorigin="anonymous"></script>
-<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/pjax.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
-<script src="/js/third-party/search/local-search.js"></script>
-
-
-
-
-  <script src="/js/third-party/fancybox.js"></script>
-
-
-
-  
-
-
-
-
-  
-
-  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
-<script src="/js/third-party/math/mathjax.js"></script>
-
-
 
 </body>
 </html>
