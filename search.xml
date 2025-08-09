@@ -289,116 +289,6 @@ $$</p>
       </tags>
   </entry>
   <entry>
-    <title>Hadoop之Yarn原理</title>
-    <url>/2017/04/17/2017-04-17-Hadoop%E4%B9%8BYarn%E5%8E%9F%E7%90%86/</url>
-    <content><![CDATA[<p>YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。</p>
-<span id="more"></span>
-<h1>Hadoop MapReduce 框架的问题</h1>
-<p>随着分布式系统集群的规模和其工作负荷的增长，MapReduce 框架的问题逐渐浮出水面，主要的问题集中如下：</p>
-<ol>
-<li>JobTracker 是 Map-reduce 的集中处理点，存在单点故障。</li>
-<li>JobTracker 完成了太多的任务，造成了过多的资源消耗，当 map-reduce job 非常多的时候，会造成很大的内存开销，潜在来说，也增加了 JobTracker fail 的风险，这也是业界普遍总结出老 Hadoop 的 Map-Reduce 只能支持 4000 节点主机的上限。</li>
-<li>在 TaskTracker 端，以 map/reduce task 的数目作为资源的表示过于简单，没有考虑到 cpu/ 内存的占用情况，如果两个大内存消耗的 task 被调度到了一块，很容易出现 OOM(Out-Of-Memory)。</li>
-<li>在 TaskTracker 端，把资源强制划分为 map task slot 和 reduce task slot, 如果当系统中只有 map task 或者只有 reduce task 的时候，会造成资源的浪费，也就是前面提过的集群资源利用的问题。</li>
-<li>源代码层面分析的时候，会发现代码非常的难读，常常因为一个 class 做了太多的事情，代码量达 3000 多行，造成 class 的任务不清晰，增加 bug 修复和版本维护的难度。</li>
-<li>从操作的角度来看，现在的 Hadoop MapReduce 框架在有任何重要的或者不重要的变化 ( 例如 bug 修复，性能提升和特性化 ) 时，都会强制进行系统级别的升级更新。更糟的是，它不管用户的喜好，强制让分布式集群系统的每一个用户端同时更新。这些更新会让用户为了验证他们之前的应用程序是不是适用新的 Hadoop 版本而浪费大量时间。</li>
-</ol>
-<h1>Yarn介绍</h1>
-<p>Yarn的核心出发点是为了分离资源管理与作业调度/监控，实现分离的做法是拥有一个全局的资源管理器（ResourceManager，RM），以及每个应用程序对应一个的应用管理器（ApplicationMaster，AM），应用程序由一个作业（Job）或者Job的有向无环图（DAG）组成。</p>
-<p>YARN可以将多种计算框架(如离线处理MapReduce、在线处理的Storm、迭代式计算框架Spark、流式处理框架S4等) 部署到一个公共集群中，共享集群的资源。并提供如下功能：</p>
-<ol>
-<li>资源的统一管理和调度：<br>
-集群中所有节点的资源(内存、CPU、磁盘、网络等)抽象为Container。计算框架需要资源进行运算任务时需要向YARN申请Container， YARN按照特定的策略对资源进行调度进行Container的分配。</li>
-<li>资源隔离：<br>
-YARN使用了轻量级资源隔离机制Cgroups进行资源隔离以避免相互干扰，一旦Container使用的资源量超过事先定义的上限值，就将其杀死。</li>
-</ol>
-<p>YARN是对Mapreduce V1重构得到的，有时候也成为MapReduce V2。</p>
-<p>YARN可以看成一个云操作系统，由一个ResourceManager和多个NodeManager组成， 它负责管理所有NodeManger上多维度资源， 并以Container(启动一个Container相当于启动一个进程)方式分配给应用程序启动ApplicationMaster(相当于主进程中运行逻辑) 或运行ApplicationMaster切分的各Task(相当于子进程中运行逻辑)。</p>
-<h1>YARN体系架构</h1>
-<p>YARN架构如下图所示：</p>
-<p><img src="/imgs/Hadoop/yarn/architecture.png" alt="YARN架构图"></p>
-<p>YARN总体上是Master/Slave结构，主要由ResourceManager、NodeManager、 ApplicationMaster和Container等几个组件构成。</p>
-<ul>
-<li>
-<p><strong>ResourceManager(RM)</strong><br>
-负责对各NodeManager上的资源进行统一管理和调度。将ApplicationMaster分配空闲的Container运行并监控其运行状态。对ApplicationMaster申请的资源请求分配相应的空闲Container。主要由两个组件构成：调度器和应用程序管理器：</p>
-<ol>
-<li><strong>调度器(Scheduler)</strong>：调度器根据容量、队列等限制条件（如每个队列分配一定的资源，最多执行一定数量的作业等），将系统中的资源分配给各个正在运行的应用程序。调度器仅根据各个应用程序的资源需求进行资源分配，而资源分配单位是Container，从而限定每个任务使用的资源量。Scheduler不负责监控或者跟踪应用程序的状态，也不负责任务因为各种原因而需要的重启（由ApplicationMaster负责）。总之，调度器根据应用程序的资源要求，以及集群机器的资源情况，为应用程序分配封装在Container中的资源。</li>
-<li><strong>应用程序管理器(Applications Manager)</strong>：应用程序管理器负责管理整个系统中所有应用程序，包括应用程序提交、与调度器协商资源以启动ApplicationMaster、监控ApplicationMaster运行状态并在失败时重新启动等，跟踪分给的Container的进度、状态也是其职责。</li>
-</ol>
-</li>
-<li>
-<p><strong>NodeManager (NM)</strong><br>
-NodeManager是每个节点上的资源和任务管理器。它会定时地向ResourceManager汇报本节点上的资源使用情况和各个Container的运行状态；同时会接收并处理来自ApplicationMaster的Container 启动/停止等请求。</p>
-</li>
-<li>
-<p><strong>ApplicationMaster (AM)</strong><br>
-用户提交的应用程序均包含一个ApplicationMaster，负责应用的监控，跟踪应用执行状态，重启失败任务等。ApplicationMaster是应用框架，它负责向ResourceManager协调资源，并且与NodeManager协同工作完成Task的执行和监控。MapReduce就是原生支持的一种框架，可以在YARN上运行Mapreduce作业。有很多分布式应用都开发了对应的应用程序框架，用于在YARN上运行任务，例如Spark，Storm等。</p>
-</li>
-<li>
-<p><strong>Container</strong><br>
-Container是YARN中的资源抽象，它封装了某个节点上的多维度资源，如内存、CPU、磁盘、网络等，当ApplicationMaster向ResourceManager申请资源时，ResourceManager为ApplicationMaster返回的资源便是用Container 表示的。 YARN会为每个任务分配一个Container且该任务只能使用该Container中描述的资源。</p>
-</li>
-</ul>
-<h1>YARN应用工作流程</h1>
-<p>如下图所示用户向YARN中提交一个应用程序后，YARN将分两个阶段运行该应用程序：</p>
-<ol>
-<li>启动ApplicationMaster，如下步骤1~3；</li>
-<li>由ApplicationMaster创建应用程序为它申请资源并监控它的整个运行过程，直到运行完成，如下步骤4~7。</li>
-</ol>
-<p><img src="/imgs/Hadoop/yarn/yarn.png" alt="YARN应用工作流程图"></p>
-<ol>
-<li>用户向YARN中提交应用程序，其中包括ApplicationMaster程序、启动ApplicationMaster的命令、命令参数、用户程序等；事实上，需要准确描述运行ApplicationMaster的unix进程的所有信息。提交工作通常由YarnClient来完成。</li>
-<li>ResourceManager为该应用程序分配第一个Container，并与对应的NodeManager通信，要求它在这个Container中启动ApplicationMaster；</li>
-<li>ApplicationMaster首先向ResourceManager注册，这样用户可以直接通过ResourceManager査看应用程序的运行状态，运行状态通过 <code>AMRMClientAsync.CallbackHandler</code>的<code>getProgress()</code> 方法来传递给ResourceManager。 然后它将为各个任务申请资源，并监控它的运行状态，直到运行结束，即重复步骤4〜7；</li>
-<li>ApplicationMaster采用轮询的方式通过RPC协议向ResourceManager申请和领取资源；资源的协调通过<code>AMRMClientAsync</code>异步完成,相应的处理方法封装在<code>AMRMClientAsync.CallbackHandler</code>中。</li>
-<li>一旦ApplicationMaster申请到资源后，便与对应的NodeManager通信，要求它启动任务；通常需要指定一个<code>ContainerLaunchContext</code>，提供Container启动时需要的信息。</li>
-<li>NodeManager为任务设置好运行环境(包括环境变量、JAR包、二进制程序等)后，将任务启动命令写到一个脚本中，并通过运行该脚本启动任务；</li>
-<li>各个任务通过某个RPC协议向ApplicationMaster汇报自己的状态和进度，以让ApplicationMaster随时掌握各个任务的运行状态，从而可以在任务失败时重新启动任务；ApplicationMaster与NodeManager的通信通过<code>NMClientAsync object</code>来完成，容器的所有事件通过<code>NMClientAsync.CallbackHandler</code>来处理。例如启动、状态更新、停止等。</li>
-<li>应用程序运行完成后，ApplicationMaster向ResourceManager注销并关闭自己。</li>
-</ol>
-<h1>YARN资源调度模型</h1>
-<p>YARN提供了一个资源管理平台能够将集群中的资源统一进行管理。所有节点上的多维度资源都会根据申请抽象为一个个Container。</p>
-<p>YARN采用了双层资源调度模型：</p>
-<ul>
-<li>ResourceManager中的资源调度器将资源分配给各个ApplicationMaster：资源分配过程是异步的。资源调度器将资源分配给一个应用程序后，它不会立刻push给对应的ApplicationMaster，而是暂时放到一个缓冲区中，等待ApplicationMaster通过周期性的心跳主动来取；</li>
-<li>ApplicationMaster领取到资源后再进一步分配给它内部的各个任务：不属于YARN平台的范畴，由用户自行实现。</li>
-</ul>
-<p>也就是说，ResourceManager分配集群资源的时候，以抽象的Container形式分配给各应用程序，至于应用程序的子任务如何使用这些资源，由应用程序自行决定。</p>
-<p>YARN目前采用的资源分配算法有三种。但真实的调度器实现中还对算法做了一定程度的优化。</p>
-<ol>
-<li>Capacity Scheduler：该调度器用于在共享、多租户（multi-tenant）的集群环境中运行Hadoop应用，对运营尽可能友好的同时最大化吞吐量和效用。<br>
-该调度器保证共享集群的各个组织能够得到容量的保证，同时可以超额使用集群中暂时没有人使用的资源。Capacity Scheduler为了实现这些目标，抽象了queue的概念，queue通常由管理员配置。为了进一步细分容量的使用，调度器支持层级化的queue（hierarchical queues），使得在特定组织内部，可以进一步有效利用集群资源。<br>
-Capacity调度器支持的一些特性如下：
-<ul>
-<li>层级队列（Hierarchical Queues）</li>
-<li>容量保证</li>
-<li>安全性：每个队列都有队列的访问权限控制（ACL）</li>
-<li>弹性： 空闲资源可以额外分配给任何需要的队列</li>
-<li>多租户</li>
-<li>基于资源的调度（resouce-based scheduling): 对资源敏感的应用程序，可以有效地控制资源情况</li>
-<li>支持用户（组）到queue的映射：基于用户组提交作业到对应queue。</li>
-<li>运营支持：支持运行时配置队列的容量，ACL等。也可以在运行时停止queue阻止进一步往queue提交作业。</li>
-</ul>
-</li>
-<li>Fair Scheduler：公平调度FAIR，该算法的思想是尽可能地公平调度，即已分配资源量少的优先级高。也就是说，在考虑如何分配资源时，调度器尽可能使得每个应用程序都能够得到大致相当的资源。默认情况下，公平性只通过内存来衡量，但是可以配置成内存和CPU。<br>
-这种策略使得运行时间短的应用能够尽快结束，而不至于在等待资源时被饿死。另外，也可以为应用程序配置优先级，优先级用于决定资源使用量的占比。</li>
-</ol>
-<h1>参考文献</h1>
-<blockquote>
-<p><a href="https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-yarn/">Hadoop 新MapReduce 框架Yarn 详解</a><br>
-<a href="http://blog.csdn.net/bingduanlbd/article/details/51880019">理解Hadoop YARN架构</a></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>hadoop</category>
-      </categories>
-      <tags>
-        <tag>hadoop</tag>
-        <tag>yarn</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Hadoop之MapReduce原理</title>
     <url>/2017/04/17/2017-04-17-Hadoop%E4%B9%8BMapReduce%E5%8E%9F%E7%90%86/</url>
     <content><![CDATA[<p>Hadoop Map/Reduce是一个使用简易的软件框架，基于它写出来的应用程序能够运行在由上千个商用机器组成的大型集群上，并以一种可靠容错的方式并行处理上T级别的数据集。</p>
@@ -568,6 +458,116 @@ $$</p>
       </tags>
   </entry>
   <entry>
+    <title>Hadoop之Yarn原理</title>
+    <url>/2017/04/17/2017-04-17-Hadoop%E4%B9%8BYarn%E5%8E%9F%E7%90%86/</url>
+    <content><![CDATA[<p>YARN（Yet Another Resource Negotiator）是一个通用的资源管理平台，可为各类计算框架提供资源的管理和调度。</p>
+<span id="more"></span>
+<h1>Hadoop MapReduce 框架的问题</h1>
+<p>随着分布式系统集群的规模和其工作负荷的增长，MapReduce 框架的问题逐渐浮出水面，主要的问题集中如下：</p>
+<ol>
+<li>JobTracker 是 Map-reduce 的集中处理点，存在单点故障。</li>
+<li>JobTracker 完成了太多的任务，造成了过多的资源消耗，当 map-reduce job 非常多的时候，会造成很大的内存开销，潜在来说，也增加了 JobTracker fail 的风险，这也是业界普遍总结出老 Hadoop 的 Map-Reduce 只能支持 4000 节点主机的上限。</li>
+<li>在 TaskTracker 端，以 map/reduce task 的数目作为资源的表示过于简单，没有考虑到 cpu/ 内存的占用情况，如果两个大内存消耗的 task 被调度到了一块，很容易出现 OOM(Out-Of-Memory)。</li>
+<li>在 TaskTracker 端，把资源强制划分为 map task slot 和 reduce task slot, 如果当系统中只有 map task 或者只有 reduce task 的时候，会造成资源的浪费，也就是前面提过的集群资源利用的问题。</li>
+<li>源代码层面分析的时候，会发现代码非常的难读，常常因为一个 class 做了太多的事情，代码量达 3000 多行，造成 class 的任务不清晰，增加 bug 修复和版本维护的难度。</li>
+<li>从操作的角度来看，现在的 Hadoop MapReduce 框架在有任何重要的或者不重要的变化 ( 例如 bug 修复，性能提升和特性化 ) 时，都会强制进行系统级别的升级更新。更糟的是，它不管用户的喜好，强制让分布式集群系统的每一个用户端同时更新。这些更新会让用户为了验证他们之前的应用程序是不是适用新的 Hadoop 版本而浪费大量时间。</li>
+</ol>
+<h1>Yarn介绍</h1>
+<p>Yarn的核心出发点是为了分离资源管理与作业调度/监控，实现分离的做法是拥有一个全局的资源管理器（ResourceManager，RM），以及每个应用程序对应一个的应用管理器（ApplicationMaster，AM），应用程序由一个作业（Job）或者Job的有向无环图（DAG）组成。</p>
+<p>YARN可以将多种计算框架(如离线处理MapReduce、在线处理的Storm、迭代式计算框架Spark、流式处理框架S4等) 部署到一个公共集群中，共享集群的资源。并提供如下功能：</p>
+<ol>
+<li>资源的统一管理和调度：<br>
+集群中所有节点的资源(内存、CPU、磁盘、网络等)抽象为Container。计算框架需要资源进行运算任务时需要向YARN申请Container， YARN按照特定的策略对资源进行调度进行Container的分配。</li>
+<li>资源隔离：<br>
+YARN使用了轻量级资源隔离机制Cgroups进行资源隔离以避免相互干扰，一旦Container使用的资源量超过事先定义的上限值，就将其杀死。</li>
+</ol>
+<p>YARN是对Mapreduce V1重构得到的，有时候也成为MapReduce V2。</p>
+<p>YARN可以看成一个云操作系统，由一个ResourceManager和多个NodeManager组成， 它负责管理所有NodeManger上多维度资源， 并以Container(启动一个Container相当于启动一个进程)方式分配给应用程序启动ApplicationMaster(相当于主进程中运行逻辑) 或运行ApplicationMaster切分的各Task(相当于子进程中运行逻辑)。</p>
+<h1>YARN体系架构</h1>
+<p>YARN架构如下图所示：</p>
+<p><img src="/imgs/Hadoop/yarn/architecture.png" alt="YARN架构图"></p>
+<p>YARN总体上是Master/Slave结构，主要由ResourceManager、NodeManager、 ApplicationMaster和Container等几个组件构成。</p>
+<ul>
+<li>
+<p><strong>ResourceManager(RM)</strong><br>
+负责对各NodeManager上的资源进行统一管理和调度。将ApplicationMaster分配空闲的Container运行并监控其运行状态。对ApplicationMaster申请的资源请求分配相应的空闲Container。主要由两个组件构成：调度器和应用程序管理器：</p>
+<ol>
+<li><strong>调度器(Scheduler)</strong>：调度器根据容量、队列等限制条件（如每个队列分配一定的资源，最多执行一定数量的作业等），将系统中的资源分配给各个正在运行的应用程序。调度器仅根据各个应用程序的资源需求进行资源分配，而资源分配单位是Container，从而限定每个任务使用的资源量。Scheduler不负责监控或者跟踪应用程序的状态，也不负责任务因为各种原因而需要的重启（由ApplicationMaster负责）。总之，调度器根据应用程序的资源要求，以及集群机器的资源情况，为应用程序分配封装在Container中的资源。</li>
+<li><strong>应用程序管理器(Applications Manager)</strong>：应用程序管理器负责管理整个系统中所有应用程序，包括应用程序提交、与调度器协商资源以启动ApplicationMaster、监控ApplicationMaster运行状态并在失败时重新启动等，跟踪分给的Container的进度、状态也是其职责。</li>
+</ol>
+</li>
+<li>
+<p><strong>NodeManager (NM)</strong><br>
+NodeManager是每个节点上的资源和任务管理器。它会定时地向ResourceManager汇报本节点上的资源使用情况和各个Container的运行状态；同时会接收并处理来自ApplicationMaster的Container 启动/停止等请求。</p>
+</li>
+<li>
+<p><strong>ApplicationMaster (AM)</strong><br>
+用户提交的应用程序均包含一个ApplicationMaster，负责应用的监控，跟踪应用执行状态，重启失败任务等。ApplicationMaster是应用框架，它负责向ResourceManager协调资源，并且与NodeManager协同工作完成Task的执行和监控。MapReduce就是原生支持的一种框架，可以在YARN上运行Mapreduce作业。有很多分布式应用都开发了对应的应用程序框架，用于在YARN上运行任务，例如Spark，Storm等。</p>
+</li>
+<li>
+<p><strong>Container</strong><br>
+Container是YARN中的资源抽象，它封装了某个节点上的多维度资源，如内存、CPU、磁盘、网络等，当ApplicationMaster向ResourceManager申请资源时，ResourceManager为ApplicationMaster返回的资源便是用Container 表示的。 YARN会为每个任务分配一个Container且该任务只能使用该Container中描述的资源。</p>
+</li>
+</ul>
+<h1>YARN应用工作流程</h1>
+<p>如下图所示用户向YARN中提交一个应用程序后，YARN将分两个阶段运行该应用程序：</p>
+<ol>
+<li>启动ApplicationMaster，如下步骤1~3；</li>
+<li>由ApplicationMaster创建应用程序为它申请资源并监控它的整个运行过程，直到运行完成，如下步骤4~7。</li>
+</ol>
+<p><img src="/imgs/Hadoop/yarn/yarn.png" alt="YARN应用工作流程图"></p>
+<ol>
+<li>用户向YARN中提交应用程序，其中包括ApplicationMaster程序、启动ApplicationMaster的命令、命令参数、用户程序等；事实上，需要准确描述运行ApplicationMaster的unix进程的所有信息。提交工作通常由YarnClient来完成。</li>
+<li>ResourceManager为该应用程序分配第一个Container，并与对应的NodeManager通信，要求它在这个Container中启动ApplicationMaster；</li>
+<li>ApplicationMaster首先向ResourceManager注册，这样用户可以直接通过ResourceManager査看应用程序的运行状态，运行状态通过 <code>AMRMClientAsync.CallbackHandler</code>的<code>getProgress()</code> 方法来传递给ResourceManager。 然后它将为各个任务申请资源，并监控它的运行状态，直到运行结束，即重复步骤4〜7；</li>
+<li>ApplicationMaster采用轮询的方式通过RPC协议向ResourceManager申请和领取资源；资源的协调通过<code>AMRMClientAsync</code>异步完成,相应的处理方法封装在<code>AMRMClientAsync.CallbackHandler</code>中。</li>
+<li>一旦ApplicationMaster申请到资源后，便与对应的NodeManager通信，要求它启动任务；通常需要指定一个<code>ContainerLaunchContext</code>，提供Container启动时需要的信息。</li>
+<li>NodeManager为任务设置好运行环境(包括环境变量、JAR包、二进制程序等)后，将任务启动命令写到一个脚本中，并通过运行该脚本启动任务；</li>
+<li>各个任务通过某个RPC协议向ApplicationMaster汇报自己的状态和进度，以让ApplicationMaster随时掌握各个任务的运行状态，从而可以在任务失败时重新启动任务；ApplicationMaster与NodeManager的通信通过<code>NMClientAsync object</code>来完成，容器的所有事件通过<code>NMClientAsync.CallbackHandler</code>来处理。例如启动、状态更新、停止等。</li>
+<li>应用程序运行完成后，ApplicationMaster向ResourceManager注销并关闭自己。</li>
+</ol>
+<h1>YARN资源调度模型</h1>
+<p>YARN提供了一个资源管理平台能够将集群中的资源统一进行管理。所有节点上的多维度资源都会根据申请抽象为一个个Container。</p>
+<p>YARN采用了双层资源调度模型：</p>
+<ul>
+<li>ResourceManager中的资源调度器将资源分配给各个ApplicationMaster：资源分配过程是异步的。资源调度器将资源分配给一个应用程序后，它不会立刻push给对应的ApplicationMaster，而是暂时放到一个缓冲区中，等待ApplicationMaster通过周期性的心跳主动来取；</li>
+<li>ApplicationMaster领取到资源后再进一步分配给它内部的各个任务：不属于YARN平台的范畴，由用户自行实现。</li>
+</ul>
+<p>也就是说，ResourceManager分配集群资源的时候，以抽象的Container形式分配给各应用程序，至于应用程序的子任务如何使用这些资源，由应用程序自行决定。</p>
+<p>YARN目前采用的资源分配算法有三种。但真实的调度器实现中还对算法做了一定程度的优化。</p>
+<ol>
+<li>Capacity Scheduler：该调度器用于在共享、多租户（multi-tenant）的集群环境中运行Hadoop应用，对运营尽可能友好的同时最大化吞吐量和效用。<br>
+该调度器保证共享集群的各个组织能够得到容量的保证，同时可以超额使用集群中暂时没有人使用的资源。Capacity Scheduler为了实现这些目标，抽象了queue的概念，queue通常由管理员配置。为了进一步细分容量的使用，调度器支持层级化的queue（hierarchical queues），使得在特定组织内部，可以进一步有效利用集群资源。<br>
+Capacity调度器支持的一些特性如下：
+<ul>
+<li>层级队列（Hierarchical Queues）</li>
+<li>容量保证</li>
+<li>安全性：每个队列都有队列的访问权限控制（ACL）</li>
+<li>弹性： 空闲资源可以额外分配给任何需要的队列</li>
+<li>多租户</li>
+<li>基于资源的调度（resouce-based scheduling): 对资源敏感的应用程序，可以有效地控制资源情况</li>
+<li>支持用户（组）到queue的映射：基于用户组提交作业到对应queue。</li>
+<li>运营支持：支持运行时配置队列的容量，ACL等。也可以在运行时停止queue阻止进一步往queue提交作业。</li>
+</ul>
+</li>
+<li>Fair Scheduler：公平调度FAIR，该算法的思想是尽可能地公平调度，即已分配资源量少的优先级高。也就是说，在考虑如何分配资源时，调度器尽可能使得每个应用程序都能够得到大致相当的资源。默认情况下，公平性只通过内存来衡量，但是可以配置成内存和CPU。<br>
+这种策略使得运行时间短的应用能够尽快结束，而不至于在等待资源时被饿死。另外，也可以为应用程序配置优先级，优先级用于决定资源使用量的占比。</li>
+</ol>
+<h1>参考文献</h1>
+<blockquote>
+<p><a href="https://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop-yarn/">Hadoop 新MapReduce 框架Yarn 详解</a><br>
+<a href="http://blog.csdn.net/bingduanlbd/article/details/51880019">理解Hadoop YARN架构</a></p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>hadoop</category>
+      </categories>
+      <tags>
+        <tag>hadoop</tag>
+        <tag>yarn</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>纵表、横表互转</title>
     <url>/2017/12/03/2017-12-03-%E7%BA%B5%E8%A1%A8%E3%80%81%E6%A8%AA%E8%A1%A8%E4%BA%92%E8%BD%AC/</url>
     <content><![CDATA[<p>mysql中横表和纵表的互换。</p>
@@ -598,6 +598,124 @@ $$</p>
       </categories>
       <tags>
         <tag>sql</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>数据库索引</title>
+    <url>/2017/12/05/2017-12-05-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95/</url>
+    <content><![CDATA[<p>本文介绍数据库索隐的基本结构、聚集索引与非聚集索引等问题。</p>
+<span id="more"></span>
+<h1>B-Tree</h1>
+<p>我们常见的数据库系统，其索引使用的数据结构多是B-Tree或者B+Tree。例如，MsSql使用的是B+Tree，Oracle及Sysbase使用的是B-Tree。所以在最开始，简单地介绍一下B-Tree。</p>
+<p>B-Tree不同于Binary Tree（二叉树，最多有两个子树），一棵M阶的B-Tree满足以下条件：</p>
+<pre><code>1）每个结点至多有M个孩子；
+2）除根结点和叶结点外，其它每个结点至少有M/2个孩子；
+3）根结点至少有两个孩子（除非该树仅包含一个结点）；
+4）所有叶结点在同一层，叶结点不包含任何关键字信息；
+5）有K个关键字的非叶结点恰好包含K+1个孩子；
+</code></pre>
+<p>另外，对于一个结点，其内部的关键字是从小到大排序的。以下是B-Tree（M=4）的样例：</p>
+<img title="B-Tree样例" src="/imgs/sql/index/b-tree.png" style="display:block;margin:auto" />
+<p>对于每个结点，主要包含一个关键字数组Key[]，一个指针数组（指向儿子）Son[]。在B-Tree内，查找的流程是：使用顺序查找（数组长度较短时）或折半查找方法查找Key[]数组，若找到关键字K，则返回该结点的地址及K在Key[]中的位置；否则，可确定K在某个Key[i]和Key[i+1]之间，则从Son[i]所指的子结点继续查找，直到在某结点中查找成功；或直至找到叶结点且叶结点中的查找仍不成功时，查找过程失败。</p>
+<p>接着，我们使用以下图片演示如何生成B-Tree（M=4，依次插入1~6）：</p>
+<p>从图可见，当我们插入关键字4时，由于原结点已经满了，故进行分裂，基本按一半的原则进行分裂，然后取出中间的关键字2，升级（这里是成为根结点）。其它的依类推，就是这样一个大概的过程。</p>
+<img title="B-Tree样例" src="/imgs/sql/index/b-tree2.png" style="display:block;margin:auto" />
+<h1>数据库索引</h1>
+<h2 id="什么是索引">什么是索引</h2>
+<p>在数据库中，索引的含义与日常意义上的“索引”一词并无多大区别（想想小时候查字典），它是用于提高数据库表数据访问速度的数据库对象。</p>
+<pre><code>A）索引可以避免全表扫描。多数查询可以仅扫描少量索引页及数据页，而不是遍历所有数据页。
+B）对于非聚集索引，有些查询甚至可以不访问数据页。
+C）聚集索引可以避免数据插入操作集中于表的最后一个数据页。
+D）一些情况下，索引还可用于避免排序操作。
+</code></pre>
+<p>当然，众所周知，虽然索引可以提高查询速度，但是它们也会导致数据库系统更新数据的性能下降，因为大部分数据更新需要同时更新索引。</p>
+<h2 id="索引的存储">索引的存储</h2>
+<p>一条索引记录中包含的基本信息包括：键值（即你定义索引时指定的所有字段的值）+逻辑指针（指向数据页或者另一索引页）。</p>
+<img title="索引" src="/imgs/sql/index/index.png" style="display:block;margin:auto" />
+<p>当你为一张空表创建索引时，数据库系统将为你分配一个索引页，该索引页在你插入数据前一直是空的。此页此时既是根结点，也是叶结点。每当你往表中插入一行数据，数据库系统即向此根结点中插入一行索引记录。当根结点满时，数据库系统大抵按以下步骤进行分裂：</p>
+<pre><code>A）创建两个儿子结点
+B）将原根结点中的数据近似地拆成两半，分别写入新的两个儿子结点
+C）根结点中加上指向两个儿子结点的指针
+</code></pre>
+<p>通常状况下，由于索引记录仅包含索引字段值（以及4-9字节的指针），索引实体比真实的数据行要小许多，索引页相较数据页来说要密集许多。一个索引页可以存储数量更多的索引记录，这意味着在索引中查找时在I/O上占很大的优势，理解这一点有助于从本质上了解使用索引的优势。</p>
+<h2 id="索引的类型">索引的类型</h2>
+<p>索引有聚集索引和非聚集索引两种类型。</p>
+<pre><code>A）聚集索引，表数据按照索引的顺序来存储的。对于聚集索引，叶子结点即存储了真实的数据行，不再有另外单独的数据页。
+B）非聚集索引，表数据存储顺序与索引顺序无关。对于非聚集索引，叶结点包含索引字段值及指向数据页数据行的逻辑指针，该层紧邻数据页，其行数量与数据表行数据量一致。
+</code></pre>
+<p>在一张表上只能创建一个聚集索引，因为真实数据的物理顺序只可能是一种。如果一张表没有聚集索引，那么它被称为“堆集”（Heap）。这样的表中的数据行没有特定的顺序，所有的新行将被添加的表的末尾位置。</p>
+<h2 id="聚集索引">聚集索引</h2>
+<p>在聚集索引中，叶结点也即数据结点，所有数据行的存储顺序与索引的存储顺序一致。</p>
+<img title="索引" src="/imgs/sql/index/index2.png" style="display:block;margin:auto" />
+<h3 id="聚集索引与查询操作">聚集索引与查询操作</h3>
+<p>如上图，我们在名字字段上建立聚集索引，当需要在根据此字段查找特定的记录时，数据库系统会根据特定的系统表查找的此索引的根，然后根据指针查找下一个，直到找到。例如我们要查询“Green”，由于它介于[Bennet,Karsen]，据此我们找到了索引页1007，在该页中“Green”介于[Greane, Hunter]间，据此我们找到叶结点1133（也即数据结点），并最终在此页中找以了目标数据行。</p>
+<p>此次查询的IO包括3个索引页的查询（其中最后一次实际上是在数据页中查询）。这里的查找可能是从磁盘读取(Physical Read)或是从缓存中读取(Logical Read)，如果此表访问频率较高，那么索引树中较高层的索引很可能在缓存中被找到。所以真正的IO可能小于上面的情况。</p>
+<h3 id="聚集索引与插入操作">聚集索引与插入操作</h3>
+<p>最简单的情况下，插入操作根据索引找到对应的数据页，然后通过挪动已有的记录为新数据腾出空间，最后插入数据。</p>
+<p>如果数据页已满，则需要拆分数据页（页拆分是一种耗费资源的操作，一般数据库系统中会有相应的机制要尽量减少页拆分的次数，通常是通过为每页预留空间来实现）：</p>
+<pre><code>A）在该使用的数据段（extent）上分配新的数据页，如果数据段已满，则需要分配新段。
+B）调整索引指针，这需要将相应的索引页读入内存并加锁。
+C）大约有一半的数据行被归入新的数据页中。
+D）如果表还有非聚集索引，则需要更新这些索引指向新的数据页。
+</code></pre>
+<p>特殊情况：</p>
+<pre><code>A）如果新插入的一条记录包含很大的数据，可能会分配两个新数据页，其中之一用来存储新记录，另一存储从原页中拆分出来的数据。
+B）通常数据库系统中会将重复的数据记录存储于相同的页中。
+C）类似于自增列为聚集索引的，数据库系统可能并不拆分数据页，页只是简单的新添数据页。
+</code></pre>
+<h3 id="聚集索引与删除操作">聚集索引与删除操作</h3>
+<p>删除行将导致其下方的数据行向上移动以填充删除记录造成的空白。<br>
+如果删除的行是该数据页中的最后一行，那么该数据页将被回收，相应的索引页中的记录将被删除。如果回收的数据页位于跟该表的其它数据页相同的段上，那么它可能在随后的时间内被利用。如果该数据页是该段的唯一一个数据页，则该段也被回收。</p>
+<p>对于数据的删除操作，可能导致索引页中仅有一条记录，这时，该记录可能会被移至邻近的索引页中，原索引页将被回收，即所谓的“索引合并”。</p>
+<h2 id="非聚集索引">非聚集索引</h2>
+<p>非聚集索引与聚集索引相比：</p>
+<pre><code>A）叶子结点并非数据结点
+B）叶子结点为每一真正的数据行存储一个“键-指针”对
+C）叶子结点中还存储了一个指针偏移量，根据页指针及指针偏移量可以定位到具体的数据行。
+D）类似的，在除叶结点外的其它索引结点，存储的也是类似的内容，只不过它是指向下一级的索引页的。
+</code></pre>
+<p>聚集索引是一种稀疏索引，数据页上一级的索引页存储的是页指针，而不是行指针。而对于非聚集索引，则是密集索引，在数据页的上一级索引页它为每一个数据行存储一条索引记录。</p>
+<p>对于根与中间级的索引记录，它的结构包括：</p>
+<pre><code>A）索引字段值
+B）RowId（即对应数据页的页指针+指针偏移量）。在高层的索引页中包含RowId是为了当索引允许重复值时，当更改数据时精确定位数据行。
+C）下一级索引页的指针
+</code></pre>
+<p>对于叶子层的索引对象，它的结构包括：</p>
+<pre><code>A）索引字段值
+B）RowId
+</code></pre>
+<img title="索引" src="/imgs/sql/index/index3.png" style="display:block;margin:auto" />
+<h3 id="非聚集索引与查询操作">非聚集索引与查询操作</h3>
+<p>针对上图，如果我们同样查找“Green”，那么一次查询操作将包含以下IO：3个索引页的读取+1个数据页的读取。同样，由于缓存的关系，真实的IO实际可能要小于上面列出的。</p>
+<h3 id="非聚集索引与插入操作">非聚集索引与插入操作</h3>
+<p>如果一张表包含一个非聚集索引但没有聚集索引，则新的数据将被插入到最末一个数据页中，然后非聚集索引将被更新。如果也包含聚集索引，该聚集索引将被用于查找新行将要处于什么位置，随后，聚集索引、以及非聚集索引将被更新。</p>
+<h3 id="非聚集索引与删除操作">非聚集索引与删除操作</h3>
+<p>如果在删除命令的Where子句中包含的列上，建有非聚集索引，那么该非聚集索引将被用于查找数据行的位置，数据删除之后，位于索引叶子上的对应记录也将被删除。如果该表上有其它非聚集索引，则它们叶子结点上的相应数据也要删除。</p>
+<p>如果删除的数据是该数所页中的唯一一条，则该页也被回收，同时需要更新各个索引树上的指针。</p>
+<p>由于没有自动的合并功能，如果应用程序中有频繁的随机删除操作，最后可能导致表包含多个数据页，但每个页中只有少量数据。</p>
+<h2 id="索引覆盖">索引覆盖</h2>
+<p>索引覆盖是这样一种索引策略：当某一查询中包含的所需字段皆包含于一个索引中，此时索引将大大提高查询性能。</p>
+<p>包含多个字段的索引，称为复合索引。索引最多可以包含31个字段，索引记录最大长度为600B。如果你在若干个字段上创建了一个复合的非聚集索引，且你的查询中所需Select字段及Where,Order By,Group By,Having子句中所涉及的字段都包含在索引中，则只搜索索引页即可满足查询，而不需要访问数据页。由于非聚集索引的叶结点包含所有数据行中的索引列值，使用这些结点即可返回真正的数据，这种情况称之为“索引覆盖”。</p>
+<p>在索引覆盖的情况下，包含两种索引扫描：</p>
+<pre><code>A）匹配索引扫描
+B）非匹配索引扫描
+</code></pre>
+<h3 id="匹配索引扫描">匹配索引扫描</h3>
+<p>此类索引扫描可以让我们省去访问数据页的步骤，当查询仅返回一行数据时，性能提高是有限的，但在范围查询的情况下，性能提高将随结果集数量的增长而增长。</p>
+<p>针对此类扫描，索引必须包含查询中涉及的的所有字段，另外，还需要满足：Where子句中包含索引中的“引导列”（Leading Column），例如一个复合索引包含A,B,C,D四列，则A为“引导列”。如果Where子句中所包含列是BCD或者BD等情况，则只能使用非匹配索引扫描。</p>
+<h3 id="非配置索引扫描">非配置索引扫描</h3>
+<p>正如上述，如果Where子句中不包含索引的导引列，那么将使用非配置索引扫描。这最终导致扫描索引树上的所有叶子结点，当然，它的性能通常仍强于扫描所有的数据页。</p>
+<h1>参考</h1>
+<blockquote>
+<p><a href="http://www.cnblogs.com/morvenhuang/archive/2009/03/30/1425534.html">数据库进阶系列之一：漫谈数据库索引</a></p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>sql</category>
+      </categories>
+      <tags>
+        <tag>sql</tag>
+        <tag>索引</tag>
       </tags>
   </entry>
   <entry>
@@ -894,124 +1012,6 @@ $$</p>
       </tags>
   </entry>
   <entry>
-    <title>数据库索引</title>
-    <url>/2017/12/05/2017-12-05-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95/</url>
-    <content><![CDATA[<p>本文介绍数据库索隐的基本结构、聚集索引与非聚集索引等问题。</p>
-<span id="more"></span>
-<h1>B-Tree</h1>
-<p>我们常见的数据库系统，其索引使用的数据结构多是B-Tree或者B+Tree。例如，MsSql使用的是B+Tree，Oracle及Sysbase使用的是B-Tree。所以在最开始，简单地介绍一下B-Tree。</p>
-<p>B-Tree不同于Binary Tree（二叉树，最多有两个子树），一棵M阶的B-Tree满足以下条件：</p>
-<pre><code>1）每个结点至多有M个孩子；
-2）除根结点和叶结点外，其它每个结点至少有M/2个孩子；
-3）根结点至少有两个孩子（除非该树仅包含一个结点）；
-4）所有叶结点在同一层，叶结点不包含任何关键字信息；
-5）有K个关键字的非叶结点恰好包含K+1个孩子；
-</code></pre>
-<p>另外，对于一个结点，其内部的关键字是从小到大排序的。以下是B-Tree（M=4）的样例：</p>
-<img title="B-Tree样例" src="/imgs/sql/index/b-tree.png" style="display:block;margin:auto" />
-<p>对于每个结点，主要包含一个关键字数组Key[]，一个指针数组（指向儿子）Son[]。在B-Tree内，查找的流程是：使用顺序查找（数组长度较短时）或折半查找方法查找Key[]数组，若找到关键字K，则返回该结点的地址及K在Key[]中的位置；否则，可确定K在某个Key[i]和Key[i+1]之间，则从Son[i]所指的子结点继续查找，直到在某结点中查找成功；或直至找到叶结点且叶结点中的查找仍不成功时，查找过程失败。</p>
-<p>接着，我们使用以下图片演示如何生成B-Tree（M=4，依次插入1~6）：</p>
-<p>从图可见，当我们插入关键字4时，由于原结点已经满了，故进行分裂，基本按一半的原则进行分裂，然后取出中间的关键字2，升级（这里是成为根结点）。其它的依类推，就是这样一个大概的过程。</p>
-<img title="B-Tree样例" src="/imgs/sql/index/b-tree2.png" style="display:block;margin:auto" />
-<h1>数据库索引</h1>
-<h2 id="什么是索引">什么是索引</h2>
-<p>在数据库中，索引的含义与日常意义上的“索引”一词并无多大区别（想想小时候查字典），它是用于提高数据库表数据访问速度的数据库对象。</p>
-<pre><code>A）索引可以避免全表扫描。多数查询可以仅扫描少量索引页及数据页，而不是遍历所有数据页。
-B）对于非聚集索引，有些查询甚至可以不访问数据页。
-C）聚集索引可以避免数据插入操作集中于表的最后一个数据页。
-D）一些情况下，索引还可用于避免排序操作。
-</code></pre>
-<p>当然，众所周知，虽然索引可以提高查询速度，但是它们也会导致数据库系统更新数据的性能下降，因为大部分数据更新需要同时更新索引。</p>
-<h2 id="索引的存储">索引的存储</h2>
-<p>一条索引记录中包含的基本信息包括：键值（即你定义索引时指定的所有字段的值）+逻辑指针（指向数据页或者另一索引页）。</p>
-<img title="索引" src="/imgs/sql/index/index.png" style="display:block;margin:auto" />
-<p>当你为一张空表创建索引时，数据库系统将为你分配一个索引页，该索引页在你插入数据前一直是空的。此页此时既是根结点，也是叶结点。每当你往表中插入一行数据，数据库系统即向此根结点中插入一行索引记录。当根结点满时，数据库系统大抵按以下步骤进行分裂：</p>
-<pre><code>A）创建两个儿子结点
-B）将原根结点中的数据近似地拆成两半，分别写入新的两个儿子结点
-C）根结点中加上指向两个儿子结点的指针
-</code></pre>
-<p>通常状况下，由于索引记录仅包含索引字段值（以及4-9字节的指针），索引实体比真实的数据行要小许多，索引页相较数据页来说要密集许多。一个索引页可以存储数量更多的索引记录，这意味着在索引中查找时在I/O上占很大的优势，理解这一点有助于从本质上了解使用索引的优势。</p>
-<h2 id="索引的类型">索引的类型</h2>
-<p>索引有聚集索引和非聚集索引两种类型。</p>
-<pre><code>A）聚集索引，表数据按照索引的顺序来存储的。对于聚集索引，叶子结点即存储了真实的数据行，不再有另外单独的数据页。
-B）非聚集索引，表数据存储顺序与索引顺序无关。对于非聚集索引，叶结点包含索引字段值及指向数据页数据行的逻辑指针，该层紧邻数据页，其行数量与数据表行数据量一致。
-</code></pre>
-<p>在一张表上只能创建一个聚集索引，因为真实数据的物理顺序只可能是一种。如果一张表没有聚集索引，那么它被称为“堆集”（Heap）。这样的表中的数据行没有特定的顺序，所有的新行将被添加的表的末尾位置。</p>
-<h2 id="聚集索引">聚集索引</h2>
-<p>在聚集索引中，叶结点也即数据结点，所有数据行的存储顺序与索引的存储顺序一致。</p>
-<img title="索引" src="/imgs/sql/index/index2.png" style="display:block;margin:auto" />
-<h3 id="聚集索引与查询操作">聚集索引与查询操作</h3>
-<p>如上图，我们在名字字段上建立聚集索引，当需要在根据此字段查找特定的记录时，数据库系统会根据特定的系统表查找的此索引的根，然后根据指针查找下一个，直到找到。例如我们要查询“Green”，由于它介于[Bennet,Karsen]，据此我们找到了索引页1007，在该页中“Green”介于[Greane, Hunter]间，据此我们找到叶结点1133（也即数据结点），并最终在此页中找以了目标数据行。</p>
-<p>此次查询的IO包括3个索引页的查询（其中最后一次实际上是在数据页中查询）。这里的查找可能是从磁盘读取(Physical Read)或是从缓存中读取(Logical Read)，如果此表访问频率较高，那么索引树中较高层的索引很可能在缓存中被找到。所以真正的IO可能小于上面的情况。</p>
-<h3 id="聚集索引与插入操作">聚集索引与插入操作</h3>
-<p>最简单的情况下，插入操作根据索引找到对应的数据页，然后通过挪动已有的记录为新数据腾出空间，最后插入数据。</p>
-<p>如果数据页已满，则需要拆分数据页（页拆分是一种耗费资源的操作，一般数据库系统中会有相应的机制要尽量减少页拆分的次数，通常是通过为每页预留空间来实现）：</p>
-<pre><code>A）在该使用的数据段（extent）上分配新的数据页，如果数据段已满，则需要分配新段。
-B）调整索引指针，这需要将相应的索引页读入内存并加锁。
-C）大约有一半的数据行被归入新的数据页中。
-D）如果表还有非聚集索引，则需要更新这些索引指向新的数据页。
-</code></pre>
-<p>特殊情况：</p>
-<pre><code>A）如果新插入的一条记录包含很大的数据，可能会分配两个新数据页，其中之一用来存储新记录，另一存储从原页中拆分出来的数据。
-B）通常数据库系统中会将重复的数据记录存储于相同的页中。
-C）类似于自增列为聚集索引的，数据库系统可能并不拆分数据页，页只是简单的新添数据页。
-</code></pre>
-<h3 id="聚集索引与删除操作">聚集索引与删除操作</h3>
-<p>删除行将导致其下方的数据行向上移动以填充删除记录造成的空白。<br>
-如果删除的行是该数据页中的最后一行，那么该数据页将被回收，相应的索引页中的记录将被删除。如果回收的数据页位于跟该表的其它数据页相同的段上，那么它可能在随后的时间内被利用。如果该数据页是该段的唯一一个数据页，则该段也被回收。</p>
-<p>对于数据的删除操作，可能导致索引页中仅有一条记录，这时，该记录可能会被移至邻近的索引页中，原索引页将被回收，即所谓的“索引合并”。</p>
-<h2 id="非聚集索引">非聚集索引</h2>
-<p>非聚集索引与聚集索引相比：</p>
-<pre><code>A）叶子结点并非数据结点
-B）叶子结点为每一真正的数据行存储一个“键-指针”对
-C）叶子结点中还存储了一个指针偏移量，根据页指针及指针偏移量可以定位到具体的数据行。
-D）类似的，在除叶结点外的其它索引结点，存储的也是类似的内容，只不过它是指向下一级的索引页的。
-</code></pre>
-<p>聚集索引是一种稀疏索引，数据页上一级的索引页存储的是页指针，而不是行指针。而对于非聚集索引，则是密集索引，在数据页的上一级索引页它为每一个数据行存储一条索引记录。</p>
-<p>对于根与中间级的索引记录，它的结构包括：</p>
-<pre><code>A）索引字段值
-B）RowId（即对应数据页的页指针+指针偏移量）。在高层的索引页中包含RowId是为了当索引允许重复值时，当更改数据时精确定位数据行。
-C）下一级索引页的指针
-</code></pre>
-<p>对于叶子层的索引对象，它的结构包括：</p>
-<pre><code>A）索引字段值
-B）RowId
-</code></pre>
-<img title="索引" src="/imgs/sql/index/index3.png" style="display:block;margin:auto" />
-<h3 id="非聚集索引与查询操作">非聚集索引与查询操作</h3>
-<p>针对上图，如果我们同样查找“Green”，那么一次查询操作将包含以下IO：3个索引页的读取+1个数据页的读取。同样，由于缓存的关系，真实的IO实际可能要小于上面列出的。</p>
-<h3 id="非聚集索引与插入操作">非聚集索引与插入操作</h3>
-<p>如果一张表包含一个非聚集索引但没有聚集索引，则新的数据将被插入到最末一个数据页中，然后非聚集索引将被更新。如果也包含聚集索引，该聚集索引将被用于查找新行将要处于什么位置，随后，聚集索引、以及非聚集索引将被更新。</p>
-<h3 id="非聚集索引与删除操作">非聚集索引与删除操作</h3>
-<p>如果在删除命令的Where子句中包含的列上，建有非聚集索引，那么该非聚集索引将被用于查找数据行的位置，数据删除之后，位于索引叶子上的对应记录也将被删除。如果该表上有其它非聚集索引，则它们叶子结点上的相应数据也要删除。</p>
-<p>如果删除的数据是该数所页中的唯一一条，则该页也被回收，同时需要更新各个索引树上的指针。</p>
-<p>由于没有自动的合并功能，如果应用程序中有频繁的随机删除操作，最后可能导致表包含多个数据页，但每个页中只有少量数据。</p>
-<h2 id="索引覆盖">索引覆盖</h2>
-<p>索引覆盖是这样一种索引策略：当某一查询中包含的所需字段皆包含于一个索引中，此时索引将大大提高查询性能。</p>
-<p>包含多个字段的索引，称为复合索引。索引最多可以包含31个字段，索引记录最大长度为600B。如果你在若干个字段上创建了一个复合的非聚集索引，且你的查询中所需Select字段及Where,Order By,Group By,Having子句中所涉及的字段都包含在索引中，则只搜索索引页即可满足查询，而不需要访问数据页。由于非聚集索引的叶结点包含所有数据行中的索引列值，使用这些结点即可返回真正的数据，这种情况称之为“索引覆盖”。</p>
-<p>在索引覆盖的情况下，包含两种索引扫描：</p>
-<pre><code>A）匹配索引扫描
-B）非匹配索引扫描
-</code></pre>
-<h3 id="匹配索引扫描">匹配索引扫描</h3>
-<p>此类索引扫描可以让我们省去访问数据页的步骤，当查询仅返回一行数据时，性能提高是有限的，但在范围查询的情况下，性能提高将随结果集数量的增长而增长。</p>
-<p>针对此类扫描，索引必须包含查询中涉及的的所有字段，另外，还需要满足：Where子句中包含索引中的“引导列”（Leading Column），例如一个复合索引包含A,B,C,D四列，则A为“引导列”。如果Where子句中所包含列是BCD或者BD等情况，则只能使用非匹配索引扫描。</p>
-<h3 id="非配置索引扫描">非配置索引扫描</h3>
-<p>正如上述，如果Where子句中不包含索引的导引列，那么将使用非配置索引扫描。这最终导致扫描索引树上的所有叶子结点，当然，它的性能通常仍强于扫描所有的数据页。</p>
-<h1>参考</h1>
-<blockquote>
-<p><a href="http://www.cnblogs.com/morvenhuang/archive/2009/03/30/1425534.html">数据库进阶系列之一：漫谈数据库索引</a></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>sql</category>
-      </categories>
-      <tags>
-        <tag>sql</tag>
-        <tag>索引</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>上海天壤智能科技有限公司</title>
     <url>/2020/07/19/%E4%B8%8A%E6%B5%B7%E5%A4%A9%E5%A3%A4%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -1034,6 +1034,75 @@ B）非匹配索引扫描
         <tag>数据倾斜</tag>
         <tag>XGBoost</tag>
         <tag>LR</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>oppo广东移动通信有限公司</title>
+    <url>/2020/08/12/oppo%E5%B9%BF%E4%B8%9C%E7%A7%BB%E5%8A%A8%E9%80%9A%E4%BF%A1%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="5bc513b888122c33ec9025c8bbe171814cd1a116a3dd9bb93301042f056df8d3">5d20b81ac1f5d0b70e9113cacf134e1eec55447497a63f53873908500ac625f1423b695f187cdd796fd2f19623632ee80d0d0fc920ec205d622fbbf7d3e84307afb94b23027f08fbd819934a81c8f862bc8f830430a140a71b223ae5b4dd7f6bea314de1aa37ebde269bb3d4396150edd161d4fd10813ea2b4f15752a5e046620f53d5a66c954351cfbd0d939287eced586708f25efff26517d890f4d0b538f7e125568fdbda089412a46ca3e75955241cf8568fc208f64396078cc3cc317a28574016851ff50975dbca310114419f9c80f0e9ba55bee1d035d0d4a589a2b74cc3a77cbeb3519aaffab41609a241e1c1aaa88a105d99bb15c325335dbdb813b8b6b88768b6f2ed298fd6c08a23c5cf25d3be4a49b59c4eb171c8da9b6254e3989ca77576488f720afdfefc9fab071091e851ff63d2d6ebb1e9f059146ef31f3b15da43c34e77808ef5108bb70111c491db899ba47bb0c1966a76d269c218ab35e00634bc2f289dc39ce98173c355536e143d21f52b1a03b212852a9f0bc5a81676bbe059fe9fb8021889754ffccdcd05cbd3e6d259e618ca61e3f08d69ee7889f80089e3f3b820b085016e20162c128c1244ebf7f24fe6010e2a15f0d985c952bba1075c2575a03ad2b86be7ee4a8f4680335fae896e79ba56dcb505a7cab29ba352cea380ec08e6c8a8cddb654dc8a37fa917837c59d97e447f50e37ca861277552defc6c9e710b0151861f14b1d64a611cb560da516940a921a7cc8db067803f29b779d58f5137aca45a2ef99a95a49527a16c5323261214cac27136f2f9362e056f4da959adc271a8b2494ebe3ab61bd654860ac3e1e4834ac84953c91e94e2c198660f6346a2c074a4bf708d8ace3b9e8f601c3e3bc204b696625ae4f5d319136d23f2144a0fdfb7970a0c301e3237732bafa70c0701cd65833f60de540de735e3c4ef1a50ab472b3ff0ec174ac29bd2503e19a11e59002020258b25c97d5a2a7699736b474e856f71b995dd675a52fda97ed628841ef5339e5ab86e542e39553ceb1e2edbb2d5a3c07dd4bd1784419a1ac5e6c8c10e25ae6b565cdfde6b542273cfaa3dd9ebfd10c39bac8f8463a6846367e907273f4ba62a76feb366d12500b3fba640631f193d01bde1f9d12859ae982d006567cd95609257a885defd8efbce2d41f0a1ff9ba5bad3dd70d59b7cf7970d225b270519590e8c14b5c9503f32c8b93a9bd7e0e2fd25f9a72419a828b5af26325d92d3f5f141902cff424bf029b2c187c66125ff3011640b3434ff9171937d5ea3dd1bef58b320e2ac7c15feb3a56e78bc32c8dd776e5eb4e329a643fb262dfb367f2e8b02c721df7de98cf9dfa022b48d7cb2c38e92872a560454b9252afa669a76b59cf047bd7fbab5aa0ac9cc5119caff6aa168fe66a47bad9a4e00f22455d58a9b57110ead63be4e43cc3a1ea830183d91e30e1de39cf601bf29a8237ac912a77dff572e6bead69191ba1fcfad679c660c345a4c06161156964a68c74863f04320d65df1010a9150b6616e8bd6312907592bacfd40ea90f520ad63d243fe3f1a00dd04324dab92280ac13578dfa8c5a0cfc57c1a78558559654a1148f2fb60fe9273bc494490254f48745343b92db341c852485fd3b73f0f57cb6e2f11148992759ff5be11fc068fc87fad5001bcd12ba2c608135708e02eaedea5084363749f0de57354bcb8b65df92113120723ed33879a692bf3bc42ec85b7b50910193a7e7f3dc822dd80cfee11eaa2001a2e054a5fdaf4438e7a0f5f808ae16d3d656e02e6362b7e88c285b985bfa4a1d867737e4699126cf362832d8e9bb6c7d232b021822f238e56fa48ad53edadda4c9fe9a91b23e77a23304c4dbd567c16b72e6b0b8c48b77cb8fedf100975364061b953c50e5407d34325f0308c66d1c621df6519c983f56528d542c7c349db0984b4fb5574c7b85cd71989aa54e8b0a6a25bb32fec1801bd8473790927bd96f3fa98b8e469e0c25441ff367d22b5ca3aa7d8bdb5959ffe0063380840c7ec0b581468e5cb2033e16f5139411c36f46faab3833234f18712b000cee50b3f957b29afc0e5f94260e895a75c8afa50</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>job</category>
+      </categories>
+      <tags>
+        <tag>nlp</tag>
+        <tag>todo</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>深圳乐信软件技术有限公司</title>
+    <url>/2020/08/05/%E6%B7%B1%E5%9C%B3%E4%B9%90%E4%BF%A1%E8%BD%AF%E4%BB%B6%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="1bb10ad5e3de6abc98007679c0cf7b194e831a20d1c0d6cf5f6db6eb9daa12eb">5d20b81ac1f5d0b70e9113cacf134e1e134b19f000ba74e5186cbc353b77de2e102ebdb688b73a05bd8208bc29535182ff7cf0cbbe5f07bf01c20e725e9f5377b154d9a6a96784917bb5ced6f932c624e5b39d6ccebdb1c4055a1e20cd6214a7a6c6f1e8559e09462cb23b0c845bf8ed5098e47a3beeae308205170c8794727072835f768ff5ebec3ded752f64d7653c13e65963bf468cbc81a250203f3c8b69c608a96c96115031237398b5b205c6d173f99564ef18c25ef4a774cbf697b3fafd17ad814a9e7714280d80198193793ccd3459735fa39fd69756fdbd52a1463f24f8794acf8d6ee9934288e51a3c304c83a6ae3161c1861829050e7b18223ec356d22aa4a4020f9071d683046fdeabc654852b685e5af0bd27097d6c22dc9614d6c6901aa71c10985e6b602f7eda22328812c549071bac16dc6d0cf52cd3eb9682b3c62c6ba436b64cb454b14e714c37591c78364e0cd6428a35237b9044d1bf3a7af3e66c328b151f5679dc122eef9dbac52721dc273e0f8ea6f62b7c3a15138f50ded5d96b3e6adc51f9bfbd5214c6c8ea71612e1dec70230476f5dff7da8f8c10ac9f7e4fe38bff313131987ac9085bbe73db1caaed003c3d3414217a2720d6adb923278f2be7602e6ecefdfc6202a82ecfdd1e623edec41e75a0356a6c495d6a0b6723fae18ce3136d43ba164840a8e5750e62baa3beddc783fbc532af545e9304e06d3e3171b4137ca2a8e33b32d04c1ca30f2f4de6820bf1f9da511cc10c2c90bbbd6ad6805a99c5ed192adb228f645edf6c8122c8038054a75feec6f6ccc87ea6cb597c6e9584d7e0b32596673acc4e488bb6424c201767946dc6e8beb36f099afd8079e61eac7b2da8a0b99fef4ca545f02fff47fabea94c20ad8427418182f2b900ff1f6fdea99294c0116a2f1c9345ddf812f256faee57addbfab99e5c0d6566a3e70c0eceb9b0421d4578c0eae5167f205f7639c13638e0a73f9e01ff7057875ab1b96635728dad5299482b3525b6edd9f00d2ee0ce944a727171c96bce15d14f42e416e7dbaae8f904f222fe561d7ea6d03d0ef2687d8fba21e5a535d53f1e0555c2ec72143aaca8efe4cb024ae297ab6e33dd59012e2d9909c8d7af0be9c5bbc1e3a9e17d0d9b9fa7cfe27cd69107163c2ba2ce94db6f664f0b5bbf82f7a4314a8e6453265726dd3d6dbf29052a256ad9beb2a94ee1a01b4b50f7e74af0d728674cdd8140f55e492674ec456b5b26a2e83110a9e9b8a1569c45d0a929cb02d675850b9e61eeb9111a605c45ef0aef531fe39bcdb0ee363ebb414d0dac0d126672611e1bc341dc08f4703e9eb3e923091c55026b5361e4c220af17287be5ea2dcc538011624dd12527f9e6a537b3b2a54d5e64ad64238be4cd37c5320e815c36ca8269d3a64f702706b63eb9b0cabbb2161c3c6dd128aee8e43804b7493110add183ddc26555aceeb6ed0b6953293614149701b24d5e51ed422be302ba9067d02814c2062fc8240862ee0901ccaf714e758d81b3a7c90ffdc373e7a5258c7c71b11a26d83a5fc069b9b31af3f8c6f7d153f2fa5c0175c9180173d875ada46e03488f5b8ddedcd44d45974f409078e526216f80ede784cd43d1f878a175106130e23813c0eac2b999438de1d7b130563737af8a7c46c8ee20e22b470d8593d9489c4c8b833203fa0ff24cc4b34b1ecfa31130e819cc24671c67cfbc220280834ebf06468dae76d09ecc3a2a257beb426e9ef109738d9d2e04e7def1f28178e9edd17aee8036a5a386895d69514e35048efe64b224efaa85e4ce937f5fb8c4221d4d771ec229dcf194fd95b896f74ed2286dcb04a80a69af8d9ba550c8488aefb2c41cb73931f615cde38050f1d167603996fe941b5bfac7c07b63aacef40eb8f85dc531f3530e4a7944a5353e141e28aaa358fb3707f281f5c51b1046f894649dac5a22016120e1f97c4e258387361cfd3226a7a7bb6d84322d3e28222018611b8782bda8e834f043a5d88f5211667c2e54ae89c983c35e6e6dfe99b7974821a1b939da7827db1d05b8dd7eae035448477564f9b40e3a475342bf4ebb63a7bf7b2e08f5fd12c0b8aa74cf09ee84d1c674dca39b3ab777f5b0f0a5a75bca982c8b05b23a57892b71613dbee898b663d0970fdd40da81839c8e9819013663fb7fb23e5108232ff684b0f15fc5d409e29113800331f8ca0b2131a63e5f68f8442086fdbaa2f8629a4638110e767be35a5ca44de12f0a4b89ca75ef55d1e0594e573e07475cf52df9dfc3067a4dad716b15dba38795f29a29e5f7fec91e53993dbd87efb449354dfe55d0ecccc2fb52a26abfce87a730843315659d13deb565de0852e43529314a64133120ae0957ec0e57659bfca59a302fe984a356afcc3597dc9f8a799d773d4a240b297ea53de60a92eea4e80dd02c9c457ab9188be63da91845a8a2b7dc42da31af4965747947130c78c914136a6588c9a4593dec3fdabcd885a4d31795af374cedf159107e37a73e89bb9775a8dc08d59196cee8fc09e6f7ffd2962c21f6ca52d59f166d7c32c6694b646d30a6c488e42495f4d24bb053a9986f9e7ac354856fe47a30d915fe6bb42c02a3cd178daff5ba150b5bb0d239e12e9e88a186d5ddde5e9f123b80758953fae8ca3321c44242cc6bffb17b34c5be415adb32643bd94a450480e2573ae9fa13a56fa497946b5f1086fe718712d65d75cc4c70d0356405d63735fa5595a433af5a8de7a6fc619c01b596097c5d13d863ed4a66082500214cb6468f9f29d456547ec457b1b2b967beb373a624b4a03ec2415ea91f63c4d87f8224b62ba421468121ad9fe21292503ea4a6efedf7f88f0c10d73ed3cba5373b0ed29bbb3495507fedf146d9b5ba9267fe1d57f4faa296c10a617bf99a5f220542fc0316b6e1ad98894fd63b78308a8680d2</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>job</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>推荐系统</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>宇龙计算机通信科技（深圳）有限公司</title>
+    <url>/2020/08/11/%E5%AE%87%E9%BE%99%E8%AE%A1%E7%AE%97%E6%9C%BA%E9%80%9A%E4%BF%A1%E7%A7%91%E6%8A%80%EF%BC%88%E6%B7%B1%E5%9C%B3%EF%BC%89%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="0a96818458728a8c88715045e42ac9018b456f08823b688ada48c1539925ab42">5d20b81ac1f5d0b70e9113cacf134e1e15826083e6b6367bf1e68fe6118c8f33a272ce2d0e6bcfeeda4cbdbd7a02d9c9c7de930988ecdeee0b836b6626acc05292246098cd90e4a352207e089580ce1a27367db90d4adbdb5f4cdbeb949d8c9c584d005e75b2a3a0a439ca76fd49237643853e066dc4184be3ef9446555097b627860e8711b594da3d593c348ad8c62d2c559f53ced606e9cc7368e2899828f36e3d74c7dc9758735f3ee7153908006667a92e55495d5d58244dc808c573adb64dd5e2dc545b7b9043a3aa17dfc061213d4415396623dede3be931c9518ab779eef63a744b90d834771c47e1ce4d3717ed01e3a91d7780af8d8844b29d1aba7f55fad739538750b8a2d84015e5bc71ce1db6572751ea7401a41f6417e193daf532e1586940d04761c6ca82a35684d382b43ac38976d7a2fbe8de8ceac7808ab46d1dd99b9c7321f8e35a87ad6491556ed3b849cb00e1bc747960b562c77b00b4a223106f59edb4b553b50ff2aa916bd7473db5a45fea003989d319643741ab74b32a7d3aa4663ba7bcbb5beabb52e522abaf466c235460920da4ee675ceab11894991743a668d8a4a81358f0808baeabd7e454450e49a9d130a8f4ec93d749f00ea39fe3039932d5f515f5e59cf463ac059f7f03b9e5240a0cfb2fcb25df11f67a46a62ac0b337018141f022b3704e1227864563c3e6ca867a6fb68b4e46118b9ad08de403c7d0068762aa1e57d9022d6d9b94042d7c994330e5873424ff20896419504a993359d5d94d0d541c8e49656fece7c91a705bd67f999063736a20f0dda2b4bc7b8b706506705177f025a251a8b0dc0b3bdf08067c603de8b73bd994d0824dbad89f29f647097472ec9a80281b27f555b3b53b1bc7e0d5000b89b64a9c024d4130b5785c58d78684b735a5959aff906dcaf7e416f503a421b31711bc5a43c3abb6c7dccfa61271fd655a43de00c284b5eda53f2d3363c2d3f9c04482b9ab2fcf6b98e42b0a5c8f5d71339c398ed9b3d78aeed657d761937e464a07a866a8b1dcb1f1d1781387d6e6ed9fdfc6d8acd46a9ccd6ec5df638cd30eb23847127d116676a8c8e6be4ea3877c7b24955c417cefb44b31d8c0690bc077f4f985fb67e359da9d95b0f463bd3ee7865767eeb3de59d791785c3b61c133309addfcee1555266d150012b1c603d88ad54357873cc25952ed7716541954bb5038ccd616291d378b2fd31f08f9cbc6db851664fb8d90e75159c2ea3e1cd8f7f528834c11cd47a26b106cb5f18cef0a375682dea7291f2d2981b5a56e219fe036c3dfe1f1b3c67fac5305aa13e1bede03d8ad4d01fdba41c7598944f9b3a2f8b546e07b9277ac597871a8081e6a5dfa5fa777f23e7a7c10822dd50f26c2de45aca1434e945ddd1c4bc750092aed6ff334cea7433a692e36f9ed886f5024d8cc0116ac453b9bcc3a50add2398d91a62653da280a2177836288369dc8706a419098b8e55ab2fa6607335d2e7c348a5ce923e9628df527317e67d33a1e23dec499f22ff8c6970fd791884214995b13094374780d882e862abc14b1d8232ed543b264ca788239f9c02827fb32fa2dc7b708ff0c478536dd249dd7439dcc933d1319e316844a2b25a28468dea8c6702ccfe61d771764718b5f79718d66ac000b8a202a71b18c44d753f9f23dea3f443b63b439eb87c69d5d5cab08c3d812d8cb87b9182b70f09836bd94623ad6bc3a006ed913761415bddca0c8b662cde396565280313654f08fcdbb6412f4c1ef3426158c5b07423862207053e077a49336e3fc6da8eafaf78ce2569e1a3a1d1ad02468b0add437b2068f1696358d607a837d994f3e5abc148df450f96a6b6936f9c1d705be2632ca</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>job</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>rs</tag>
       </tags>
   </entry>
   <entry>
@@ -1063,75 +1132,6 @@ B）非匹配索引扫描
       </tags>
   </entry>
   <entry>
-    <title>oppo广东移动通信有限公司</title>
-    <url>/2020/08/12/oppo%E5%B9%BF%E4%B8%9C%E7%A7%BB%E5%8A%A8%E9%80%9A%E4%BF%A1%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="5bc513b888122c33ec9025c8bbe171814cd1a116a3dd9bb93301042f056df8d3">5d20b81ac1f5d0b70e9113cacf134e1eec55447497a63f53873908500ac625f1423b695f187cdd796fd2f19623632ee80d0d0fc920ec205d622fbbf7d3e84307afb94b23027f08fbd819934a81c8f862bc8f830430a140a71b223ae5b4dd7f6bea314de1aa37ebde269bb3d4396150edd161d4fd10813ea2b4f15752a5e046620f53d5a66c954351cfbd0d939287eced586708f25efff26517d890f4d0b538f7e125568fdbda089412a46ca3e75955241cf8568fc208f64396078cc3cc317a28574016851ff50975dbca310114419f9c80f0e9ba55bee1d035d0d4a589a2b74cc3a77cbeb3519aaffab41609a241e1c1aaa88a105d99bb15c325335dbdb813b8b6b88768b6f2ed298fd6c08a23c5cf25d3be4a49b59c4eb171c8da9b6254e3989ca77576488f720afdfefc9fab071091e851ff63d2d6ebb1e9f059146ef31f3b15da43c34e77808ef5108bb70111c491db899ba47bb0c1966a76d269c218ab35e00634bc2f289dc39ce98173c355536e143d21f52b1a03b212852a9f0bc5a81676bbe059fe9fb8021889754ffccdcd05cbd3e6d259e618ca61e3f08d69ee7889f80089e3f3b820b085016e20162c128c1244ebf7f24fe6010e2a15f0d985c952bba1075c2575a03ad2b86be7ee4a8f4680335fae896e79ba56dcb505a7cab29ba352cea380ec08e6c8a8cddb654dc8a37fa917837c59d97e447f50e37ca861277552defc6c9e710b0151861f14b1d64a611cb560da516940a921a7cc8db067803f29b779d58f5137aca45a2ef99a95a49527a16c5323261214cac27136f2f9362e056f4da959adc271a8b2494ebe3ab61bd654860ac3e1e4834ac84953c91e94e2c198660f6346a2c074a4bf708d8ace3b9e8f601c3e3bc204b696625ae4f5d319136d23f2144a0fdfb7970a0c301e3237732bafa70c0701cd65833f60de540de735e3c4ef1a50ab472b3ff0ec174ac29bd2503e19a11e59002020258b25c97d5a2a7699736b474e856f71b995dd675a52fda97ed628841ef5339e5ab86e542e39553ceb1e2edbb2d5a3c07dd4bd1784419a1ac5e6c8c10e25ae6b565cdfde6b542273cfaa3dd9ebfd10c39bac8f8463a6846367e907273f4ba62a76feb366d12500b3fba640631f193d01bde1f9d12859ae982d006567cd95609257a885defd8efbce2d41f0a1ff9ba5bad3dd70d59b7cf7970d225b270519590e8c14b5c9503f32c8b93a9bd7e0e2fd25f9a72419a828b5af26325d92d3f5f141902cff424bf029b2c187c66125ff3011640b3434ff9171937d5ea3dd1bef58b320e2ac7c15feb3a56e78bc32c8dd776e5eb4e329a643fb262dfb367f2e8b02c721df7de98cf9dfa022b48d7cb2c38e92872a560454b9252afa669a76b59cf047bd7fbab5aa0ac9cc5119caff6aa168fe66a47bad9a4e00f22455d58a9b57110ead63be4e43cc3a1ea830183d91e30e1de39cf601bf29a8237ac912a77dff572e6bead69191ba1fcfad679c660c345a4c06161156964a68c74863f04320d65df1010a9150b6616e8bd6312907592bacfd40ea90f520ad63d243fe3f1a00dd04324dab92280ac13578dfa8c5a0cfc57c1a78558559654a1148f2fb60fe9273bc494490254f48745343b92db341c852485fd3b73f0f57cb6e2f11148992759ff5be11fc068fc87fad5001bcd12ba2c608135708e02eaedea5084363749f0de57354bcb8b65df92113120723ed33879a692bf3bc42ec85b7b50910193a7e7f3dc822dd80cfee11eaa2001a2e054a5fdaf4438e7a0f5f808ae16d3d656e02e6362b7e88c285b985bfa4a1d867737e4699126cf362832d8e9bb6c7d232b021822f238e56fa48ad53edadda4c9fe9a91b23e77a23304c4dbd567c16b72e6b0b8c48b77cb8fedf100975364061b953c50e5407d34325f0308c66d1c621df6519c983f56528d542c7c349db0984b4fb5574c7b85cd71989aa54e8b0a6a25bb32fec1801bd8473790927bd96f3fa98b8e469e0c25441ff367d22b5ca3aa7d8bdb5959ffe0063380840c7ec0b581468e5cb2033e16f5139411c36f46faab3833234f18712b000cee50b3f957b29afc0e5f94260e895a75c8afa50</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
-      <categories>
-        <category>job</category>
-      </categories>
-      <tags>
-        <tag>nlp</tag>
-        <tag>todo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>宇龙计算机通信科技（深圳）有限公司</title>
-    <url>/2020/08/11/%E5%AE%87%E9%BE%99%E8%AE%A1%E7%AE%97%E6%9C%BA%E9%80%9A%E4%BF%A1%E7%A7%91%E6%8A%80%EF%BC%88%E6%B7%B1%E5%9C%B3%EF%BC%89%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="0a96818458728a8c88715045e42ac9018b456f08823b688ada48c1539925ab42">5d20b81ac1f5d0b70e9113cacf134e1e15826083e6b6367bf1e68fe6118c8f33a272ce2d0e6bcfeeda4cbdbd7a02d9c9c7de930988ecdeee0b836b6626acc05292246098cd90e4a352207e089580ce1a27367db90d4adbdb5f4cdbeb949d8c9c584d005e75b2a3a0a439ca76fd49237643853e066dc4184be3ef9446555097b627860e8711b594da3d593c348ad8c62d2c559f53ced606e9cc7368e2899828f36e3d74c7dc9758735f3ee7153908006667a92e55495d5d58244dc808c573adb64dd5e2dc545b7b9043a3aa17dfc061213d4415396623dede3be931c9518ab779eef63a744b90d834771c47e1ce4d3717ed01e3a91d7780af8d8844b29d1aba7f55fad739538750b8a2d84015e5bc71ce1db6572751ea7401a41f6417e193daf532e1586940d04761c6ca82a35684d382b43ac38976d7a2fbe8de8ceac7808ab46d1dd99b9c7321f8e35a87ad6491556ed3b849cb00e1bc747960b562c77b00b4a223106f59edb4b553b50ff2aa916bd7473db5a45fea003989d319643741ab74b32a7d3aa4663ba7bcbb5beabb52e522abaf466c235460920da4ee675ceab11894991743a668d8a4a81358f0808baeabd7e454450e49a9d130a8f4ec93d749f00ea39fe3039932d5f515f5e59cf463ac059f7f03b9e5240a0cfb2fcb25df11f67a46a62ac0b337018141f022b3704e1227864563c3e6ca867a6fb68b4e46118b9ad08de403c7d0068762aa1e57d9022d6d9b94042d7c994330e5873424ff20896419504a993359d5d94d0d541c8e49656fece7c91a705bd67f999063736a20f0dda2b4bc7b8b706506705177f025a251a8b0dc0b3bdf08067c603de8b73bd994d0824dbad89f29f647097472ec9a80281b27f555b3b53b1bc7e0d5000b89b64a9c024d4130b5785c58d78684b735a5959aff906dcaf7e416f503a421b31711bc5a43c3abb6c7dccfa61271fd655a43de00c284b5eda53f2d3363c2d3f9c04482b9ab2fcf6b98e42b0a5c8f5d71339c398ed9b3d78aeed657d761937e464a07a866a8b1dcb1f1d1781387d6e6ed9fdfc6d8acd46a9ccd6ec5df638cd30eb23847127d116676a8c8e6be4ea3877c7b24955c417cefb44b31d8c0690bc077f4f985fb67e359da9d95b0f463bd3ee7865767eeb3de59d791785c3b61c133309addfcee1555266d150012b1c603d88ad54357873cc25952ed7716541954bb5038ccd616291d378b2fd31f08f9cbc6db851664fb8d90e75159c2ea3e1cd8f7f528834c11cd47a26b106cb5f18cef0a375682dea7291f2d2981b5a56e219fe036c3dfe1f1b3c67fac5305aa13e1bede03d8ad4d01fdba41c7598944f9b3a2f8b546e07b9277ac597871a8081e6a5dfa5fa777f23e7a7c10822dd50f26c2de45aca1434e945ddd1c4bc750092aed6ff334cea7433a692e36f9ed886f5024d8cc0116ac453b9bcc3a50add2398d91a62653da280a2177836288369dc8706a419098b8e55ab2fa6607335d2e7c348a5ce923e9628df527317e67d33a1e23dec499f22ff8c6970fd791884214995b13094374780d882e862abc14b1d8232ed543b264ca788239f9c02827fb32fa2dc7b708ff0c478536dd249dd7439dcc933d1319e316844a2b25a28468dea8c6702ccfe61d771764718b5f79718d66ac000b8a202a71b18c44d753f9f23dea3f443b63b439eb87c69d5d5cab08c3d812d8cb87b9182b70f09836bd94623ad6bc3a006ed913761415bddca0c8b662cde396565280313654f08fcdbb6412f4c1ef3426158c5b07423862207053e077a49336e3fc6da8eafaf78ce2569e1a3a1d1ad02468b0add437b2068f1696358d607a837d994f3e5abc148df450f96a6b6936f9c1d705be2632ca</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
-      <categories>
-        <category>job</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>rs</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>深圳乐信软件技术有限公司</title>
-    <url>/2020/08/05/%E6%B7%B1%E5%9C%B3%E4%B9%90%E4%BF%A1%E8%BD%AF%E4%BB%B6%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
-    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="1bb10ad5e3de6abc98007679c0cf7b194e831a20d1c0d6cf5f6db6eb9daa12eb">5d20b81ac1f5d0b70e9113cacf134e1e134b19f000ba74e5186cbc353b77de2e102ebdb688b73a05bd8208bc29535182ff7cf0cbbe5f07bf01c20e725e9f5377b154d9a6a96784917bb5ced6f932c624e5b39d6ccebdb1c4055a1e20cd6214a7a6c6f1e8559e09462cb23b0c845bf8ed5098e47a3beeae308205170c8794727072835f768ff5ebec3ded752f64d7653c13e65963bf468cbc81a250203f3c8b69c608a96c96115031237398b5b205c6d173f99564ef18c25ef4a774cbf697b3fafd17ad814a9e7714280d80198193793ccd3459735fa39fd69756fdbd52a1463f24f8794acf8d6ee9934288e51a3c304c83a6ae3161c1861829050e7b18223ec356d22aa4a4020f9071d683046fdeabc654852b685e5af0bd27097d6c22dc9614d6c6901aa71c10985e6b602f7eda22328812c549071bac16dc6d0cf52cd3eb9682b3c62c6ba436b64cb454b14e714c37591c78364e0cd6428a35237b9044d1bf3a7af3e66c328b151f5679dc122eef9dbac52721dc273e0f8ea6f62b7c3a15138f50ded5d96b3e6adc51f9bfbd5214c6c8ea71612e1dec70230476f5dff7da8f8c10ac9f7e4fe38bff313131987ac9085bbe73db1caaed003c3d3414217a2720d6adb923278f2be7602e6ecefdfc6202a82ecfdd1e623edec41e75a0356a6c495d6a0b6723fae18ce3136d43ba164840a8e5750e62baa3beddc783fbc532af545e9304e06d3e3171b4137ca2a8e33b32d04c1ca30f2f4de6820bf1f9da511cc10c2c90bbbd6ad6805a99c5ed192adb228f645edf6c8122c8038054a75feec6f6ccc87ea6cb597c6e9584d7e0b32596673acc4e488bb6424c201767946dc6e8beb36f099afd8079e61eac7b2da8a0b99fef4ca545f02fff47fabea94c20ad8427418182f2b900ff1f6fdea99294c0116a2f1c9345ddf812f256faee57addbfab99e5c0d6566a3e70c0eceb9b0421d4578c0eae5167f205f7639c13638e0a73f9e01ff7057875ab1b96635728dad5299482b3525b6edd9f00d2ee0ce944a727171c96bce15d14f42e416e7dbaae8f904f222fe561d7ea6d03d0ef2687d8fba21e5a535d53f1e0555c2ec72143aaca8efe4cb024ae297ab6e33dd59012e2d9909c8d7af0be9c5bbc1e3a9e17d0d9b9fa7cfe27cd69107163c2ba2ce94db6f664f0b5bbf82f7a4314a8e6453265726dd3d6dbf29052a256ad9beb2a94ee1a01b4b50f7e74af0d728674cdd8140f55e492674ec456b5b26a2e83110a9e9b8a1569c45d0a929cb02d675850b9e61eeb9111a605c45ef0aef531fe39bcdb0ee363ebb414d0dac0d126672611e1bc341dc08f4703e9eb3e923091c55026b5361e4c220af17287be5ea2dcc538011624dd12527f9e6a537b3b2a54d5e64ad64238be4cd37c5320e815c36ca8269d3a64f702706b63eb9b0cabbb2161c3c6dd128aee8e43804b7493110add183ddc26555aceeb6ed0b6953293614149701b24d5e51ed422be302ba9067d02814c2062fc8240862ee0901ccaf714e758d81b3a7c90ffdc373e7a5258c7c71b11a26d83a5fc069b9b31af3f8c6f7d153f2fa5c0175c9180173d875ada46e03488f5b8ddedcd44d45974f409078e526216f80ede784cd43d1f878a175106130e23813c0eac2b999438de1d7b130563737af8a7c46c8ee20e22b470d8593d9489c4c8b833203fa0ff24cc4b34b1ecfa31130e819cc24671c67cfbc220280834ebf06468dae76d09ecc3a2a257beb426e9ef109738d9d2e04e7def1f28178e9edd17aee8036a5a386895d69514e35048efe64b224efaa85e4ce937f5fb8c4221d4d771ec229dcf194fd95b896f74ed2286dcb04a80a69af8d9ba550c8488aefb2c41cb73931f615cde38050f1d167603996fe941b5bfac7c07b63aacef40eb8f85dc531f3530e4a7944a5353e141e28aaa358fb3707f281f5c51b1046f894649dac5a22016120e1f97c4e258387361cfd3226a7a7bb6d84322d3e28222018611b8782bda8e834f043a5d88f5211667c2e54ae89c983c35e6e6dfe99b7974821a1b939da7827db1d05b8dd7eae035448477564f9b40e3a475342bf4ebb63a7bf7b2e08f5fd12c0b8aa74cf09ee84d1c674dca39b3ab777f5b0f0a5a75bca982c8b05b23a57892b71613dbee898b663d0970fdd40da81839c8e9819013663fb7fb23e5108232ff684b0f15fc5d409e29113800331f8ca0b2131a63e5f68f8442086fdbaa2f8629a4638110e767be35a5ca44de12f0a4b89ca75ef55d1e0594e573e07475cf52df9dfc3067a4dad716b15dba38795f29a29e5f7fec91e53993dbd87efb449354dfe55d0ecccc2fb52a26abfce87a730843315659d13deb565de0852e43529314a64133120ae0957ec0e57659bfca59a302fe984a356afcc3597dc9f8a799d773d4a240b297ea53de60a92eea4e80dd02c9c457ab9188be63da91845a8a2b7dc42da31af4965747947130c78c914136a6588c9a4593dec3fdabcd885a4d31795af374cedf159107e37a73e89bb9775a8dc08d59196cee8fc09e6f7ffd2962c21f6ca52d59f166d7c32c6694b646d30a6c488e42495f4d24bb053a9986f9e7ac354856fe47a30d915fe6bb42c02a3cd178daff5ba150b5bb0d239e12e9e88a186d5ddde5e9f123b80758953fae8ca3321c44242cc6bffb17b34c5be415adb32643bd94a450480e2573ae9fa13a56fa497946b5f1086fe718712d65d75cc4c70d0356405d63735fa5595a433af5a8de7a6fc619c01b596097c5d13d863ed4a66082500214cb6468f9f29d456547ec457b1b2b967beb373a624b4a03ec2415ea91f63c4d87f8224b62ba421468121ad9fe21292503ea4a6efedf7f88f0c10d73ed3cba5373b0ed29bbb3495507fedf146d9b5ba9267fe1d57f4faa296c10a617bf99a5f220542fc0316b6e1ad98894fd63b78308a8680d2</script>
-  <div class="hbe hbe-content">
-    <div class="hbe hbe-input hbe-input-default">
-      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
-      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
-        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Hey, password is required here.</span>
-      </label>
-    </div>
-  </div>
-</div>
-<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
-      <categories>
-        <category>job</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>推荐系统</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>深圳追一科技有限公司</title>
     <url>/2020/08/03/%E6%B7%B1%E5%9C%B3%E8%BF%BD%E4%B8%80%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -1156,10 +1156,10 @@ B）非匹配索引扫描
       </tags>
   </entry>
   <entry>
-    <title>维沃移动通信有限公司</title>
-    <url>/2020/08/12/%E7%BB%B4%E6%B2%83%E7%A7%BB%E5%8A%A8%E9%80%9A%E4%BF%A1%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
+    <title>粤港澳大湾区数字经济研究院</title>
+    <url>/2020/08/08/%E7%B2%A4%E6%B8%AF%E6%BE%B3%E5%A4%A7%E6%B9%BE%E5%8C%BA%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E7%A0%94%E7%A9%B6%E9%99%A2/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="4d7aef68e1bd06e344c08efec3c104e1972ac7ce5bc9f1cd7e52b9a2532704e8">5d20b81ac1f5d0b70e9113cacf134e1e14a2a9a436662a0ddb03703b8364cb06e57fcc9de456fb697b7d8e24331e1dada1074bc8ff31f5612b4cbf9b887c97f49c390eed6b7ad701772b910f419eeb8b430f764841bec61afd90fedc7b8721beed3737305d514ed3a5bd6948d849414d2775219830a75ecb2a66943ff823943253a9a01ec5c8e5b432ef7a32ae9f4849513e3ca090f493f4c9d62b4dca33185b8ae6920a886d91e4be7409ee650e32ade3211a79cd50749f313855d5803cb20dda18c52281c99b1f1511911c1eb71ef38f4afc8d090fa87acf37c1d2153b7236fb6e2d98ac90f0df23b098d8015b7909318b0037cfa97bfbfacbf5dfd0ec62291d713a29f7105be39e28f412bb754eab1220964b2034775f32d7e156f3db9da015266a6f9a2c76f2512ef0c8ba393b64b64d66b317e91d69ed212f0a58eadd1b3c0baeab45306fa63fe3840979156ba6c2ede95745c3e954cf17da5d333c2cd1caeb9f871b3014a027c7b3e49ba64a2e89d31dc3c3535876711a9238284f0605a0bdd5236433947692b8e420878c405a5fce36d15913b756a2bca437876ea952eccf416d1fc561131219c29731b41e2abaea80dab9f4491f619a641bdf3a1cab9407d5143a22cc360258fd70e913f03a0376d0dcfe8e51d21edf14acd56a892f54de60eb033f24efc38cf1f28f22edcf39401feb94deb4b6210a5582df57c032772790676a28d7ba1886472800bca100b026f871134ac9ca871e970b5780d1881fd023ad17867b8e3e099075acecde6371623df02ce42561ab2799babb9b6069752b6838f72bf641ba5ac9b8b7cef5de1675cd67a4f11b88b8ec168c8f39fc455af20d2f2fc47074cfa2e81dad74e69d71500c3abb86d76e7e3394bda54217f162ed76a22bbfd9992673ee2dcd01bdabcb41dd728b9efb929b44aebf016d4138daff6ec80ce61b3f063e8a55b6e89603f109e544705d8d5e7688e0d1b04a3af19e5aa85cda28c82b97242b6812591dc2a6d50f5e4fef7a8892ce2d40df1ddac4656a4f052751c29c5d6c5659ae3105da05d3161163a9a44ce8659dba86ba5586b279089dc7d0f6082e28e0a81aba1ddffe59913f64b4c0f9618824f45246030d922bf750fd65f52382463ca87227780a1ab12f9a3c89f634d65cd88f5fd467df173062dbb8f01788c19261e89807f097ccb95849052827c3e02576ff99de142832e067666bc97c38cd454f0a18c91aac4025b725a7346a410ffe7b5d8445e14038b1ffb880b99ad112484017890c2d17848066aa57cbb4cfd74ee955d4bdcd89c3e3e01f123293a525ae8910a2b7fbaa82baef3f06a680b0ae73a9bb3ec5f4b03359ebd5f8c86b9971ef8c9ad708509e7a78aea683366ca4c4a2862d316c5580d93a9b654cf80e8ba892f1ea85b4f1f2591013b912cae94a0181802b3fdb5624854b5f2ce715b7595e62e118a47ed955b9f239b5bfbf5a1e638be050d937eaf196ba52425872436ce493a82a040d3200b0f9abd49c63ad8a808d72067039a2f06d4c49f4b0f48489f3f0c6bca6a13c2064c99ac406adc268d9f9c9568127552732082de94fd566c988f46ff33f79cc8e785e38c721cd912c03ea2628d96cb5ff</script>
+  <script id="hbeData" type="hbeData" data-hmacdigest="27ab009649b551519813e92b0b51adfe0f70d9608d0f567c6077f81a3525688f">5d20b81ac1f5d0b70e9113cacf134e1ebc8ffd03f4a917696faa51abfbe5fca764b45c8eff159783983f588f66e7457a72bba61e0e8b8a8a8b2fb591c4d6ade0965da7b718c1a4c3babc150993e00b5286ed13b0d7b6b67c0796dcbca55d1e026cc10fa233da43b9146b0eb5a1672714a9092c15715a4440849ed86b4a4873aac1af8cb75d40debd2f5c0990de83f9efdb8d3844f9c9456d270e7537de4abddac52388122bc8d9c7aec04f14848cf91a7ecfad95577ee81710cd50bb1140fbadb5ccc078b56933d48fcf2a6412679cae446ef2d8733ec8824d0b56386f6ea95792dd1295f6d020ee97530ded0e2efd3c51d885e2f52d4546001efc1c0d00a07ce2adaecf721df75cf65b4ee9eb07790debe488f91a4b75d6665fcebec7845da072b9b748658d99f3608afed41058c9ed794b01f35912065a589ef310c366365265abbbeaab5a1e0f2da9a5cac5f67328fcc15ce78a9926a3ae4c9c00c2588aa85f494fdfb3a5e5bed72936fb821457734566e6224cf5a31319b5f20249e61cb46a80f8e0723102594ce8fed26a676cf511846a8dbadbe06381404e4c37e03cac5c3866b66ba7ca36084679ced7aaea34b4c86136a728528e6b3a077dc52557a2732db84c56271c25eb35cfb0c57ea4f8680c16ff4656bbb520524711d380b1b9479817afc7aa1373f8b588d94fcd8770d4a50ab561bffcaa495aa8c7eb65a33be1670b3d3c3d1101cfc032240a0fa3c492420beeb6adf00defb7cde4bb430a4454f1f0f8d662135316a5d3269787c5bf051c197332e558287b26c0ed1ba91243adceff8119e6d258dfd1cac13f78e10ec75aa407415d5ef9f5956399a00bc7ca67c999951fffd0e9f2895b885863793f2ab660aac8237fc58e82948f4d415fdd49cf5e729f5b1f020e5931fefe5e2f130c73eed3449ea9c5fddc0ebaf214441e89785fa9434e7183438e70b791919676c1fe4584ac58142372745c280170106f686612a7f377e157208d45b73e8980aad72bef05cb0f533ccaa0c30ca38661ada17953f32e630a165b6fdab3eaed5b1eea320b81b14eb7e118271b16d5d5c00453d6616a1503caeefd87b21ca0400edc55e6edd33b5f2381f3c8e406c8e50e0bac0e00b62eca6a9858933148e60800902709c39e8b99dbac1dbb6920334c0d5108ef8f2c3503892c6932c74282961393a013a506a0550e94e9d7b395d268a643739ad5db58f9b5be20226fdefaecf8f624f95c4f8d4bc512feedc6278864ea1c26ba7760435a4d5b68159b3a8ffc9b6d35770e57fcb568b843a281d8c34aef8b8b8faa55d7385ebe93ba61215ec9044e6954225016be7a7fa44651b13b34bcbeb4d271ced260455073601b2f95b19ee8cced5077e9695188a16b39b2efc22d584ea2876ec462cea355c11512cb2791986536aedb2d53ef6c69f40dc6bf06ce6827be10fb0535c6108115f183c651f6b6d9873545a44874fa9754d08863eec1c88f53ef3906617e90e14942203c5bf023a736e969c7c7fbf8a38b7e2dbff3b9eb81844619a12cde60e1449174e7b20cdd6b36b28b333c695533f22f5b9ea231d37248671e84320c6a53c9f603ae3f2d3076f7abd1e5831dc63bcc9aa44815d6f88acc7f953e16f2b69fb44a8b149aebfd67a635e1a37bb59a7ec49b153cb1326b8cbda2de18d5b2ab9c76c17b1d938490ce9391f69d2af706dc6d11fe28c3589e1ddca44489750250f70a53ade1e376fdf474fdca6f30e065d0d2b805c72835ef2e01c37f95f31d5ea43d031022f85a2aa0ca081497d99b3bcfcf23ea7466161f0c4fc311af18f4d97f0b5d12ad673c15429782d24421479ae1847a7d5fa410b0f8b3edbefcc0827495310b573dd37f1748bfa72978bf24d9eee537d8b198cfb04e2341ad4cdb9f32338adb671bbc548b0002be65b80fcb88d9753e41f538c48a6d8f311b2271d3beeb3b7f684774755fa04687a77e85b1184059fd4ba981859412aac469b269db6ce141e2aee5f346bb1cfafd8387c03715ea1c5ee2de22fc88b11f6c484d0df8ab4e16412e7290f39fda588318feeb36abcdc5696fa1416f8112362259a5d1ca64f8a52324567085040cac4caa0a1f07820612ad735bc6a5e6485f2d5ef00442ee2e987b61c02471695b6012f3ed056ce0e5b5b8fa983a6cd19e26fa8676de4dedf020a92fdad227a8fa3a5c70b4edad022a794ea300b3b8cbf4ccc69eb1a04b7cd7fc8d26c35db3941b32f90dd8c9c62cf51e5cc57f88a5e15a1b19c86d9dc98a662a5b3ee4c5e3344a5484e900000373c1c85fbd38fdb276e255adf974a2029cbd64b3099e81ab3abf4c53985b9c23eed2801351954036a88043e835025e8504ba093aa68b6d838d06f6e55898e649a9bf13f2d6661f5c1271d45e142621155aba97b8d19b4b527157189367b6c1f5d0e66a4b4e473d55daf894ba052e9a6f33890126cd686ba755b0d56402c54c44dead3c1cbbedabec8016d792bd3a7b453b20da701798c134f484001116c6fac056d03e5aab489f435ff2e13e61eb03772568aa8265c030ad4d4316c93e20c4250515b1bb3406f26640c30bb8b04aaa3d3ae5e97d697249e7e45626a00e64b3e654e75f4131517f3fc0e09c767ead87781f0bb1435a13d0a31f2572100d577c81af15213816522c03ed14623650c3c7a4b97c16bae45d29f2e76f3d6e4af68c9158ea7068d056a975f3ad02a32a1d24493b311638c35f30e3f546abf154fcd4039fd62a071264b77a50740435003c9f2311daa730f00ad25537a2b4e46e4b38e1f6b68d89adb65936a4</script>
   <div class="hbe hbe-content">
     <div class="hbe hbe-input hbe-input-default">
       <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
@@ -1179,10 +1179,10 @@ B）非匹配索引扫描
       </tags>
   </entry>
   <entry>
-    <title>粤港澳大湾区数字经济研究院</title>
-    <url>/2020/08/08/%E7%B2%A4%E6%B8%AF%E6%BE%B3%E5%A4%A7%E6%B9%BE%E5%8C%BA%E6%95%B0%E5%AD%97%E7%BB%8F%E6%B5%8E%E7%A0%94%E7%A9%B6%E9%99%A2/</url>
+    <title>维沃移动通信有限公司</title>
+    <url>/2020/08/12/%E7%BB%B4%E6%B2%83%E7%A7%BB%E5%8A%A8%E9%80%9A%E4%BF%A1%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
-  <script id="hbeData" type="hbeData" data-hmacdigest="27ab009649b551519813e92b0b51adfe0f70d9608d0f567c6077f81a3525688f">5d20b81ac1f5d0b70e9113cacf134e1ebc8ffd03f4a917696faa51abfbe5fca764b45c8eff159783983f588f66e7457a72bba61e0e8b8a8a8b2fb591c4d6ade0965da7b718c1a4c3babc150993e00b5286ed13b0d7b6b67c0796dcbca55d1e026cc10fa233da43b9146b0eb5a1672714a9092c15715a4440849ed86b4a4873aac1af8cb75d40debd2f5c0990de83f9efdb8d3844f9c9456d270e7537de4abddac52388122bc8d9c7aec04f14848cf91a7ecfad95577ee81710cd50bb1140fbadb5ccc078b56933d48fcf2a6412679cae446ef2d8733ec8824d0b56386f6ea95792dd1295f6d020ee97530ded0e2efd3c51d885e2f52d4546001efc1c0d00a07ce2adaecf721df75cf65b4ee9eb07790debe488f91a4b75d6665fcebec7845da072b9b748658d99f3608afed41058c9ed794b01f35912065a589ef310c366365265abbbeaab5a1e0f2da9a5cac5f67328fcc15ce78a9926a3ae4c9c00c2588aa85f494fdfb3a5e5bed72936fb821457734566e6224cf5a31319b5f20249e61cb46a80f8e0723102594ce8fed26a676cf511846a8dbadbe06381404e4c37e03cac5c3866b66ba7ca36084679ced7aaea34b4c86136a728528e6b3a077dc52557a2732db84c56271c25eb35cfb0c57ea4f8680c16ff4656bbb520524711d380b1b9479817afc7aa1373f8b588d94fcd8770d4a50ab561bffcaa495aa8c7eb65a33be1670b3d3c3d1101cfc032240a0fa3c492420beeb6adf00defb7cde4bb430a4454f1f0f8d662135316a5d3269787c5bf051c197332e558287b26c0ed1ba91243adceff8119e6d258dfd1cac13f78e10ec75aa407415d5ef9f5956399a00bc7ca67c999951fffd0e9f2895b885863793f2ab660aac8237fc58e82948f4d415fdd49cf5e729f5b1f020e5931fefe5e2f130c73eed3449ea9c5fddc0ebaf214441e89785fa9434e7183438e70b791919676c1fe4584ac58142372745c280170106f686612a7f377e157208d45b73e8980aad72bef05cb0f533ccaa0c30ca38661ada17953f32e630a165b6fdab3eaed5b1eea320b81b14eb7e118271b16d5d5c00453d6616a1503caeefd87b21ca0400edc55e6edd33b5f2381f3c8e406c8e50e0bac0e00b62eca6a9858933148e60800902709c39e8b99dbac1dbb6920334c0d5108ef8f2c3503892c6932c74282961393a013a506a0550e94e9d7b395d268a643739ad5db58f9b5be20226fdefaecf8f624f95c4f8d4bc512feedc6278864ea1c26ba7760435a4d5b68159b3a8ffc9b6d35770e57fcb568b843a281d8c34aef8b8b8faa55d7385ebe93ba61215ec9044e6954225016be7a7fa44651b13b34bcbeb4d271ced260455073601b2f95b19ee8cced5077e9695188a16b39b2efc22d584ea2876ec462cea355c11512cb2791986536aedb2d53ef6c69f40dc6bf06ce6827be10fb0535c6108115f183c651f6b6d9873545a44874fa9754d08863eec1c88f53ef3906617e90e14942203c5bf023a736e969c7c7fbf8a38b7e2dbff3b9eb81844619a12cde60e1449174e7b20cdd6b36b28b333c695533f22f5b9ea231d37248671e84320c6a53c9f603ae3f2d3076f7abd1e5831dc63bcc9aa44815d6f88acc7f953e16f2b69fb44a8b149aebfd67a635e1a37bb59a7ec49b153cb1326b8cbda2de18d5b2ab9c76c17b1d938490ce9391f69d2af706dc6d11fe28c3589e1ddca44489750250f70a53ade1e376fdf474fdca6f30e065d0d2b805c72835ef2e01c37f95f31d5ea43d031022f85a2aa0ca081497d99b3bcfcf23ea7466161f0c4fc311af18f4d97f0b5d12ad673c15429782d24421479ae1847a7d5fa410b0f8b3edbefcc0827495310b573dd37f1748bfa72978bf24d9eee537d8b198cfb04e2341ad4cdb9f32338adb671bbc548b0002be65b80fcb88d9753e41f538c48a6d8f311b2271d3beeb3b7f684774755fa04687a77e85b1184059fd4ba981859412aac469b269db6ce141e2aee5f346bb1cfafd8387c03715ea1c5ee2de22fc88b11f6c484d0df8ab4e16412e7290f39fda588318feeb36abcdc5696fa1416f8112362259a5d1ca64f8a52324567085040cac4caa0a1f07820612ad735bc6a5e6485f2d5ef00442ee2e987b61c02471695b6012f3ed056ce0e5b5b8fa983a6cd19e26fa8676de4dedf020a92fdad227a8fa3a5c70b4edad022a794ea300b3b8cbf4ccc69eb1a04b7cd7fc8d26c35db3941b32f90dd8c9c62cf51e5cc57f88a5e15a1b19c86d9dc98a662a5b3ee4c5e3344a5484e900000373c1c85fbd38fdb276e255adf974a2029cbd64b3099e81ab3abf4c53985b9c23eed2801351954036a88043e835025e8504ba093aa68b6d838d06f6e55898e649a9bf13f2d6661f5c1271d45e142621155aba97b8d19b4b527157189367b6c1f5d0e66a4b4e473d55daf894ba052e9a6f33890126cd686ba755b0d56402c54c44dead3c1cbbedabec8016d792bd3a7b453b20da701798c134f484001116c6fac056d03e5aab489f435ff2e13e61eb03772568aa8265c030ad4d4316c93e20c4250515b1bb3406f26640c30bb8b04aaa3d3ae5e97d697249e7e45626a00e64b3e654e75f4131517f3fc0e09c767ead87781f0bb1435a13d0a31f2572100d577c81af15213816522c03ed14623650c3c7a4b97c16bae45d29f2e76f3d6e4af68c9158ea7068d056a975f3ad02a32a1d24493b311638c35f30e3f546abf154fcd4039fd62a071264b77a50740435003c9f2311daa730f00ad25537a2b4e46e4b38e1f6b68d89adb65936a4</script>
+  <script id="hbeData" type="hbeData" data-hmacdigest="4d7aef68e1bd06e344c08efec3c104e1972ac7ce5bc9f1cd7e52b9a2532704e8">5d20b81ac1f5d0b70e9113cacf134e1e14a2a9a436662a0ddb03703b8364cb06e57fcc9de456fb697b7d8e24331e1dada1074bc8ff31f5612b4cbf9b887c97f49c390eed6b7ad701772b910f419eeb8b430f764841bec61afd90fedc7b8721beed3737305d514ed3a5bd6948d849414d2775219830a75ecb2a66943ff823943253a9a01ec5c8e5b432ef7a32ae9f4849513e3ca090f493f4c9d62b4dca33185b8ae6920a886d91e4be7409ee650e32ade3211a79cd50749f313855d5803cb20dda18c52281c99b1f1511911c1eb71ef38f4afc8d090fa87acf37c1d2153b7236fb6e2d98ac90f0df23b098d8015b7909318b0037cfa97bfbfacbf5dfd0ec62291d713a29f7105be39e28f412bb754eab1220964b2034775f32d7e156f3db9da015266a6f9a2c76f2512ef0c8ba393b64b64d66b317e91d69ed212f0a58eadd1b3c0baeab45306fa63fe3840979156ba6c2ede95745c3e954cf17da5d333c2cd1caeb9f871b3014a027c7b3e49ba64a2e89d31dc3c3535876711a9238284f0605a0bdd5236433947692b8e420878c405a5fce36d15913b756a2bca437876ea952eccf416d1fc561131219c29731b41e2abaea80dab9f4491f619a641bdf3a1cab9407d5143a22cc360258fd70e913f03a0376d0dcfe8e51d21edf14acd56a892f54de60eb033f24efc38cf1f28f22edcf39401feb94deb4b6210a5582df57c032772790676a28d7ba1886472800bca100b026f871134ac9ca871e970b5780d1881fd023ad17867b8e3e099075acecde6371623df02ce42561ab2799babb9b6069752b6838f72bf641ba5ac9b8b7cef5de1675cd67a4f11b88b8ec168c8f39fc455af20d2f2fc47074cfa2e81dad74e69d71500c3abb86d76e7e3394bda54217f162ed76a22bbfd9992673ee2dcd01bdabcb41dd728b9efb929b44aebf016d4138daff6ec80ce61b3f063e8a55b6e89603f109e544705d8d5e7688e0d1b04a3af19e5aa85cda28c82b97242b6812591dc2a6d50f5e4fef7a8892ce2d40df1ddac4656a4f052751c29c5d6c5659ae3105da05d3161163a9a44ce8659dba86ba5586b279089dc7d0f6082e28e0a81aba1ddffe59913f64b4c0f9618824f45246030d922bf750fd65f52382463ca87227780a1ab12f9a3c89f634d65cd88f5fd467df173062dbb8f01788c19261e89807f097ccb95849052827c3e02576ff99de142832e067666bc97c38cd454f0a18c91aac4025b725a7346a410ffe7b5d8445e14038b1ffb880b99ad112484017890c2d17848066aa57cbb4cfd74ee955d4bdcd89c3e3e01f123293a525ae8910a2b7fbaa82baef3f06a680b0ae73a9bb3ec5f4b03359ebd5f8c86b9971ef8c9ad708509e7a78aea683366ca4c4a2862d316c5580d93a9b654cf80e8ba892f1ea85b4f1f2591013b912cae94a0181802b3fdb5624854b5f2ce715b7595e62e118a47ed955b9f239b5bfbf5a1e638be050d937eaf196ba52425872436ce493a82a040d3200b0f9abd49c63ad8a808d72067039a2f06d4c49f4b0f48489f3f0c6bca6a13c2064c99ac406adc268d9f9c9568127552732082de94fd566c988f46ff33f79cc8e785e38c721cd912c03ea2628d96cb5ff</script>
   <div class="hbe hbe-content">
     <div class="hbe hbe-input hbe-input-default">
       <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
@@ -2305,6 +2305,44 @@ $$</p>
       </tags>
   </entry>
   <entry>
+    <title>Dropout</title>
+    <url>/2021/08/23/Dropout/</url>
+    <content><![CDATA[<p>Dropout可以比较有效的缓解过拟合的发生，在一定程度上达到正则化的效果。</p>
+<span id="more"></span>
+<h1><strong>Dropout简介</strong></h1>
+<h2 id="Dropout出现的原因"><strong>Dropout出现的原因</strong></h2>
+<p>训练深度神经网络的时候，总是会遇到两大缺点:</p>
+<ol>
+<li>容易过拟合</li>
+<li>费时</li>
+</ol>
+<p>过拟合具体表现在：模型在训练数据上损失函数较小，预测准确率较高；但是在测试数据上损失函数比较大，预测准确率较低。</p>
+<h2 id="什么是Dropout">什么是Dropout</h2>
+<p>Dropout可以作为训练深度神经网络的一种trick供选择。在每个训练批次中，通过忽略一半的特征检测器（让一半的隐层节点值为0），可以明显地减少过拟合现象。这种方式可以减少特征检测器（隐层节点）间的相互作用，检测器相互作用是指某些检测器依赖其他检测器才能发挥作用。</p>
+<p>Dropout说的简单一点就是：我们在前向传播的时候，让某个神经元的激活值以一定的概率p停止工作，这样可以使模型泛化性更强，因为它不会太依赖某些局部的特征，如图所示。</p>
+<p><img src="dropout.jpg" alt="dropout"></p>
+<h1>Dropout训练和预测时的不同</h1>
+<p><strong>在训练阶段：</strong></p>
+<ol>
+<li>首先随机（临时）删掉网络中一半的隐藏神经元，输入输出神经元保持不变</li>
+<li>然后把输入x通过修改后的网络前向传播，然后把得到的损失结果通过修改的网络反向传播。一小批训练样本执行完这个过程后，在没有被删除的神经元上按照随机梯度下降法更新对应的参数（w，b）</li>
+<li>在p是神经元抛弃概率时，训练后神经元参数需要进行$\frac{1}{1-p}$缩放</li>
+</ol>
+<blockquote>
+<p>当模型使用dropout layer时，训练的时候只有占比为$p$的隐层单元参与训练，那么在预测的时候，如果所有的隐藏层单元都需要参与进来，则得到的结果相比训练时平均要大$\frac{1}{p}$，为了避免这种情况，就需要测试的时候将输出结果乘以 $p$使下一层的输入规模保持不变。</p>
+<p>而利用inverted dropout，我们可以在训练的时候直接将dropout后留下的权重扩大$\frac{1}{p}$倍，这样就可以使结果的scale保持不变，而在预测的时候也不用做额外的操作了，更方便一些。</p>
+</blockquote>
+<p><strong>在测试阶段：</strong></p>
+<p>直接利用所有训练好的神经元权重计算输出，不需要dropout</p>
+]]></content>
+      <categories>
+        <category>dl</category>
+      </categories>
+      <tags>
+        <tag>dropout</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>ABCNN</title>
     <url>/2021/07/08/ABCNN/</url>
     <content><![CDATA[<p>ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。</p>
@@ -2908,26 +2946,8 @@ $$<br>
         <category>dl</category>
       </categories>
       <tags>
+        <tag>todo</tag>
         <tag>lstm</tag>
-        <tag>todo</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Transformer详解</title>
-    <url>/2021/07/23/Transformer%E8%AF%A6%E8%A7%A3/</url>
-    <content><![CDATA[<h1>参考文献</h1>
-<blockquote>
-<ol>
-<li><a href="https://www.cnblogs.com/mantch/p/11591937.html">Transformer各层网络结构详解！</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>dl</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>transformer</tag>
       </tags>
   </entry>
   <entry>
@@ -3135,16 +3155,21 @@ $$</p>
       </tags>
   </entry>
   <entry>
-    <title>共线性特征</title>
-    <url>/2021/07/20/%E5%85%B1%E7%BA%BF%E6%80%A7%E7%89%B9%E5%BE%81/</url>
-    <content><![CDATA[]]></content>
+    <title>Transformer详解</title>
+    <url>/2021/07/23/Transformer%E8%AF%A6%E8%A7%A3/</url>
+    <content><![CDATA[<h1>参考文献</h1>
+<blockquote>
+<ol>
+<li><a href="https://www.cnblogs.com/mantch/p/11591937.html">Transformer各层网络结构详解！</a></li>
+</ol>
+</blockquote>
+]]></content>
       <categories>
-        <category>ml</category>
+        <category>dl</category>
       </categories>
       <tags>
-        <tag>特征工程</tag>
         <tag>todo</tag>
-        <tag>共线性</tag>
+        <tag>transformer</tag>
       </tags>
   </entry>
   <entry>
@@ -3214,6 +3239,19 @@ $$</p>
         <tag>word embedding</tag>
         <tag>word2vec</tag>
         <tag>GloVe</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>共线性特征</title>
+    <url>/2021/07/20/%E5%85%B1%E7%BA%BF%E6%80%A7%E7%89%B9%E5%BE%81/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>ml</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>特征工程</tag>
+        <tag>共线性</tag>
       </tags>
   </entry>
   <entry>
@@ -3624,44 +3662,6 @@ $$</p>
       </tags>
   </entry>
   <entry>
-    <title>Dropout</title>
-    <url>/2021/08/23/Dropout/</url>
-    <content><![CDATA[<p>Dropout可以比较有效的缓解过拟合的发生，在一定程度上达到正则化的效果。</p>
-<span id="more"></span>
-<h1><strong>Dropout简介</strong></h1>
-<h2 id="Dropout出现的原因"><strong>Dropout出现的原因</strong></h2>
-<p>训练深度神经网络的时候，总是会遇到两大缺点:</p>
-<ol>
-<li>容易过拟合</li>
-<li>费时</li>
-</ol>
-<p>过拟合具体表现在：模型在训练数据上损失函数较小，预测准确率较高；但是在测试数据上损失函数比较大，预测准确率较低。</p>
-<h2 id="什么是Dropout">什么是Dropout</h2>
-<p>Dropout可以作为训练深度神经网络的一种trick供选择。在每个训练批次中，通过忽略一半的特征检测器（让一半的隐层节点值为0），可以明显地减少过拟合现象。这种方式可以减少特征检测器（隐层节点）间的相互作用，检测器相互作用是指某些检测器依赖其他检测器才能发挥作用。</p>
-<p>Dropout说的简单一点就是：我们在前向传播的时候，让某个神经元的激活值以一定的概率p停止工作，这样可以使模型泛化性更强，因为它不会太依赖某些局部的特征，如图所示。</p>
-<p><img src="dropout.jpg" alt="dropout"></p>
-<h1>Dropout训练和预测时的不同</h1>
-<p><strong>在训练阶段：</strong></p>
-<ol>
-<li>首先随机（临时）删掉网络中一半的隐藏神经元，输入输出神经元保持不变</li>
-<li>然后把输入x通过修改后的网络前向传播，然后把得到的损失结果通过修改的网络反向传播。一小批训练样本执行完这个过程后，在没有被删除的神经元上按照随机梯度下降法更新对应的参数（w，b）</li>
-<li>在p是神经元抛弃概率时，训练后神经元参数需要进行$\frac{1}{1-p}$缩放</li>
-</ol>
-<blockquote>
-<p>当模型使用dropout layer时，训练的时候只有占比为$p$的隐层单元参与训练，那么在预测的时候，如果所有的隐藏层单元都需要参与进来，则得到的结果相比训练时平均要大$\frac{1}{p}$，为了避免这种情况，就需要测试的时候将输出结果乘以 $p$使下一层的输入规模保持不变。</p>
-<p>而利用inverted dropout，我们可以在训练的时候直接将dropout后留下的权重扩大$\frac{1}{p}$倍，这样就可以使结果的scale保持不变，而在预测的时候也不用做额外的操作了，更方便一些。</p>
-</blockquote>
-<p><strong>在测试阶段：</strong></p>
-<p>直接利用所有训练好的神经元权重计算输出，不需要dropout</p>
-]]></content>
-      <categories>
-        <category>dl</category>
-      </categories>
-      <tags>
-        <tag>dropout</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>ASAP: A Chinese Review Dataset Towards Aspect Category Sentiment Analysis and Rating Prediction </title>
     <url>/2021/11/25/ASAP-A-Chinese-Review-Dataset-Towards-Aspect-Category-Sentiment-Analysis-and-Rating-Prediction/</url>
     <content><![CDATA[]]></content>
@@ -4043,64 +4043,6 @@ $$</p>
       </tags>
   </entry>
   <entry>
-    <title>高维矩阵乘法</title>
-    <url>/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/</url>
-    <content><![CDATA[<p>NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。</p>
-<span id="more"></span>
-<h1>高维矩阵可视化</h1>
-<p><strong>一维:</strong> 首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br></pre></td></tr></table></figure>
-<p><img src="yiwei.jpg" alt="一维矩阵"></p>
-<p>**二维:**shape=[2,3]的二维矩阵可视化如下</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">[<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]]</span><br></pre></td></tr></table></figure>
-<p><img src="erwei.jpg" alt="二维"></p>
-<p>为方便展示三维矩阵，旋转角度如下:</p>
-<p><img src="erwei2.jpg" alt="二维"></p>
-<p>**三维:**一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">  [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line"> </span><br><span class="line"> [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]]</span><br></pre></td></tr></table></figure>
-<p><img src="sanwei.jpg" alt="三维"></p>
-<p>切片展示如下:</p>
-<p><img src="sanwei2.jpg" alt="三维"></p>
-<p>**四维:**shape=[2,2,2,3]的四维矩阵可视化如下:</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">   [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line">  </span><br><span class="line">  [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">   [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]],</span><br><span class="line">  </span><br><span class="line">  [[[<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>],</span><br><span class="line">    [<span class="number">16</span>,<span class="number">17</span>,<span class="number">18</span>]],</span><br><span class="line">   </span><br><span class="line">  [[<span class="number">19</span>,<span class="number">20</span>,<span class="number">21</span>],</span><br><span class="line">  [<span class="number">22</span>,<span class="number">23</span>,<span class="number">24</span>]]]]</span><br></pre></td></tr></table></figure>
-<p><img src="siwei.jpg" alt="四维"></p>
-<h1>高维矩阵运算</h1>
-<p>从上面的结论可以看出:<strong>所有大于二维的，最终都是以二维为基础堆叠在一起的！！</strong></p>
-<p>所以在矩阵运算的时候，其实最后都可以转成我们常见的二维矩阵运算，遵循的原则是：<strong>在多维矩阵相乘中，需最后两维满足shape匹配原则，最后两维才是有数据的矩阵，前面的维度只是矩阵的排列而已！</strong></p>
-<p><strong>相乘必须满足以下两个条件：</strong></p>
-<ol>
-<li>两个n维数组的前n-2维必须完全相同。例如（3,2,4,2）（3,2,2,3）前两维必须完全一致；</li>
-<li>最后两维必须满足二阶矩阵乘法要求。例如（3,2,4,2）（3,2,2,3）的后两维可视为（4,2）x（2,3）满足矩阵乘法。</li>
-</ol>
-<p>另，由于广播机制，第一维为1的，可以与第一维任何数相乘：</p>
-<p>（3,2,4,2）*（1,2,2,3）——&gt;&gt;（3,2,4,3）</p>
-<p>（1,2,4,2）*（3,2,2,3）——&gt;&gt;（3,2,4,3）</p>
-<p>比如两个三维的矩阵相乘，分别为shape=[2,2,3]和shape=[2,3,2]</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">a = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>  <span class="number">3.</span>]</span><br><span class="line">  [ <span class="number">4.</span>  <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>  <span class="number">9.</span>]</span><br><span class="line">  [<span class="number">10.</span> <span class="number">11.</span> <span class="number">12.</span>]]]</span><br><span class="line"></span><br><span class="line">b = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>]</span><br><span class="line">  [ <span class="number">3.</span>  <span class="number">4.</span>]</span><br><span class="line">  [ <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"></span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>]</span><br><span class="line">  [ <span class="number">9.</span> <span class="number">10.</span>]</span><br><span class="line">  [<span class="number">11.</span> <span class="number">12.</span>]]]</span><br></pre></td></tr></table></figure>
-<p>计算的时候把a的第一个shape=[2,3]的矩阵和b的第一个shape=[3,2]的矩阵相乘，得到的shape=[2,2]，即</p>
-<p><img src="matmul1.jpg" alt="matmul1"></p>
-<p>同理，再把a，b个字的第二个shape=[2,3]的矩阵相乘，得到的shape=[2,2]。</p>
-<p><img src="matmul2.jpg" alt="matmul2"></p>
-<p>最终把结果堆叠在一起，就是2个shape=[2,2]的矩阵堆叠在一起，结果为：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[ <span class="number">22.</span>  <span class="number">28.</span>]</span><br><span class="line">  [ <span class="number">49.</span>  <span class="number">64.</span>]]</span><br><span class="line"></span><br><span class="line"> [[<span class="number">220.</span> <span class="number">244.</span>]</span><br><span class="line">  [<span class="number">301.</span> <span class="number">334.</span>]]]</span><br></pre></td></tr></table></figure>
-<h1>参考文献</h1>
-<blockquote>
-<ol>
-<li><a href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
-<li><a href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>math</category>
-      </categories>
-      <tags>
-        <tag>tensor</tag>
-        <tag>numpy</tag>
-        <tag>matmul</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>激活函数</title>
     <url>/2021/12/01/%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0/</url>
     <content><![CDATA[<p>激活函数为神经网络引入了非线性，增强了神经网络的表达能力。</p>
@@ -4195,6 +4137,64 @@ $$<br>
       </tags>
   </entry>
   <entry>
+    <title>高维矩阵乘法</title>
+    <url>/2021/12/08/%E9%AB%98%E7%BB%B4%E7%9F%A9%E9%98%B5%E4%B9%98%E6%B3%95/</url>
+    <content><![CDATA[<p>NLP中经常为碰到高维矩阵运算，如Attention中的Q、K、V相乘，在此记录矩阵相乘的运算规则。</p>
+<span id="more"></span>
+<h1>高维矩阵可视化</h1>
+<p><strong>一维:</strong> 首先shape=[4]的一维矩阵非常简单，可以用下图表示</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br></pre></td></tr></table></figure>
+<p><img src="yiwei.jpg" alt="一维矩阵"></p>
+<p>**二维:**shape=[2,3]的二维矩阵可视化如下</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">[<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]]</span><br></pre></td></tr></table></figure>
+<p><img src="erwei.jpg" alt="二维"></p>
+<p>为方便展示三维矩阵，旋转角度如下:</p>
+<p><img src="erwei2.jpg" alt="二维"></p>
+<p>**三维:**一个shape=[2,2,3]的三维矩阵，可视化如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">  [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line"> </span><br><span class="line"> [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">  [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]]</span><br></pre></td></tr></table></figure>
+<p><img src="sanwei.jpg" alt="三维"></p>
+<p>切片展示如下:</p>
+<p><img src="sanwei2.jpg" alt="三维"></p>
+<p>**四维:**shape=[2,2,2,3]的四维矩阵可视化如下:</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>],</span><br><span class="line">   [<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>]],</span><br><span class="line">  </span><br><span class="line">  [[<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>],</span><br><span class="line">   [<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>]]],</span><br><span class="line">  </span><br><span class="line">  [[[<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>],</span><br><span class="line">    [<span class="number">16</span>,<span class="number">17</span>,<span class="number">18</span>]],</span><br><span class="line">   </span><br><span class="line">  [[<span class="number">19</span>,<span class="number">20</span>,<span class="number">21</span>],</span><br><span class="line">  [<span class="number">22</span>,<span class="number">23</span>,<span class="number">24</span>]]]]</span><br></pre></td></tr></table></figure>
+<p><img src="siwei.jpg" alt="四维"></p>
+<h1>高维矩阵运算</h1>
+<p>从上面的结论可以看出:<strong>所有大于二维的，最终都是以二维为基础堆叠在一起的！！</strong></p>
+<p>所以在矩阵运算的时候，其实最后都可以转成我们常见的二维矩阵运算，遵循的原则是：<strong>在多维矩阵相乘中，需最后两维满足shape匹配原则，最后两维才是有数据的矩阵，前面的维度只是矩阵的排列而已！</strong></p>
+<p><strong>相乘必须满足以下两个条件：</strong></p>
+<ol>
+<li>两个n维数组的前n-2维必须完全相同。例如（3,2,4,2）（3,2,2,3）前两维必须完全一致；</li>
+<li>最后两维必须满足二阶矩阵乘法要求。例如（3,2,4,2）（3,2,2,3）的后两维可视为（4,2）x（2,3）满足矩阵乘法。</li>
+</ol>
+<p>另，由于广播机制，第一维为1的，可以与第一维任何数相乘：</p>
+<p>（3,2,4,2）*（1,2,2,3）——&gt;&gt;（3,2,4,3）</p>
+<p>（1,2,4,2）*（3,2,2,3）——&gt;&gt;（3,2,4,3）</p>
+<p>比如两个三维的矩阵相乘，分别为shape=[2,2,3]和shape=[2,3,2]</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">a = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>  <span class="number">3.</span>]</span><br><span class="line">  [ <span class="number">4.</span>  <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>  <span class="number">9.</span>]</span><br><span class="line">  [<span class="number">10.</span> <span class="number">11.</span> <span class="number">12.</span>]]]</span><br><span class="line"></span><br><span class="line">b = </span><br><span class="line">[[[ <span class="number">1.</span>  <span class="number">2.</span>]</span><br><span class="line">  [ <span class="number">3.</span>  <span class="number">4.</span>]</span><br><span class="line">  [ <span class="number">5.</span>  <span class="number">6.</span>]]</span><br><span class="line"></span><br><span class="line"> [[ <span class="number">7.</span>  <span class="number">8.</span>]</span><br><span class="line">  [ <span class="number">9.</span> <span class="number">10.</span>]</span><br><span class="line">  [<span class="number">11.</span> <span class="number">12.</span>]]]</span><br></pre></td></tr></table></figure>
+<p>计算的时候把a的第一个shape=[2,3]的矩阵和b的第一个shape=[3,2]的矩阵相乘，得到的shape=[2,2]，即</p>
+<p><img src="matmul1.jpg" alt="matmul1"></p>
+<p>同理，再把a，b个字的第二个shape=[2,3]的矩阵相乘，得到的shape=[2,2]。</p>
+<p><img src="matmul2.jpg" alt="matmul2"></p>
+<p>最终把结果堆叠在一起，就是2个shape=[2,2]的矩阵堆叠在一起，结果为：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">[[[ <span class="number">22.</span>  <span class="number">28.</span>]</span><br><span class="line">  [ <span class="number">49.</span>  <span class="number">64.</span>]]</span><br><span class="line"></span><br><span class="line"> [[<span class="number">220.</span> <span class="number">244.</span>]</span><br><span class="line">  [<span class="number">301.</span> <span class="number">334.</span>]]]</span><br></pre></td></tr></table></figure>
+<h1>参考文献</h1>
+<blockquote>
+<ol>
+<li><a href="https://zhuanlan.zhihu.com/p/337829793">【全面理解多维矩阵运算】多维（三维四维）矩阵向量运算-超强可视化</a></li>
+<li><a href="https://blog.csdn.net/weixin_45459911/article/details/107852351">高维数组相乘的运算规则</a></li>
+</ol>
+</blockquote>
+]]></content>
+      <categories>
+        <category>math</category>
+      </categories>
+      <tags>
+        <tag>tensor</tag>
+        <tag>numpy</tag>
+        <tag>matmul</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>python import导包路径</title>
     <url>/2022/02/10/python-import%E5%AF%BC%E5%8C%85%E8%B7%AF%E5%BE%84/</url>
     <content><![CDATA[<p>本文主要分析python中import文件路径的问题。</p>
@@ -4265,30 +4265,6 @@ $$<br>
       </categories>
   </entry>
   <entry>
-    <title>manjaro配置</title>
-    <url>/2022/03/19/manjaro%E9%85%8D%E7%BD%AE/</url>
-    <content><![CDATA[<p>本文记录manjaro使用过程中的一些配置！</p>
-<span id="more"></span>
-<h1>zsh 配置</h1>
-<h2 id="安装">安装</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh</span><br><span class="line">sh install.sh</span><br></pre></td></tr></table></figure>
-<h2 id="themes">themes:</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.zshrc</span><br><span class="line">ZSH_THEME=<span class="string">&quot;ys2&quot;</span></span><br></pre></td></tr></table></figure>
-<p>其中<code>~/.oh-my-zsh/themes/ys2.zsh-theme</code>的部分内容如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Conda info</span></span><br><span class="line"><span class="built_in">local</span> conda_info=<span class="string">&#x27;$(conda_prompt_info)&#x27;</span></span><br><span class="line"><span class="function"><span class="title">conda_prompt_info</span></span>() &#123;</span><br><span class="line">  <span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$CONDA_DEFAULT_ENV</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(<span class="variable">$CONDA_DEFAULT_ENV</span>) &quot;</span></span><br><span class="line">  <span class="keyword">else</span> </span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(base) &quot;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PROMPT=<span class="string">&quot;</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[blue]%&#125;#%&#123;<span class="variable">$reset_color</span>%&#125; \</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[yellow]%&#125;%~%&#123;<span class="variable">$reset_color</span>%&#125;\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;hg_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;git_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;svn_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;venv_info&#125;</span>\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$fg</span>[yellow]%&#125; <span class="variable">$&#123;conda_info&#125;</span>\</span></span><br><span class="line"><span class="string">\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[red]%&#125;$ %&#123;<span class="variable">$reset_color</span>%&#125;&quot;</span></span><br></pre></td></tr></table></figure>
-<p><code>~/.condarc</code>中增加：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">changeps1: False</span><br></pre></td></tr></table></figure>
-<h2 id="所有可读目录颜色">所有可读目录颜色</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.dir_colors</span><br><span class="line">OTHER_WRITABLE 01;34</span><br><span class="line"></span><br><span class="line">vim ~/.zshrc</span><br><span class="line"><span class="built_in">eval</span> `<span class="built_in">dircolors</span> <span class="variable">$HOME</span>/.dir_colors`</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>tools</category>
-      </categories>
-      <tags>
-        <tag>manjaro</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>jupyter notebook配置</title>
     <url>/2022/04/02/jupyter-notebook%E9%85%8D%E7%BD%AE/</url>
     <content><![CDATA[<p>本文记录使用jupyter notebook过程中的配置问题！</p>
@@ -4357,6 +4333,30 @@ $$<br>
       </tags>
   </entry>
   <entry>
+    <title>manjaro配置</title>
+    <url>/2022/03/19/manjaro%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<p>本文记录manjaro使用过程中的一些配置！</p>
+<span id="more"></span>
+<h1>zsh 配置</h1>
+<h2 id="安装">安装</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh</span><br><span class="line">sh install.sh</span><br></pre></td></tr></table></figure>
+<h2 id="themes">themes:</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.zshrc</span><br><span class="line">ZSH_THEME=<span class="string">&quot;ys2&quot;</span></span><br></pre></td></tr></table></figure>
+<p>其中<code>~/.oh-my-zsh/themes/ys2.zsh-theme</code>的部分内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Conda info</span></span><br><span class="line"><span class="built_in">local</span> conda_info=<span class="string">&#x27;$(conda_prompt_info)&#x27;</span></span><br><span class="line"><span class="function"><span class="title">conda_prompt_info</span></span>() &#123;</span><br><span class="line">  <span class="keyword">if</span> [ -n <span class="string">&quot;<span class="variable">$CONDA_DEFAULT_ENV</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(<span class="variable">$CONDA_DEFAULT_ENV</span>) &quot;</span></span><br><span class="line">  <span class="keyword">else</span> </span><br><span class="line">    <span class="built_in">echo</span> -n <span class="string">&quot;(base) &quot;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">PROMPT=<span class="string">&quot;</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[blue]%&#125;#%&#123;<span class="variable">$reset_color</span>%&#125; \</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[yellow]%&#125;%~%&#123;<span class="variable">$reset_color</span>%&#125;\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;hg_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;git_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;svn_info&#125;</span>\</span></span><br><span class="line"><span class="string"><span class="variable">$&#123;venv_info&#125;</span>\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$fg</span>[yellow]%&#125; <span class="variable">$&#123;conda_info&#125;</span>\</span></span><br><span class="line"><span class="string">\</span></span><br><span class="line"><span class="string">%&#123;<span class="variable">$terminfo</span>[bold]<span class="variable">$fg</span>[red]%&#125;$ %&#123;<span class="variable">$reset_color</span>%&#125;&quot;</span></span><br></pre></td></tr></table></figure>
+<p><code>~/.condarc</code>中增加：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">changeps1: False</span><br></pre></td></tr></table></figure>
+<h2 id="所有可读目录颜色">所有可读目录颜色</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">vim ~/.dir_colors</span><br><span class="line">OTHER_WRITABLE 01;34</span><br><span class="line"></span><br><span class="line">vim ~/.zshrc</span><br><span class="line"><span class="built_in">eval</span> `<span class="built_in">dircolors</span> <span class="variable">$HOME</span>/.dir_colors`</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>tools</category>
+      </categories>
+      <tags>
+        <tag>manjaro</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>面试问题2</title>
     <url>/2022/07/19/%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98-cj/</url>
     <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
@@ -4402,6 +4402,19 @@ $$<br>
       </tags>
   </entry>
   <entry>
+    <title>多标签分类</title>
+    <url>/2022/09/27/%E5%A4%9A%E6%A0%87%E7%AD%BE%E5%88%86%E7%B1%BB/</url>
+    <content><![CDATA[<p>多标签分类相关算法</p>
+<span id="more"></span>
+]]></content>
+      <categories>
+        <category>nlp</category>
+      </categories>
+      <tags>
+        <tag>mlc</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>tensorflow常见问题汇总</title>
     <url>/2022/08/31/tensorflow%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E6%B1%87%E6%80%BB/</url>
     <content><![CDATA[<p>tensorflow 常见问题汇总</p>
@@ -4418,19 +4431,6 @@ $$<br>
         <tag>tensorflow</tag>
         <tag>logging</tag>
         <tag>config</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>多标签分类</title>
-    <url>/2022/09/27/%E5%A4%9A%E6%A0%87%E7%AD%BE%E5%88%86%E7%B1%BB/</url>
-    <content><![CDATA[<p>多标签分类相关算法</p>
-<span id="more"></span>
-]]></content>
-      <categories>
-        <category>nlp</category>
-      </categories>
-      <tags>
-        <tag>mlc</tag>
       </tags>
   </entry>
   <entry>
@@ -5162,45 +5162,6 @@ $$<br>
       </tags>
   </entry>
   <entry>
-    <title>DeepSeek技术报告</title>
-    <url>/2025/02/20/DeepSeek%E6%8A%80%E6%9C%AF%E6%8A%A5%E5%91%8A/</url>
-    <content><![CDATA[<p>DeepSeek相关技术报告</p>
-<span id="more"></span>
-<h1>DeepSeek V2</h1>
-<h2 id="Architecture">Architecture</h2>
-<h3 id="Multi-head-Latent-Attention">Multi-head Latent Attention</h3>
-<h3 id="Decoupled-Rope（-font-color-red-todo-font-）">Decoupled Rope（<font color='red'> todo </font>）</h3>
-<p>为了解决原始 RoPE 与低秩压缩不兼容的问题，DeepSeek-V2 提出了 Decoupled RoPE（解耦旋转位置编码）。其核心思想是：</p>
-<ul>
-<li>**解耦 Query 和 Key 的位置编码：**将 Query 和 Key 分为两部分：
-<ol>
-<li>压缩部分：用于低秩压缩，不包含位置信息。</li>
-<li>位置编码部分：专门用于存储位置信息，不参与压缩。</li>
-</ol>
-</li>
-<li>具体实现：
-<ol>
-<li>引入额外的 Query 和 Key 向量（ $q_t^R$ 和 $k_t^R$ ），专门存储位置信息。</li>
-<li>使用独立的权重矩阵 $W^{QR} $和$ W^{KR}$ 将输入投影到位置编码部分。</li>
-<li>对位置编码部分应用 RoPE，而压缩部分保持不变。</li>
-<li>将压缩部分和位置编码部分拼接起来，形成完整的 Query 和 Key。</li>
-</ol>
-</li>
-</ul>
-<h3 id="DeepSeekMoE">DeepSeekMoE</h3>
-]]></content>
-      <categories>
-        <category>llm</category>
-      </categories>
-      <tags>
-        <tag>todo</tag>
-        <tag>deepseek</tag>
-        <tag>MLA</tag>
-        <tag>Decoupled Rope</tag>
-        <tag>position encoding</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>LLaMA</title>
     <url>/2024/12/30/LLaMA/</url>
     <content><![CDATA[<p>LLaMA系列论文</p>
@@ -5438,6 +5399,45 @@ SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的
       </tags>
   </entry>
   <entry>
+    <title>DeepSeek技术报告</title>
+    <url>/2025/02/20/DeepSeek%E6%8A%80%E6%9C%AF%E6%8A%A5%E5%91%8A/</url>
+    <content><![CDATA[<p>DeepSeek相关技术报告</p>
+<span id="more"></span>
+<h1>DeepSeek V2</h1>
+<h2 id="Architecture">Architecture</h2>
+<h3 id="Multi-head-Latent-Attention">Multi-head Latent Attention</h3>
+<h3 id="Decoupled-Rope（-font-color-red-todo-font-）">Decoupled Rope（<font color='red'> todo </font>）</h3>
+<p>为了解决原始 RoPE 与低秩压缩不兼容的问题，DeepSeek-V2 提出了 Decoupled RoPE（解耦旋转位置编码）。其核心思想是：</p>
+<ul>
+<li>**解耦 Query 和 Key 的位置编码：**将 Query 和 Key 分为两部分：
+<ol>
+<li>压缩部分：用于低秩压缩，不包含位置信息。</li>
+<li>位置编码部分：专门用于存储位置信息，不参与压缩。</li>
+</ol>
+</li>
+<li>具体实现：
+<ol>
+<li>引入额外的 Query 和 Key 向量（ $q_t^R$ 和 $k_t^R$ ），专门存储位置信息。</li>
+<li>使用独立的权重矩阵 $W^{QR} $和$ W^{KR}$ 将输入投影到位置编码部分。</li>
+<li>对位置编码部分应用 RoPE，而压缩部分保持不变。</li>
+<li>将压缩部分和位置编码部分拼接起来，形成完整的 Query 和 Key。</li>
+</ol>
+</li>
+</ul>
+<h3 id="DeepSeekMoE">DeepSeekMoE</h3>
+]]></content>
+      <categories>
+        <category>llm</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>deepseek</tag>
+        <tag>MLA</tag>
+        <tag>Decoupled Rope</tag>
+        <tag>position encoding</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>分布式并行训练</title>
     <url>/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/</url>
     <content><![CDATA[<p>为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。</p>
@@ -5468,7 +5468,7 @@ SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的
 <h1>并行方法</h1>
 <h2 id="数据并行">数据并行</h2>
 <p><img src="matmul_data_paralelism.png" alt="数据并行"></p>
-<p><strong>运行步骤：</strong></p>
+<p><strong>运行原理：</strong></p>
 <ul>
 <li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w 是完整的、一致的。</li>
 <li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
@@ -5477,6 +5477,125 @@ SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的
 <ul>
 <li>当数据集较大，模型较小时</li>
 </ul>
+<blockquote>
+<p>注意：If your model contains any <code>BatchNorm</code> layers, it needs to be converted to <code>SyncBatchNorm</code> to sync the running stats of <code>BatchNorm</code> layers across replicas.</p>
+</blockquote>
+<p><strong>训练步骤：</strong></p>
+<ol>
+<li>
+<p>创建进程组：</p>
+<ul>
+<li>
+<p>给每个进程设置cuda id</p>
+</li>
+<li>
+<p>Init_process_progress</p>
+<ul>
+<li>
+<p><strong>初始化分布式通信环境</strong></p>
+<ul>
+<li>
+<p><strong>建立进程组（Process Group）</strong>：为多个进程（如不同 GPU/机器上的训练进程）创建通信组，使它们能够相互通信。</p>
+</li>
+<li>
+<p><strong>设置通信后端</strong>：支持多种后端：</p>
+<ul>
+<li>
+<p><code>nccl</code>：NVIDIA GPU 最佳选择，高性能。</p>
+</li>
+<li>
+<p><code>gloo</code>：CPU 或 GPU（跨平台支持）。</p>
+</li>
+<li>
+<p><code>mpi</code>：需 MPI 环境支持。</p>
+</li>
+<li>
+<p>后端决定了通信效率和硬件兼容性。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>定义进程拓扑</strong></p>
+<ul>
+<li><strong>指定全局进程数（<code>world_size</code>）</strong>：设置参与训练的总进程数（如 GPU 总数）。</li>
+<li><strong>分配唯一标识（<code>rank</code>）</strong>：为当前进程分配全局唯一 ID（<code>0</code>到 <code>world_size-1</code>），<code>rank=0</code>通常为主节点。</li>
+</ul>
+</li>
+<li>
+<p><strong>配置通信方式（<code>init_method</code>）</strong></p>
+</li>
+<li>
+<p><strong>环境变量初始化（<code>env://</code>）</strong>：通过环境变量 <code>MASTER_ADDR</code>和 <code>MASTER_PORT</code>指定主节点地址和端口（最常用）。</p>
+</li>
+<li>
+<p><strong>TCP 初始化</strong>：直接指定主节点 IP 和端口（<code>tcp://10.1.1.20:23456</code>）。</p>
+</li>
+<li>
+<p><strong>共享文件初始化</strong>：通过共享文件系统同步（<code>file:///path/to/shared_file</code>）。</p>
+</li>
+<li>
+<p><strong>协调进程启动</strong></p>
+<ul>
+<li><strong>同步所有进程</strong>：确保所有进程完成初始化后再继续执行（避免死锁）。</li>
+<li><strong>建立通信链路</strong>：例如，使用 <code>nccl</code>时为 GPU 建立高速通信通道。</li>
+</ul>
+</li>
+<li>
+<p><strong>准备核心通信操作</strong></p>
+<ul>
+<li><code>dist.all_reduce()</code>：全局求和等规约操作。</li>
+<li><code>dist.broadcast()</code>：主节点向其他节点广播数据。</li>
+<li><code>dist.barrier()</code>：进程同步等待。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>创建ddp模型</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="variable language_">self</span>.model = DDP(model, device_ids=[gpu_id])</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>创建数据分发器</p>
+<ul>
+<li>
+<p><a href="https://pytorch.org/docs/stable/data.html?highlight=distributedsampler#torch.utils.data.distributed.DistributedSampler">DistributedSampler</a> chunks the input data across all distributed processes.</p>
+</li>
+<li>
+<p>The <a href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader">DataLoader</a> combines a dataset and a sampler, and provides an iterable over the given dataset.</p>
+</li>
+<li>
+<p>Each process will receive an input batch of 32 samples; the effective batch size is <code>32 * nprocs</code>, or 128 when using 4 GPUs.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">train_data = torch.utils.data.DataLoader(</span><br><span class="line">    dataset=train_dataset,</span><br><span class="line">    batch_size=<span class="number">32</span>,</span><br><span class="line">    shuffle=<span class="literal">False</span>,  <span class="comment"># We don&#x27;t shuffle</span></span><br><span class="line">    sampler=DistributedSampler(train_dataset), <span class="comment"># Use the Distributed Sampler here.</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>Calling the <code>set_epoch()</code> method on the <code>DistributedSampler</code> at the beginning of each epoch is necessary to make shuffling work properly across multiple epochs. Otherwise, the same ordering will be used in each epoch.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_run_epoch</span>(<span class="params">self, epoch</span>):</span><br><span class="line">    b_sz = <span class="built_in">len</span>(<span class="built_in">next</span>(<span class="built_in">iter</span>(<span class="variable language_">self</span>.train_data))[<span class="number">0</span>])</span><br><span class="line">    <span class="variable language_">self</span>.train_data.sampler.set_epoch(epoch)   <span class="comment"># call this additional line at every epoch</span></span><br><span class="line">    <span class="keyword">for</span> source, targets <span class="keyword">in</span> <span class="variable language_">self</span>.train_data:</span><br><span class="line">      ...</span><br><span class="line">      <span class="variable language_">self</span>._run_batch(source, targets)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li>
+<p>保存模型</p>
+<p>We only need to save model checkpoints from one process. Without this condition, each process would save its copy of the identical mode.</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">- ckp = <span class="variable language_">self</span>.model.state_dict()</span><br><span class="line">+ ckp = <span class="variable language_">self</span>.model.module.state_dict()</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">- <span class="keyword">if</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">+ <span class="keyword">if</span> <span class="variable language_">self</span>.gpu_id == <span class="number">0</span> <span class="keyword">and</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">  <span class="variable language_">self</span>._save_checkpoint(epoch)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>运行分布式训练</p>
+<ul>
+<li>
+<p>Include new arguments <code>rank</code> (replacing <code>device</code>) and <code>world_size</code>.</p>
+<ul>
+<li><code>rank</code> is auto-allocated by DDP when calling <a href="https://pytorch.org/docs/stable/multiprocessing.html#spawning-subprocesses">mp.spawn</a>.</li>
+<li><code>world_size</code> is the number of processes across the training job. For GPU training, this corresponds to the number of GPUs in use, and each process works on a dedicated GPU.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">- <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">device, total_epochs, save_every</span>):</span><br><span class="line">+ <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">rank, world_size, total_epochs, save_every</span>):</span><br><span class="line">+  ddp_setup(rank, world_size)</span><br><span class="line">   dataset, model, optimizer = load_train_objs()</span><br><span class="line">   train_data = prepare_dataloader(dataset, batch_size=<span class="number">32</span>)</span><br><span class="line">-  trainer = Trainer(model, train_data, optimizer, device, save_every)</span><br><span class="line">+  trainer = Trainer(model, train_data, optimizer, rank, save_every)</span><br><span class="line">   trainer.train(total_epochs)</span><br><span class="line">+  destroy_process_group()</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">   <span class="keyword">import</span> sys</span><br><span class="line">   total_epochs = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>])</span><br><span class="line">   save_every = <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line">-  device = <span class="number">0</span>      <span class="comment"># shorthand for cuda:0</span></span><br><span class="line">-  main(device, total_epochs, save_every)</span><br><span class="line">+  world_size = torch.cuda.device_count()</span><br><span class="line">+  mp.spawn(main, args=(world_size, total_epochs, save_every,), nprocs=world_size)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
 <h2 id="模型并行">模型并行</h2>
 <p><img src="matmul_model_paralelism.png" alt="模型并行"></p>
 <p><strong>运行步骤：</strong></p>
@@ -5528,16 +5647,104 @@ SwiGLU是一个GLU，但不是将sigmoid作为激活函数，而是使用ß=1的
       </tags>
   </entry>
   <entry>
+    <title>Prompt Engineering</title>
+    <url>/2025/05/23/Prompt-Engineering/</url>
+    <content><![CDATA[<p>提示工程不仅仅是关于设计和研发提示词。它包含了与大语言模型交互和研发的各种技能和技术。</p>
+<span id="more"></span>
+<h2 id="简介">简介</h2>
+<h3 id="参数设置">参数设置</h3>
+<ul>
+<li>
+<p><strong>Temperature</strong>：调整模型的softmax输出层中预测词的概率。<br>
+<code>softmax</code>的计算公式为<br>
+$$<br>
+p(x_i)=\frac{e^{x_i}}{\sum_{j=1}^{V}e^{x_j}}<br>
+$$<br>
+加入温度系数<code>tempmerature</code>后：<br>
+$$<br>
+p(x_i)=\frac{\frac{e^{x_i}}{T}}{\sum_{j=1}^{V}\frac{e^{x_j}}{T}}<br>
+$$</p>
+<ul>
+<li><code>temperature</code>为0到1的数值，数值越大，$p(x_i)$的分布越平滑，采样结果更随机。数值越小，$p(x_i)$的分布差异越大，采样结果越确定。</li>
+<li>对于质量保障（QA）等任务，我们可以设置更低的 <code>temperature</code> 值，以促使模型基于事实返回更真实和简洁的结果。 对于诗歌生成或其他创造性任务，适度地调高 <code>temperature</code> 参数值可能会更好。</li>
+</ul>
+</li>
+<li>
+<p><strong>Top_p</strong>：使用Top P意味着只有词元集合（tokens）中包含<code>top_p</code>概率质量的才会被考虑用于响应。</p>
+<ul>
+<li><font color='red'>公式</font></li>
+<li>如果你需要准确和事实的答案，就把参数值调低。如果你在寻找更多样化的响应，可以将其值调高点。</li>
+</ul>
+</li>
+<li>
+<p><strong>Max Length</strong>：您可以通过调整 <code>max length</code> 来控制大模型生成的 token 数。指定 Max Length 有助于防止大模型生成冗长或不相关的响应并控制成本。</p>
+</li>
+<li>
+<p><font color='red'><strong>Stop Sequences</strong>：<code>stop sequence</code> 是一个字符串，可以阻止模型生成 token，指定 <code>stop sequences</code> 是控制大模型响应长度和结构的另一种方法。例如，您可以通过添加 “11” 作为 <code>stop sequence</code> 来告诉模型生成不超过 10 个项的列表。</font></p>
+</li>
+<li>
+<p><font color='red'><strong>Frequency Penalty</strong>：<code>frequency penalty</code> 是对下一个生成的 token 进行惩罚，这个惩罚和 token 在响应和提示中已出现的次数成比例， <code>frequency penalty</code> 越高，某个词再次出现的可能性就越小，这个设置通过给 重复数量多的 Token 设置更高的惩罚来减少响应中单词的重复。</font></p>
+</li>
+<li>
+<p><font color='red'><strong>Presence Penalty</strong>：<code>presence penalty</code> 也是对重复的 token 施加惩罚，但与 <code>frequency penalty</code> 不同的是，惩罚对于所有重复 token 都是相同的。出现两次的 token 和出现 10 次的 token 会受到相同的惩罚。 此设置可防止模型在响应中过于频繁地生成重复的词。 如果您希望模型生成多样化或创造性的文本，您可以设置更高的 <code>presence penalty</code>，如果您希望模型生成更专注的内容，您可以设置更低的 <code>presence penalty</code>。</font></p>
+</li>
+</ul>
+<h3 id="提示词要素">提示词要素</h3>
+<ul>
+<li><strong>指令</strong>：想要模型执行的特定任务或指令。</li>
+<li><strong>上下文</strong>：包含外部信息或额外的上下文信息，引导语言模型更好地响应。</li>
+<li>输入数据**：用户输入的内容或问题。**</li>
+<li><strong>输出指示</strong>：指定输出的类型或格式。</li>
+</ul>
+<h2 id="提示词技术">提示词技术</h2>
+<h3 id="零样本提示">零样本提示</h3>
+<p>提示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">将文本分类为中性、负面或正面。</span><br><span class="line"></span><br><span class="line">文本：我认为这次假期还可以。</span><br><span class="line">情感：</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">中性</span><br></pre></td></tr></table></figure>
+<p>当零样本不起作用时，建议在提示中提供演示或示例，这就引出了少样本提示。</p>
+<h3 id="少样本提示">少样本提示</h3>
+<p>使用零样本设置时，它们在更复杂的任务上仍然表现不佳。少样本提示可以作为一种技术，以启用上下文学习，我们在提示中提供演示以引导模型实现更好的性能。</p>
+<p>提示：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">“whatpu”是坦桑尼亚的一种小型毛茸茸的动物。一个使用whatpu这个词的句子的例子是：</span><br><span class="line">我们在非洲旅行时看到了这些非常可爱的whatpus。</span><br><span class="line">“farduddle”是指快速跳上跳下。一个使用farduddle这个词的句子的例子是：</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">当我们赢得比赛时，我们都开始farduddle。</span><br></pre></td></tr></table></figure>
+<p>模型通过提供一个示例（即1-shot）已经学会了如何执行任务。对于更困难的任务，我们可以尝试增加演示（例如3-shot、5-shot、10-shot等）。</p>
+<h3 id="思维链（CoT）提示">思维链（CoT）提示</h3>
+<p>链式思考（CoT）提示通过中间推理步骤实现了复杂的推理能力。包括少样本思维链提示和零样本思维链提示。</p>
+<p><img src="zero-cot.jpg" alt="CoT"></p>
+<p><font color='red'>自动思维链（Auto-CoT）<a href="https://www.promptingguide.ai/zh/techniques/cot">https://www.promptingguide.ai/zh/techniques/cot</a></font></p>
+]]></content>
+      <categories>
+        <category>llm</category>
+      </categories>
+      <tags>
+        <tag>todo</tag>
+        <tag>prompt</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Megatron-LM</title>
     <url>/2025/04/29/Megatron-LM/</url>
-    <content><![CDATA[<p>Megatron-LM 是一种用于训练超大规模语言模型的框架，2020年3月由 NVIDIA 研究团队开发。它通过高效的模型并行技术，使得在标准硬件上训练数十亿参数的语言模型成为可能。</p>
-<p>通过在 512 个 GPU 上训练高达 83 亿参数的 Transformer 模型，Megatron-LM 实现了 15.1 PetaFLOPs 的计算效率，相比单 GPU 基线有 76% 的扩展效率。</p>
+    <content><![CDATA[<p>Megatron-LM 是一个基于 <strong>Megatron-Core</strong> 实现高效大模型训练的框架。</p>
+<p>Megatron-core是一个<strong>GPU 优化的训练技术库</strong>，专注于提升大模型训练的性能和效率。</p>
 <span id="more"></span>
+<h1>Todo list:</h1>
+<h2 id="数据处理：">数据处理：</h2>
+<ul>
+<li>
+<p>Indexed_dataset是干什么的？</p>
+</li>
+<li>
+<p>apex的作用是什么？</p>
+</li>
+</ul>
 <h1>背景</h1>
 <ul>
 <li><strong>内存限制的挑战：</strong> 随着模型规模的增大，现代处理器的内存限制成为瓶颈。例如，单个 GPU 的内存通常无法容纳数十亿参数的模型，因此需要额外的内存管理技术，如激活检查点。</li>
 <li><strong>现有方法的局限性：</strong> 现有的模型并行方法（如 GPipe 和 Mesh-TensorFlow）需要重写模型，并依赖于仍在开发中的自定义编译器和框架。</li>
 </ul>
+<p>通过在 512 个 GPU 上训练高达 83 亿参数的 Transformer 模型，Megatron-LM 实现了 15.1 PetaFLOPs 的计算效率，相比单 GPU 基线有 76% 的扩展效率。</p>
 <h1>Model Parallel Transformers</h1>
 <h1>其他信息</h1>
 <blockquote>

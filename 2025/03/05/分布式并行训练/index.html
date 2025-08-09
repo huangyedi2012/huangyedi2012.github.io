@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/realy.png">
 <meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/gpt3-overview.png">
 <meta property="article:published_time" content="2025-03-05T06:59:55.000Z">
-<meta property="article:modified_time" content="2025-04-19T10:00:38.813Z">
+<meta property="article:modified_time" content="2025-08-09T04:04:41.891Z">
 <meta property="article:tag" content="并行训练">
 <meta property="article:tag" content="数据并行">
 <meta property="article:tag" content="模型并行">
@@ -187,7 +187,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-count">75</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -198,7 +198,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-count">97</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -267,7 +267,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-04-19 18:00:38" itemprop="dateModified" datetime="2025-04-19T18:00:38+08:00">2025-04-19</time>
+      <time title="修改时间：2025-08-09 12:04:41" itemprop="dateModified" datetime="2025-08-09T12:04:41+08:00">2025-08-09</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -316,7 +316,7 @@
 <h1>并行方法</h1>
 <h2 id="数据并行">数据并行</h2>
 <p><img src="matmul_data_paralelism.png" alt="数据并行"></p>
-<p><strong>运行步骤：</strong></p>
+<p><strong>运行原理：</strong></p>
 <ul>
 <li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w 是完整的、一致的。</li>
 <li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
@@ -325,6 +325,125 @@
 <ul>
 <li>当数据集较大，模型较小时</li>
 </ul>
+<blockquote>
+<p>注意：If your model contains any <code>BatchNorm</code> layers, it needs to be converted to <code>SyncBatchNorm</code> to sync the running stats of <code>BatchNorm</code> layers across replicas.</p>
+</blockquote>
+<p><strong>训练步骤：</strong></p>
+<ol>
+<li>
+<p>创建进程组：</p>
+<ul>
+<li>
+<p>给每个进程设置cuda id</p>
+</li>
+<li>
+<p>Init_process_progress</p>
+<ul>
+<li>
+<p><strong>初始化分布式通信环境</strong></p>
+<ul>
+<li>
+<p><strong>建立进程组（Process Group）</strong>：为多个进程（如不同 GPU/机器上的训练进程）创建通信组，使它们能够相互通信。</p>
+</li>
+<li>
+<p><strong>设置通信后端</strong>：支持多种后端：</p>
+<ul>
+<li>
+<p><code>nccl</code>：NVIDIA GPU 最佳选择，高性能。</p>
+</li>
+<li>
+<p><code>gloo</code>：CPU 或 GPU（跨平台支持）。</p>
+</li>
+<li>
+<p><code>mpi</code>：需 MPI 环境支持。</p>
+</li>
+<li>
+<p>后端决定了通信效率和硬件兼容性。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>定义进程拓扑</strong></p>
+<ul>
+<li><strong>指定全局进程数（<code>world_size</code>）</strong>：设置参与训练的总进程数（如 GPU 总数）。</li>
+<li><strong>分配唯一标识（<code>rank</code>）</strong>：为当前进程分配全局唯一 ID（<code>0</code>到 <code>world_size-1</code>），<code>rank=0</code>通常为主节点。</li>
+</ul>
+</li>
+<li>
+<p><strong>配置通信方式（<code>init_method</code>）</strong></p>
+</li>
+<li>
+<p><strong>环境变量初始化（<code>env://</code>）</strong>：通过环境变量 <code>MASTER_ADDR</code>和 <code>MASTER_PORT</code>指定主节点地址和端口（最常用）。</p>
+</li>
+<li>
+<p><strong>TCP 初始化</strong>：直接指定主节点 IP 和端口（<code>tcp://10.1.1.20:23456</code>）。</p>
+</li>
+<li>
+<p><strong>共享文件初始化</strong>：通过共享文件系统同步（<code>file:///path/to/shared_file</code>）。</p>
+</li>
+<li>
+<p><strong>协调进程启动</strong></p>
+<ul>
+<li><strong>同步所有进程</strong>：确保所有进程完成初始化后再继续执行（避免死锁）。</li>
+<li><strong>建立通信链路</strong>：例如，使用 <code>nccl</code>时为 GPU 建立高速通信通道。</li>
+</ul>
+</li>
+<li>
+<p><strong>准备核心通信操作</strong></p>
+<ul>
+<li><code>dist.all_reduce()</code>：全局求和等规约操作。</li>
+<li><code>dist.broadcast()</code>：主节点向其他节点广播数据。</li>
+<li><code>dist.barrier()</code>：进程同步等待。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>创建ddp模型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">self</span>.model = DDP(model, device_ids=[gpu_id])</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>创建数据分发器</p>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/data.html?highlight=distributedsampler#torch.utils.data.distributed.DistributedSampler">DistributedSampler</a> chunks the input data across all distributed processes.</p>
+</li>
+<li>
+<p>The <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader">DataLoader</a> combines a dataset and a sampler, and provides an iterable over the given dataset.</p>
+</li>
+<li>
+<p>Each process will receive an input batch of 32 samples; the effective batch size is <code>32 * nprocs</code>, or 128 when using 4 GPUs.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">train_data = torch.utils.data.DataLoader(</span><br><span class="line">    dataset=train_dataset,</span><br><span class="line">    batch_size=<span class="number">32</span>,</span><br><span class="line">    shuffle=<span class="literal">False</span>,  <span class="comment"># We don&#x27;t shuffle</span></span><br><span class="line">    sampler=DistributedSampler(train_dataset), <span class="comment"># Use the Distributed Sampler here.</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>Calling the <code>set_epoch()</code> method on the <code>DistributedSampler</code> at the beginning of each epoch is necessary to make shuffling work properly across multiple epochs. Otherwise, the same ordering will be used in each epoch.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_run_epoch</span>(<span class="params">self, epoch</span>):</span><br><span class="line">    b_sz = <span class="built_in">len</span>(<span class="built_in">next</span>(<span class="built_in">iter</span>(<span class="variable language_">self</span>.train_data))[<span class="number">0</span>])</span><br><span class="line">    <span class="variable language_">self</span>.train_data.sampler.set_epoch(epoch)   <span class="comment"># call this additional line at every epoch</span></span><br><span class="line">    <span class="keyword">for</span> source, targets <span class="keyword">in</span> <span class="variable language_">self</span>.train_data:</span><br><span class="line">      ...</span><br><span class="line">      <span class="variable language_">self</span>._run_batch(source, targets)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li>
+<p>保存模型</p>
+<p>We only need to save model checkpoints from one process. Without this condition, each process would save its copy of the identical mode.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- ckp = <span class="variable language_">self</span>.model.state_dict()</span><br><span class="line">+ ckp = <span class="variable language_">self</span>.model.module.state_dict()</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">- <span class="keyword">if</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">+ <span class="keyword">if</span> <span class="variable language_">self</span>.gpu_id == <span class="number">0</span> <span class="keyword">and</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">  <span class="variable language_">self</span>._save_checkpoint(epoch)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>运行分布式训练</p>
+<ul>
+<li>
+<p>Include new arguments <code>rank</code> (replacing <code>device</code>) and <code>world_size</code>.</p>
+<ul>
+<li><code>rank</code> is auto-allocated by DDP when calling <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/multiprocessing.html#spawning-subprocesses">mp.spawn</a>.</li>
+<li><code>world_size</code> is the number of processes across the training job. For GPU training, this corresponds to the number of GPUs in use, and each process works on a dedicated GPU.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">- <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">device, total_epochs, save_every</span>):</span><br><span class="line">+ <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">rank, world_size, total_epochs, save_every</span>):</span><br><span class="line">+  ddp_setup(rank, world_size)</span><br><span class="line">   dataset, model, optimizer = load_train_objs()</span><br><span class="line">   train_data = prepare_dataloader(dataset, batch_size=<span class="number">32</span>)</span><br><span class="line">-  trainer = Trainer(model, train_data, optimizer, device, save_every)</span><br><span class="line">+  trainer = Trainer(model, train_data, optimizer, rank, save_every)</span><br><span class="line">   trainer.train(total_epochs)</span><br><span class="line">+  destroy_process_group()</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">   <span class="keyword">import</span> sys</span><br><span class="line">   total_epochs = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>])</span><br><span class="line">   save_every = <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line">-  device = <span class="number">0</span>      <span class="comment"># shorthand for cuda:0</span></span><br><span class="line">-  main(device, total_epochs, save_every)</span><br><span class="line">+  world_size = torch.cuda.device_count()</span><br><span class="line">+  mp.spawn(main, args=(world_size, total_epochs, save_every,), nprocs=world_size)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
 <h2 id="模型并行">模型并行</h2>
 <p><img src="matmul_model_paralelism.png" alt="模型并行"></p>
 <p><strong>运行步骤：</strong></p>
