@@ -27,13 +27,11 @@
 <meta property="og:site_name" content="huangyedi2012">
 <meta property="og:description" content="记录大模型学习过程中的问题。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/experiments_layers.png">
 <meta property="article:published_time" content="2024-08-01T15:44:08.000Z">
-<meta property="article:modified_time" content="2024-08-15T01:57:39.907Z">
+<meta property="article:modified_time" content="2025-09-05T08:03:29.285Z">
 <meta property="article:tag" content="todo">
 <meta property="article:tag" content="llm">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/experiments_layers.png">
 
 
 <link rel="canonical" href="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
@@ -170,7 +168,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">GPT1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">todo</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-LayerNorm%E5%92%8CPost-LayerNorm%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">Pre-LayerNorm和Post-LayerNorm的区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%85%AC%E5%BC%8F%E5%AF%B9%E6%AF%94%EF%BC%9A"><span class="nav-text">结构定义与公式对比：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%B7%AE%E5%BC%82%E4%B8%8E%E5%BD%B1%E5%93%8D"><span class="nav-text">核心差异与影响</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%9B%B8%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E6%AF%94%E7%BB%9D%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E5%A5%BD%EF%BC%9F"><span class="nav-text">为什么相对位置编码比绝对位置编码好？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AD%E8%A8%80%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E5%85%B3%E7%B3%BB%E9%A9%B1%E5%8A%A8%EF%BC%8C%E8%80%8C%E9%9D%9E%E4%BD%8D%E7%BD%AE%E9%A9%B1%E5%8A%A8"><span class="nav-text">语言的本质：关系驱动，而非位置驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%9D%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E7%9A%84%E6%A0%B8%E5%BF%83%E7%BC%BA%E9%99%B7"><span class="nav-text">绝对位置编码的核心缺陷</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -183,7 +181,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">75</span>
+          <span class="site-state-item-count">76</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -194,7 +192,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">97</span>
+        <span class="site-state-item-count">100</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -263,7 +261,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-08-15 09:57:39" itemprop="dateModified" datetime="2024-08-15T09:57:39+08:00">2024-08-15</time>
+      <time title="修改时间：2025-09-05 16:03:29" itemprop="dateModified" datetime="2025-09-05T16:03:29+08:00">2025-09-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -286,50 +284,91 @@
     
     <div class="post-body" itemprop="articleBody"><p>记录大模型学习过程中的问题。</p>
 <span id="more"></span>
-<h1>GPT1</h1>
+<h2 id="Pre-LayerNorm和Post-LayerNorm的区别？">Pre-LayerNorm和Post-LayerNorm的区别？</h2>
+<h3 id="结构定义与公式对比："><strong>结构定义与公式对比：</strong></h3>
+<ol>
+<li>
+<p><strong>后置归一化（Post-LN）</strong></p>
 <ul>
 <li>
-<p>直接用transformer的decoder结构预测下一个token</p>
+<p><strong>结构</strong>：子层（自注意力/前馈网络）输出后，先与残差连接相加，再进行LayerNorm。</p>
 </li>
 <li>
-<p>encoding用的是bpe（byte pair encoding）</p>
+<p><strong>公式</strong>：<br>
+$$<br>
+x_{out}=LayerNorm(x+Sublayer(x))<br>
+$$</p>
 </li>
 <li>
-<p>layers层数越多，效果越好</p>
+<p><strong>特点</strong>：原始Transformer论文采用的设计（如BERT）。</p>
 </li>
-<li>
-<p>预训练轮次越多，模型能力越强</p>
-<p><img src="experiments_layers.png" alt="experiments_layers"></p>
-</li>
-</ul>
-<h1>todo</h1>
-<ul>
-<li>
-<p>temperature</p>
-</li>
-<li>
-<p>gpt-3论文</p>
-</li>
-<li>
-<p>语言模型困惑度</p>
-</li>
-<li>
-<p>bpe</p>
-<ul>
-<li><a target="_blank" rel="noopener" href="https://jalammar.github.io/illustrated-transformer/">Illustrated Transformer</a>和<a target="_blank" rel="noopener" href="https://jalammar.github.io/illustrated-gpt2/">Illustrated GPT-2</a>：对Transformer的视觉描述非常好。</li>
 </ul>
 </li>
 <li>
-<p>torch distribuited training</p>
+<p><strong>前置归一化（Pre-LN）</strong></p>
+<ul>
+<li>
+<p><strong>结构</strong>：输入先通过LayerNorm，再进入子层计算，结果与原始输入残差连接。</p>
 </li>
 <li>
-<p>attention mask是怎么设计的？</p>
+<p><strong>公式</strong>：<br>
+$$<br>
+x_{out}=x+Sublayer(LayerNorm(x))<br>
+$$</p>
+</li>
+</ul>
 </li>
 <li></li>
+</ol>
+<pre><code> - **特点**：GPT系列、LLaMA、T5等现代大模型的主流选择。
+</code></pre>
+<h3 id="核心差异与影响"><strong>核心差异与影响</strong></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"><strong>维度</strong></th>
+<th style="text-align:center"><strong>Pre-LN（前置）</strong></th>
+<th style="text-align:center"><strong>Post-LN（后置）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>梯度稳定性</strong></td>
+<td style="text-align:center">深层梯度衰减平缓（$O(1/\sqrt{L})$)，不易消失/爆炸</td>
+<td style="text-align:center">低层梯度指数衰减（$O((1/2)^{(N-k)/2}$），易消失</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>训练收敛</strong></td>
+<td style="text-align:center">无需学习率预热（Warm-up），收敛更快</td>
+<td style="text-align:center">需精细调整学习率和Warm-up，否则易震荡或不收敛</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>模型深度适应性</strong></td>
+<td style="text-align:center">支持深层网络（&gt;12层），可扩展至百层</td>
+<td style="text-align:center">仅适用于浅层网络（≤6层），深层训练易崩溃</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>表达能力</strong></td>
+<td style="text-align:center">高层可能表征趋同（Representation Collapse）</td>
+<td style="text-align:center">浅层模型泛化能力更强，输出多样性更高</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>实际应用案例</strong></td>
+<td style="text-align:center">GPT-3/4、LLaMA、PaLM、Qwen 等主流大模型</td>
+<td style="text-align:center">原始Transformer、BERT（浅层微调场景）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="为什么相对位置编码比绝对位置编码好？">为什么相对位置编码比绝对位置编码好？</h2>
+<p><strong>相对位置编码更好地契合了语言的本质，并解决了绝对位置编码在长文本上的根本性缺陷。</strong></p>
+<h3 id="语言的本质：关系驱动，而非位置驱动">语言的本质：关系驱动，而非位置驱动</h3>
+<p>“美味的苹果” 和 “苹果公司很成功”</p>
+<p><strong>绝对位置视角</strong>：第一个“苹果”是第2个词，第二个“苹果”是第1个词。这个“第几个”的信息本身，对于理解“苹果”的含义几乎毫无帮助。</p>
+<h3 id="绝对位置编码的核心缺陷">绝对位置编码的核心缺陷</h3>
+<ul>
+<li><strong>长度外推（Length Extrapolation）能力差</strong>：模型在训练时见过的序列长度是有限的（例如512个token）。当你试图处理一个更长的句子（例如1000个token）时，问题就来了。</li>
+<li><strong>可能引入无关的偏差</strong>：绝对位置编码可能会让模型过度关注绝对位置本身</li>
 </ul>
-<p>$$<br>
-\text{perplexity}-p\left(x_{1: L}\right)=\exp \left(\frac{1}{L} \sum_{i=1}^L \log \frac{1}{p\left(x_i \mid x_{1: i-1}\right)}\right) \text {. }<br>
-$$</p>
 
     </div>
 
@@ -352,8 +391,8 @@ $$</p>
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/" rel="next" title="强化学习">
-                  强化学习 <i class="fa fa-angle-right"></i>
+                <a href="/2024/08/02/GPT%E7%B3%BB%E5%88%97%E6%A8%A1%E5%9E%8B/" rel="next" title="GPT系列模型">
+                  GPT系列模型 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>

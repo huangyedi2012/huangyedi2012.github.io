@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.36/fancybox/fancybox.css" integrity="sha256-zM8WXtG4eUn7dKKNMTuoWZub++VnSfaOpA/8PJfvTBo=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="强化学习的终极目标是让一个智能体（Agent）通过与环境（Environment）的持续交互，学会一个最优策略（Policy），从而获得最大化的累积奖励（Cumulative Reward）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="强化学习基础">
+<meta property="og:url" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="huangyedi2012">
+<meta property="og:description" content="强化学习的终极目标是让一个智能体（Agent）通过与环境（Environment）的持续交互，学会一个最优策略（Policy），从而获得最大化的累积奖励（Cumulative Reward）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/vi1.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/vi2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/vi3.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/pi1.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/pi2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/pi3.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/compare.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/compare2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/compare3.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/mc_basic.png">
+<meta property="article:published_time" content="2024-09-05T07:50:33.000Z">
+<meta property="article:modified_time" content="2025-09-28T12:25:31.923Z">
+<meta property="article:tag" content="todo">
+<meta property="article:tag" content="rl">
+<meta property="article:tag" content="Monte Carlo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/vi1.png">
+
+
+<link rel="canonical" href="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/","path":"2024/09/05/强化学习基础/","title":"强化学习基础"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>强化学习基础 | huangyedi2012</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.36/fancybox/fancybox.umd.js" integrity="sha256-hiUEBwFEpLF6DlB8sGXlKo4kPZ46Ui4qGpd0vrVkOm4=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huangyedi2012</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼公式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#State-Value"><span class="nav-text">State Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Action-Value"><span class="nav-text">Action Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#State-value%E5%92%8CAction-Value%E7%9A%84%E8%81%94%E7%B3%BB%EF%BC%9A"><span class="nav-text">State value和Action Value的联系：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bellman-Equation"><span class="nav-text">Bellman Equation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%9C%80%E4%BC%98%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼最优公式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3%E5%92%8C%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代和策略迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%AA%E6%96%AD%E7%9A%84%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">截断的策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95%E7%9A%84%E6%94%B6%E6%95%9B%E9%80%9F%E5%BA%A6"><span class="nav-text">三种迭代算法的收敛速度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monte-Carlo-Method"><span class="nav-text">Monte Carlo Method</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Basic"><span class="nav-text">MC Basic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Exploring-Starts"><span class="nav-text">MC Exploring Starts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-varepsilon-Greedy"><span class="nav-text">MC  $\varepsilon$-Greedy</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E8%BF%91%E4%BC%BC%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D"><span class="nav-text">随机近似与梯度下降</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">100</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="强化学习基础 | huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          强化学习基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-09-05 15:50:33" itemprop="dateCreated datePublished" datetime="2024-09-05T15:50:33+08:00">2024-09-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2025-09-28 20:25:31" itemprop="dateModified" datetime="2025-09-28T20:25:31+08:00">2025-09-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/nlp/" itemprop="url" rel="index"><span itemprop="name">nlp</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>强化学习的<strong>终极目标</strong>是让一个智能体（Agent）通过与环境（Environment）的持续交互，学会一个<strong>最优策略（Policy）</strong>，从而获得<strong>最大化的累积奖励（Cumulative Reward）</strong>。</p>
+<span id="more"></span>
+<h2 id="基本概念">基本概念</h2>
+<p><strong>1. 智能体 (Agent)</strong></p>
+<ul>
+<li>学习者或决策者。例如：下棋的AI程序、自动驾驶汽车、玩游戏的角色。</li>
+</ul>
+<p><strong>2. 环境 (Environment)</strong></p>
+<ul>
+<li>智能体所处的外部世界，智能体与之交互的一切。例如：棋盘、道路、游戏界面。</li>
+</ul>
+<p><strong>3. 状态 (State, S)</strong></p>
+<ul>
+<li>环境在某一时刻的特定情况或配置。例如：棋盘上所有棋子的位置、汽车当前的坐标和速度。</li>
+<li><strong>注意</strong>：智能体有时无法看到完整状态，只能获得一个<strong>观测 (Observation)</strong>，这通常被称为部分可观测环境。</li>
+</ul>
+<p><strong>4. 动作 (Action, A)</strong></p>
+<ul>
+<li>智能体在某个状态下可以做出的行为。例如：移动一个棋子、踩油门或刹车、按“向左”键。</li>
+<li>动作空间 (Action Space)：所有可能动作的集合。</li>
+</ul>
+<p><strong>5. 奖励 (Reward, R)</strong></p>
+<ul>
+<li>环境在智能体执行一个动作后，反馈给智能体的一个<strong>标量信号</strong>。这是智能体判断好坏的核心依据。</li>
+<li>例如：赢得比赛（+100），吃掉豆子（+10），碰到敌人（-100）。</li>
+<li><strong>设计奖励函数是强化学习成功的关键</strong>，它定义了智能体需要完成的任务。</li>
+</ul>
+<p><strong>6. 策略 (Policy, π)</strong></p>
+<ul>
+<li>智能体的<strong>行为函数</strong>，是状态到动作的映射。它决定了在某个状态下应该采取什么动作。</li>
+<li>可以看作是智能体的大脑。策略可以是确定性的（<code>a = π(s)</code>），也可以是随机性的（<code>π(a|s)</code>表示在状态s下选择动作a的概率）。</li>
+</ul>
+<p><strong>7. 轨迹（trajectory）</strong>：有时也称为 <strong>episode</strong> 或 <strong>rollout</strong>，是一系列State -&gt; Action  -&gt; Reward的动作链。<br>
+$$<br>
+S_{1} \xrightarrow[r=0]{a_{2}} S_{2} \xrightarrow[r=0]{a_{3}} S_{5} \xrightarrow[r=0]{a_{3}} S_{8} \xrightarrow[r=1]{a_{2}} S_{9}<br>
+$$<br>
+<strong>8. 价值函数 (Value Function, V(s))</strong></p>
+<ul>
+<li>这是强化学习中最核心的概念之一。奖励代表的是<strong>即时好处</strong>，而价值函数代表的是<strong>长期好处</strong>。</li>
+<li><strong>状态价值函数 V(s)</strong>：表示从状态 <code>s</code>开始，遵循某个策略 <code>π</code>所能获得的<strong>预期累积奖励</strong>。</li>
+<li><strong>动作价值函数 Q(s, a)</strong>：表示在状态 <code>s</code>下执行动作 <code>a</code>后，再遵循策略 <code>π</code>所能获得的<strong>预期累积奖励</strong>。</li>
+<li><strong>核心思想</strong>：一个动作可能带来很小的即时奖励，但能导向未来有巨大奖励的状态（高价值），那么这个动作总体上也是好的。例如，象棋中牺牲一个卒（负奖励）以获取局面优势（高价值状态）。</li>
+</ul>
+<p><strong>9. 模型 (Model)</strong></p>
+<ul>
+<li>智能体对环境动态变化规律的内部表示。模型预测环境下一步会变成什么样子。</li>
+<li>例如：预测“在状态s下执行动作a，下一个状态s’是什么，以及会得到多少奖励”。</li>
+<li>并非所有强化学习方法都需要模型。因此产生了两种主要方法：
+<ul>
+<li><strong>基于模型 (Model-based)</strong>：有环境模型，可以进行“想象”和规划。</li>
+<li><strong>无模型 (Model-free)</strong>：没有环境模型，直接通过试错来学习策略或价值函数（如著名的Q-Learning, DQN）。</li>
+</ul>
+</li>
+</ul>
+<h2 id="贝尔曼公式">贝尔曼公式</h2>
+<p>令$G_t$代表一个轨迹的Return，即为：<br>
+$$<br>
+G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + …<br>
+$$</p>
+<h3 id="State-Value">State Value</h3>
+<p>我们如何用一个值来衡量策略（policy）的好坏，答案就是State Value.</p>
+<p>State value是从一个状态出发，得到的所有可能轨迹的平均Return，可以用State Value来指导优化所需要选用的策略。</p>
+<p>那么State Value为：<br>
+$$<br>
+v_{\pi}(s) = E[G_t | S_t =s].<br>
+$$</p>
+<h3 id="Action-Value">Action Value</h3>
+<p>Action value是指从一个state出发，选用某个Action所得到的平均Return，可以用来评估某个Action的好坏。</p>
+<p>那么Action Value为：<br>
+$$<br>
+q_{\pi}(s,a) = E\left[G_{t}|S_{t} = s, A_{t}=a\right]<br>
+$$</p>
+<h3 id="State-value和Action-Value的联系：">State value和Action Value的联系：</h3>
+<p>$$<br>
+\underbrace{\mathbb{E}[G_{t}\mid S_{t}=s]}_{v_{\pi}(s)}=\sum_{a\in\mathcal{A}}\underbrace{\mathbb{E}[G_{t}\mid S_{t}=s,A_{t}=a]}_{q_{\pi}(s,a)}\pi(a\mid s).<br>
+$$</p>
+<p>即：<br>
+$$<br>
+v_{\pi}(s) = \sum_{a}\pi(a|s)q_{\pi}(s,a)<br>
+$$</p>
+<p><strong>如果知道action value，即可求解state value.</strong></p>
+<h3 id="Bellman-Equation">Bellman Equation</h3>
+<p>贝尔曼公式描述的是两个状态之间的state value之间的关系：</p>
+<p>$G_t$和$G_{t+1}$的关系为：<br>
+$$<br>
+G_t = R_{t+1} + \gamma G_{t+1}<br>
+$$<br>
+那么有：<br>
+$$<br>
+\begin{aligned}<br>
+v_{\pi}(s) &amp;= \mathbb{E}[G_{t} \vert S_{t} = s] \\<br>
+&amp;= \mathbb{E}[R_{t+1} + \gamma G_{t+1} \vert S_{t} = s] \\<br>
+&amp;= \mathbb{E}[R_{t+1} \vert S_{t} = s] + \gamma \mathbb{E}[G_{t+1} \vert S_{t} = s].<br>
+\end{aligned}<br>
+$$</p>
+<ul>
+<li>第一项为状态$s$下的即时奖励期望。</li>
+<li>第二项为状态$s$下的将来的奖励期望。</li>
+</ul>
+<h4 id="Elementwise-form">Elementwise form:</h4>
+<p>$$<br>
+\begin{aligned}<br>
+v_{\pi}(s) &amp;= \sum_{a} {\pi}(a|s) \left[ \underbrace{\sum_{r}p(r|s,a)r + \gamma \sum_{s’}p(s’|s,a)v_{\pi}(s’)}_{q_{\pi}(s,a)}\right] \\<br>
+&amp;= \sum_{a}\pi(a|s)q_{\pi}(s,a)<br>
+\end{aligned}<br>
+$$</p>
+<p><strong>Action-value function:</strong><br>
+$$<br>
+q_{\pi}(s,a) = \sum_{r}p(r|s,a)r + \gamma \sum_{s’}p(s’|s,a)v_{\pi}(s’)<br>
+$$</p>
+<p><strong>如果知道state value，即可求解Action Value</strong></p>
+<h4 id="Matrix-form">Matrix form:</h4>
+<p>$$<br>
+\begin{align*}<br>
+v &amp;= r + \gamma Pv \\<br>
+&amp;= r + \gamma v’<br>
+\end{align*}<br>
+$$<br>
+其中$r$为即时奖励，$\gamma$为时间折扣，$P$为状态转移矩阵。</p>
+<h2 id="贝尔曼最优公式">贝尔曼最优公式</h2>
+<p>对于每个状态$S$​，策略$\pi^*$的State Value都大于其他任意策略$\pi$的State Value，即$\pi^*(s) \geq \pi(s)$,那么$\pi^*$即为最优策略。</p>
+<p><strong>Elementwise Form of BOE(Bellman Optimality Equation)：</strong><br>
+$$<br>
+\begin{align*}<br>
+v(s) &amp;= \max_{\pi(s) \in \Pi(s)} \sum_{a \in \mathcal{A}} \pi(a|s) \left( \sum_{r \in \mathcal{R}} p(r|s, a) r + \gamma \sum_{s’ \in \mathcal{S}} p(s’|s, a) v(s’) \right) \\<br>
+&amp;= \max_{\pi(s) \in \Pi(s)} \sum_{a \in \mathcal{A}} \pi(a|s) q(s, a)<br>
+\end{align*}<br>
+$$<br>
+其中$\pi(a|s)$为策略在某个状态下的动作概率，且$\pi(a|s)\geq0$，因此当$q(s,a)$取得最大值，采取动作$a$时，策略为最优策略。</p>
+<h2 id="值迭代和策略迭代">值迭代和策略迭代</h2>
+<h3 id="值迭代">值迭代</h3>
+<p>假设值已知，求解所有可能Action的$q(s,a)$，通过最大的action value去更新策略，求解新的Value State。</p>
+<p>两个步骤：</p>
+<ol>
+<li>
+<p>策略更新：<br>
+$$<br>
+\pi_{k+1} = arg \underset{\pi}{max}(r_{\pi} + \gamma P_{\pi}v_{k})<br>
+$$</p>
+<p>$v_{k}$是已知的（迭代开始时可以随意赋值）</p>
+<p><img src="vi1.png" alt="计算$q(s,a)$"></p>
+</li>
+<li>
+<p>价值更新：选定策略后，更新state value<br>
+$$<br>
+v_{k+1} = r_{\pi_{k+1}} + \gamma P_{\pi_{k+1}}v_{k}<br>
+$$</p>
+<p><img src="vi2.png" alt="更新state value"></p>
+<p><img src="vi3.png" alt="多次迭代"></p>
+</li>
+</ol>
+<h3 id="策略迭代">策略迭代</h3>
+<ol>
+<li>
+<p>策略评估：<br>
+$$<br>
+v_{\pi_{k}} = r_{\pi_{k}} + \gamma P_{\pi_{k}}v_{\pi_{k}}<br>
+$$<br>
+策略$\pi_{k}$是已知的（随机选择策略），求解该策略的state value时，采用迭代的方法求解。</p>
+<p><img src="pi1.png" alt="随机选择策略"></p>
+<p><img src="pi2.png" alt="评估策略价值"></p>
+</li>
+<li>
+<p>策略更新：<br>
+$$<br>
+\pi_{k+1} = arg \underset{\pi}{max}(r_{\pi} + \gamma P_{\pi}v_{\pi_{k}})<br>
+$$<br>
+<img src="pi3.png" alt="更新策略"></p>
+</li>
+</ol>
+<h3 id="截断的策略迭代">截断的策略迭代</h3>
+<p>对比值迭代和策略迭代的步骤如下：在两个迭代算法中，假设第一次state value的值一致，那么可以同时更新相同的Action，再根据Action估计State Value时，两者差异有所体现（第4步的Value 求解），值迭代仅仅迭代一次，而策略迭代需要迭代无穷次才能求得最终的State Value($v_{\pi1}$)</p>
+<p><img src="compare.png" alt="值迭代和策略迭代"></p>
+<p><img src="compare2.png" alt="值迭代和策略迭代"></p>
+<p>策略迭代方法中，策略评估过程中，需要无穷步的迭代才能评估出策略价值，现实过程中无法实现，因此推出基于截断的策略迭代方法。</p>
+<p>当截断步骤设置为1时，等同于值迭代。步骤为无穷时，等同于策略迭代。</p>
+<h3 id="三种迭代算法的收敛速度">三种迭代算法的收敛速度</h3>
+<p><img src="compare3.png" alt="迭代算法的收敛速度对比"></p>
+<h2 id="Monte-Carlo-Method">Monte Carlo Method</h2>
+<p>值迭代和策略迭代是一个model-based的方法，这个model具体指的是马尔科夫决策过程（MDP）的核心元素：</p>
+<ol>
+<li><strong>状态转移概率 $P(s′∣s,a)$</strong>：在状态 <em>s</em>下执行动作 <em>a</em>后，环境转移到状态 <em>s</em>’的概率是多少。</li>
+<li><strong>奖励函数 $R(s,a,s′)$</strong>：在状态 <em>s</em>下执行动作 <em>a</em>并转移到状态 s’ 后，能获得的即时奖励是多少。</li>
+</ol>
+<h3 id="MC-Basic">MC Basic</h3>
+<p>主要就是将<strong>策略迭代</strong>算法变成无模型方法。</p>
+<p>策略迭代算法中，第一步是需要评估策略价值，第二步选择$q(s,a)$最大的策略作为更新策略。</p>
+<p>在下面的表达式中，我们不依赖于模型计算动作价值：<br>
+$$<br>
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a]<br>
+$$<br>
+因此，我们可以利用Monte Carlo方法来计算动作价值：</p>
+<ul>
+<li>
+<p>从状态和动作$(s,a)$出发，在初始策略$\pi_{0}$下，生成一个轨迹。</p>
+</li>
+<li>
+<p>计算该轨迹的价值：</p>
+<p>$$<br>
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a]<br>
+$$</p>
+</li>
+<li>
+<p>采样多条轨迹，然后求期望</p>
+<p>$$<br>
+q_{\pi_{k}}(s|a) = E[G_{t}| S_{t}=s, A_{t} = a] \approx \frac{1}{N}\sum_{i=1}^{N}g^{i}(s,a)<br>
+$$</p>
+</li>
+</ul>
+<p><img src="mc_basic.png" alt="MC Basic algorithm"></p>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>效率比较低，需要多次采样大量轨迹</li>
+<li>轨迹长度需要足够长，否则距离较远的状态没有价值</li>
+<li>没有充分利用采样轨迹信息</li>
+</ul>
+<h3 id="MC-Exploring-Starts">MC Exploring Starts</h3>
+<p>每条轨迹中包含了以其他状态和动作为起点的轨迹，该方法对这些数据进行了利用，提高了效率。</p>
+<ul>
+<li>方法一：收集完所有轨迹后，便利所有state-action pair，计算平均价值，该方法需要等所有的轨迹收集完，效率低！</li>
+<li>方法二：每收集完一个轨迹，立即计算action value，更新策略。（可以收敛）</li>
+</ul>
+<h3 id="MC-varepsilon-Greedy">MC  $\varepsilon$-Greedy</h3>
+<p><strong>$\varepsilon$-greedy policy:</strong><br>
+$$<br>
+\pi(a|s)=<br>
+\begin{cases}<br>
+1-\frac{\varepsilon}{\vert\mathcal{A}(s)\vert}(\vert\mathcal{A}(s)\vert - 1) &amp;\text{ for the greedy actions.}<br>
+\\<br>
+\frac{\varepsilon}{\vert\mathcal{A}(s)\vert} &amp;\text{ for the other }\vert\mathcal{A}(s)\vert - 1\text{ actions.}<br>
+\end{cases}<br>
+$$<br>
+Where $\varepsilon \in [0,1]$ and $\vert\mathcal{A}\vert$ is the number of actions.</p>
+<ul>
+<li>该方法保证了greedy action总是比其他的动作概率大</li>
+<li>$\varepsilon$-greedy平衡了利用和探索（exploitaion and exploration）</li>
+</ul>
+<p><strong>MC  $\varepsilon$-Greedy</strong> 在MC RL algorithm中使用时，在估计完action value之后，需要根据最大的Action Value来更新策略，而MC Exploring Starts是贪婪策略，直接选择action value最大的策略进行更新，但该方法需要添加一些随机更新策略进来：<br>
+$$<br>
+\pi_{k+1}(a|s)=\left\{\begin{array}{ll}<br>
+1-\frac{|\mathcal{A}(s)|-1}{|\mathcal{A}(s)|}\varepsilon, &amp;a=a_{k}^{*},\\<br>
+\frac{1}{|\mathcal{A}(s)|}\varepsilon, &amp;a\neq a_{k}^{*}.<br>
+\end{array}\right.<br>
+$$</p>
+<p>使用**$\varepsilon$-greedy policy:**进行采样的话，$\varepsilon$的值不能设置太大，否则最终得到的策略与greedy策略得到的最有策略不一致。</p>
+<h2 id="随机近似与梯度下降">随机近似与梯度下降</h2>
+<p>Stochastic Approximation and Stochastic Gradient Descent.</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/todo/" rel="tag"># todo</a>
+              <a href="/tags/rl/" rel="tag"># rl</a>
+              <a href="/tags/Monte-Carlo/" rel="tag"># Monte Carlo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/08/03/LLaMA%E7%B3%BB%E5%88%97%E6%A8%A1%E5%9E%8B/" rel="prev" title="LLaMA系列模型">
+                  <i class="fa fa-angle-left"></i> LLaMA系列模型
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/09/23/%E7%86%B5%E3%80%81%E4%BA%A4%E5%8F%89%E7%86%B5%E3%80%81KL%E6%95%A3%E5%BA%A6/" rel="next" title="熵、交叉熵、KL散度">
+                  熵、交叉熵、KL散度 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
