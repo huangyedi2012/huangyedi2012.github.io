@@ -39,7 +39,7 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/mc_basic.png">
 <meta property="og:image" content="https://huangyedi2012.github.io/2024/09/05/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/sarsa.png">
 <meta property="article:published_time" content="2024-09-05T07:50:33.000Z">
-<meta property="article:modified_time" content="2025-12-24T12:31:23.654Z">
+<meta property="article:modified_time" content="2025-12-25T13:04:22.357Z">
 <meta property="article:tag" content="Monte Carlo">
 <meta property="article:tag" content="rl">
 <meta property="article:tag" content="todo">
@@ -181,7 +181,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼公式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#State-Value"><span class="nav-text">State Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Action-Value"><span class="nav-text">Action Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#State-value%E5%92%8CAction-Value%E7%9A%84%E8%81%94%E7%B3%BB%EF%BC%9A"><span class="nav-text">State value和Action Value的联系：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bellman-Equation"><span class="nav-text">Bellman Equation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%9C%80%E4%BC%98%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼最优公式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3%E5%92%8C%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代和策略迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%AA%E6%96%AD%E7%9A%84%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">截断的策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95%E7%9A%84%E6%94%B6%E6%95%9B%E9%80%9F%E5%BA%A6"><span class="nav-text">三种迭代算法的收敛速度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monte-Carlo-Method"><span class="nav-text">Monte Carlo Method</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Basic"><span class="nav-text">MC Basic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Exploring-Starts"><span class="nav-text">MC Exploring Starts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-varepsilon-Greedy"><span class="nav-text">MC  $\varepsilon$-Greedy</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E8%BF%91%E4%BC%BC%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D"><span class="nav-text">随机近似与梯度下降</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RM-Robbins-Monro-%E7%AE%97%E6%B3%95"><span class="nav-text">RM(Robbins-Monro)算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D-Stochastic-gradient-descent"><span class="nav-text">随机梯度下降(Stochastic gradient descent)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%B6%E5%BA%8F%E5%B7%AE%E5%88%86%E6%96%B9%E6%B3%95"><span class="nav-text">时序差分方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B1%82%E8%A7%A3state-value%E7%9A%84TD%E7%AE%97%E6%B3%95"><span class="nav-text">求解state value的TD算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B1%82%E8%A7%A3action-value%E7%9A%84TD%E7%AE%97%E6%B3%95%EF%BC%9ASarsa"><span class="nav-text">求解action value的TD算法：Sarsa</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q-learning"><span class="nav-text">Q-learning</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-text">问题</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼公式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#State-Value"><span class="nav-text">State Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Action-Value"><span class="nav-text">Action Value</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#State-value%E5%92%8CAction-Value%E7%9A%84%E8%81%94%E7%B3%BB%EF%BC%9A"><span class="nav-text">State value和Action Value的联系：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bellman-Equation"><span class="nav-text">Bellman Equation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%9D%E5%B0%94%E6%9B%BC%E6%9C%80%E4%BC%98%E5%85%AC%E5%BC%8F"><span class="nav-text">贝尔曼最优公式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3%E5%92%8C%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代和策略迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%BC%E8%BF%AD%E4%BB%A3"><span class="nav-text">值迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%AA%E6%96%AD%E7%9A%84%E7%AD%96%E7%95%A5%E8%BF%AD%E4%BB%A3"><span class="nav-text">截断的策略迭代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E8%BF%AD%E4%BB%A3%E7%AE%97%E6%B3%95%E7%9A%84%E6%94%B6%E6%95%9B%E9%80%9F%E5%BA%A6"><span class="nav-text">三种迭代算法的收敛速度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Monte-Carlo-Method"><span class="nav-text">Monte Carlo Method</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Basic"><span class="nav-text">MC Basic</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-Exploring-Starts"><span class="nav-text">MC Exploring Starts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MC-varepsilon-Greedy"><span class="nav-text">MC  $\varepsilon$-Greedy</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E8%BF%91%E4%BC%BC%E4%B8%8E%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D"><span class="nav-text">随机近似与梯度下降</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RM-Robbins-Monro-%E7%AE%97%E6%B3%95"><span class="nav-text">RM(Robbins-Monro)算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%8F%E6%9C%BA%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D-Stochastic-gradient-descent"><span class="nav-text">随机梯度下降(Stochastic gradient descent)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%B6%E5%BA%8F%E5%B7%AE%E5%88%86%E6%96%B9%E6%B3%95"><span class="nav-text">时序差分方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B1%82%E8%A7%A3state-value%E7%9A%84TD%E7%AE%97%E6%B3%95"><span class="nav-text">求解state value的TD算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B1%82%E8%A7%A3action-value%E7%9A%84TD%E7%AE%97%E6%B3%95%EF%BC%9ASarsa"><span class="nav-text">求解action value的TD算法：Sarsa</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Q-learning"><span class="nav-text">Q-learning</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -274,7 +274,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-12-24 20:31:23" itemprop="dateModified" datetime="2025-12-24T20:31:23+08:00">2025-12-24</time>
+      <time title="修改时间：2025-12-25 21:04:22" itemprop="dateModified" datetime="2025-12-25T21:04:22+08:00">2025-12-25</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -784,12 +784,84 @@ $$</p>
 <p>实际中求解n-step sarsa时，会利用滑动窗口的概念进行处理，提升收敛速度。</p>
 </blockquote>
 <h3 id="Q-learning">Q-learning</h3>
-<h2 id="问题">问题</h2>
-<blockquote>
+<p>Sarsa只能对给定的策略进行action values的估计，为了找到最优策略，sarsa必须在每次评估action value后进行Policy improvement。 相对而言，Q-learning可以<strong>直接估计最优动作价值函数</strong>。</p>
+<h4 id="算法形式">算法形式</h4>
+<p>$$<br>
+\begin{aligned}<br>
+&amp; q_{t+1}(s_t, a_t) = q_t(s_t, a_t) - \alpha_t(s_t, a_t) \Bigg[ q_t(s_t, a_t) - \Big( r_{t+1} + \gamma \max_{a \in \mathcal{A}(s_{t+1})} q_t(s_{t+1}, a) \Big) \Bigg],<br>
+\\<br>
+&amp; q_{t+1}(s, a) = q_t(s, a), \quad \text{for all } (s, a) \neq (s_t, a_t), for all (s,a) \neq (s_t, a_t)<br>
+\end{aligned}<br>
+$$</p>
+<p>Sarsa在每次迭代时，要求得到$(r_{t+1},s_{t+1},a_{t+1})$，而Q-learning只需要$(r_{t+1},s_{t+1})$。</p>
+<p>Q-learning算法是利用随机近似算法来求解<strong>贝尔曼最优方程</strong>的解。</p>
+<h4 id="Off-Policy算法">Off-Policy算法</h4>
+<p>On-policy vs Off-policy主要看它的behavior policy（用于采样）和target policy（用于更新收敛）是否是同一个。</p>
+<p>Q-learning是一个off-policy的算法，它的好处是：</p>
 <ol>
-<li>当环境中有多个状态时，如GridEnv，那么 step(action)的action是什么样子的？</li>
+<li><strong>极高的数据利用率</strong>（Sample Efficiency）</li>
 </ol>
+<p>这是 Off-policy 算法最大的卖点。</p>
+<ul>
+<li><strong>经验回放（Experience Replay）：</strong> On-policy 算法（如 PPO, REINFORCE）通常在这个回合（Episode）结束后，数据用一次就必须丢弃，因为策略更新后，旧策略产生的数据就不再准确了。但 Off-policy 算法（如 DQN, SAC）可以使用<strong>经验回放缓冲区（Replay Buffer）</strong>。</li>
+<li><strong>重复利用：</strong> 过去产生的数据（比如 1000 步之前的，甚至是之前的策略产生的）可以被存储起来，并在未来的训练中反复抽取、学习。</li>
+<li><strong>数据去相关性：</strong> 神经网络喜欢独立同分布（i.i.d.）的数据。通过从缓冲区随机抽取样本，可以打破时间序列上的相关性，使训练更稳定。</li>
+</ul>
+<blockquote>
+<p><strong>场景举例：</strong> 训练机器人抓取物体。由于物理世界的时间很宝贵，如果每动一次只能学一次，训练可能需要几年。Off-policy 允许机器人把过去的“失败尝试”存起来反复琢磨，从而大幅缩短训练时间。</p>
 </blockquote>
+<ol start="2">
+<li><strong>更好的探索与利用平衡</strong>（Exploration vs. Exploitation）</li>
+</ol>
+<p>Off-policy 将策略拆分为两个：</p>
+<ol>
+<li><strong>行为策略（Behavior Policy）：</strong> 负责在环境中行动，产生数据。它可以非常激进、随机，以确保探索到环境的每一个角落。</li>
+<li><strong>目标策略（Target Policy）：</strong> 负责学习最优解。它通常是贪婪的（Greedy），只关注目前认为最好的动作。</li>
+</ol>
+<ul>
+<li><strong>优势：</strong> 你可以让智能体像“疯子”一样随机探索（保持高熵或高 $\epsilon$-greedy），但这并不妨碍它在后台冷静地计算出一条“最优路径”。On-policy 算法则很难做到这一点，因为它的探索行为会直接影响它对价值的估计。</li>
+</ul>
+<ol start="3">
+<li>可以从“<strong>别人的经验</strong>”中学习（Offline RL / Demonstration）</li>
+</ol>
+<p>由于 Off-policy 并不要求数据必须是当前策略产生的，它带来了巨大的灵活性：</p>
+<ul>
+<li><strong>学习人类示范：</strong> 你可以喂给算法一堆人类高手的操作录像，算法可以利用这些数据进行初始化或优化（例如 AlphaGo 最初学习人类棋谱）。</li>
+<li><strong>历史数据：</strong> 在推荐系统或自动驾驶中，我们可以利用过去几个月积累的日志数据来训练新模型，而不需要将一个未经测试的模型直接上线去收集数据（这可能很危险或昂贵）。</li>
+</ul>
+<h3 id="总结">总结</h3>
+<p>不同算法之间的<strong>TD目标（Temporal-Difference Target）</strong> 表达式：</p>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>TD目标表达式 $\bar{q_t}$</th>
+<th>核心思想与特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sarsa</strong></td>
+<td>$\bar{q}_t = r_{t+1} + \gamma \bar{q}_t(s_{t+1}, a_{t+1})$</td>
+<td><strong>在线策略（On-policy）</strong>。使用当前策略<strong>实际执行</strong>的下一动作 at+1的Q值来构建目标。其更新依赖于当前策略的连续性，倾向于评估并优化正在执行的策略。</td>
+</tr>
+<tr>
+<td><strong>n-step Sarsa</strong></td>
+<td>$\bar{q}_t = r_{t+1} + \gamma r_{t+2} + \cdots + \gamma^n \bar{q}_t(s_{t+n}, a_{t+n})$</td>
+<td>Sarsa的多步扩展。目标由<strong>未来n步的即时奖励</strong>加上<strong>第n步的状态动作值</strong>估计共同构成。它在单步更新（偏差小、方差大）和Monte Carlo更新（偏差大、方差小）之间取得了折衷。</td>
+</tr>
+<tr>
+<td><strong>Q-learning</strong></td>
+<td>$\bar{q}_t = r_{t+1} + \gamma \max_{a} \bar{q}_t(s_{t+1}, a)$</td>
+<td><strong>离线策略（Off-policy）</strong>。这是表格中最关键的区别。它使用下一状态 st+1下<strong>所有可能动作中最大的Q值</strong>来构建目标，而不管下一步实际会采取什么动作。这使其能够<strong>直接估计最优策略的价值</strong>。</td>
+</tr>
+<tr>
+<td><strong>Monte Carlo</strong></td>
+<td>$\bar{q}_t = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots$</td>
+<td>不使用“自举”（Bootstrapping）。TD目标是从当前时刻开始直到回合结束的**完整实际回报（Return）**的累积。它没有偏差，但方差很大，且必须等待回合结束才能更新。</td>
+</tr>
+</tbody>
+</table>
 
     </div>
 
