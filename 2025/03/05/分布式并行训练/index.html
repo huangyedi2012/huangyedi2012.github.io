@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式并行训练">
+<meta property="og:url" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/index.html">
+<meta property="og:site_name" content="huangyedi2012">
+<meta property="og:description" content="为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/matmul_data_paralelism.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/matmul_model_paralelism.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/realy.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/gpt3-overview.png">
+<meta property="article:published_time" content="2025-03-05T06:59:55.000Z">
+<meta property="article:modified_time" content="2026-01-15T10:40:22.898Z">
+<meta property="article:tag" content="ddp">
+<meta property="article:tag" content="torchrun">
+<meta property="article:tag" content="并行训练">
+<meta property="article:tag" content="数据并行">
+<meta property="article:tag" content="模型并行">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/matmul_data_paralelism.png">
+
+
+<link rel="canonical" href="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/","path":"2025/03/05/分布式并行训练/","title":"分布式并行训练"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>分布式并行训练 | huangyedi2012</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huangyedi2012</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">并行训练的评价指标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FLOPs-GPU-%E5%88%A9%E7%94%A8%E7%8E%87"><span class="nav-text">FLOPs&#x2F;GPU 利用率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%9E%E5%90%90%E9%87%8F%E4%B8%8E%E5%B9%B6%E8%A1%8C%E6%95%88%E7%8E%87"><span class="nav-text">吞吐量与并行效率</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">并行方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C"><span class="nav-text">数据并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C"><span class="nav-text">模型并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E6%B0%B4%E5%B9%B6%E8%A1%8C"><span class="nav-text">流水并行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%B9%B6%E8%A1%8C"><span class="nav-text">混合并行</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">参考文献</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">100</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2025/03/05/%E5%88%86%E5%B8%83%E5%BC%8F%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="分布式并行训练 | huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式并行训练
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-03-05 14:59:55" itemprop="dateCreated datePublished" datetime="2025-03-05T14:59:55+08:00">2025-03-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-01-15 18:40:22" itemprop="dateModified" datetime="2026-01-15T18:40:22+08:00">2026-01-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/framework/" itemprop="url" rel="index"><span itemprop="name">framework</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>为了解决算力增速不足的问题，人们考虑用多节点集群进行分布式训练，以提升算力，分布式训练势在必行。</p>
+<span id="more"></span>
+<h1>并行训练的评价指标</h1>
+<h2 id="FLOPs-GPU-利用率"><strong>FLOPs/GPU 利用率</strong></h2>
+<p>关注计算性能是否充分发挥：</p>
+<ul>
+<li><strong>FLOPs（浮点运算次数）</strong>：计算模型训练过程中执行的浮点运算次数，通常以 TFLOPs（TeraFLOPs）或 PFLOPs（PetaFLOPs）衡量。</li>
+<li><strong>FLOPs 利用率（FLOPs Utilization）</strong>：实际执行的 FLOPs 与硬件理论峰值 FLOPs 的比值，衡量计算资源利用率。</li>
+<li><strong>GPU 利用率（GPU Utilization）</strong>：统计 GPU 计算核心的使用情况，反映 GPU 是否被充分利用。</li>
+</ul>
+<h2 id="吞吐量与并行效率"><strong>吞吐量与并行效率</strong></h2>
+<p>关注扩展性是否合理：</p>
+<ul>
+<li><strong>吞吐量（Throughput）</strong>：每秒处理的样本数（samples/sec）或 tokens/sec，通常用于衡量训练速度。</li>
+<li><strong>加速比（Speedup）</strong>：$ S(N) = \frac{T(1)}{T(N)} $其中$ T(1)$ 是单 GPU 训练时间，$T(N)$ 是 N 个 GPU 训练时间。</li>
+<li><strong>并行效率（Scaling Efficiency）</strong>:$ E(N) = \frac{S(N)}{N} = \frac{T(1)}{N \cdot T(N)} $.衡量并行扩展性，理想情况下应接近 100%。</li>
+</ul>
+<blockquote>
+<p>Megatron-LM的实验中：</p>
+<p>We sustain 15.1 PetaFLOPs with 512 V100 GPUS across the entire application with <strong>76% scaling efficiency</strong> when compared to a strong single GPU baseline that sustains 39 TeraFLOPs, which is 30% of peak FLOPs.</p>
+<p>计算过程：</p>
+<p>1 PetaFLOPs = 1000 TeraFLOPs</p>
+<p>39 * 512 =19,968 TeraFLOPS</p>
+<p>15.1 / 20.0 = 75.5 %</p>
+</blockquote>
+<h1>并行方法</h1>
+<h2 id="数据并行">数据并行</h2>
+<p><img src="matmul_data_paralelism.png" alt="数据并行"></p>
+<p><strong>运行原理：</strong></p>
+<ul>
+<li>所谓的数据并行，就是将数据 x 进行切分，而每个设备上的模型 w 是完整的、一致的。</li>
+<li>数据并行策略下，在反向传播过程中，需要对各个设备上的梯度进行 <a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/collectives.html#allreduce">AllReduce</a>，以确保各个设备上的模型始终保持一致。</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>当数据集较大，模型较小时</li>
+</ul>
+<blockquote>
+<p>注意：If your model contains any <code>BatchNorm</code> layers, it needs to be converted to <code>SyncBatchNorm</code> to sync the running stats of <code>BatchNorm</code> layers across replicas.</p>
+</blockquote>
+<p><strong>训练步骤：</strong></p>
+<ol>
+<li>
+<p>创建进程组：</p>
+<ul>
+<li>
+<p>给每个进程设置cuda id</p>
+</li>
+<li>
+<p>Init_process_progress</p>
+<ul>
+<li>
+<p><strong>初始化分布式通信环境</strong></p>
+<ul>
+<li>
+<p><strong>建立进程组（Process Group）</strong>：为多个进程（如不同 GPU/机器上的训练进程）创建通信组，使它们能够相互通信。</p>
+</li>
+<li>
+<p><strong>设置通信后端</strong>：支持多种后端：</p>
+<ul>
+<li>
+<p><code>nccl</code>：NVIDIA GPU 最佳选择，高性能。</p>
+</li>
+<li>
+<p><code>gloo</code>：CPU 或 GPU（跨平台支持）。</p>
+</li>
+<li>
+<p><code>mpi</code>：需 MPI 环境支持。</p>
+</li>
+<li>
+<p>后端决定了通信效率和硬件兼容性。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>定义进程拓扑</strong></p>
+<ul>
+<li><strong>指定全局进程数（<code>world_size</code>）</strong>：设置参与训练的总进程数（如 GPU 总数）。</li>
+<li><strong>分配唯一标识（<code>rank</code>）</strong>：为当前进程分配全局唯一 ID（<code>0</code>到 <code>world_size-1</code>），<code>rank=0</code>通常为主节点。</li>
+</ul>
+</li>
+<li>
+<p><strong>配置通信方式（<code>init_method</code>）</strong></p>
+</li>
+<li>
+<p><strong>环境变量初始化（<code>env://</code>）</strong>：通过环境变量 <code>MASTER_ADDR</code>和 <code>MASTER_PORT</code>指定主节点地址和端口（最常用）。</p>
+</li>
+<li>
+<p><strong>TCP 初始化</strong>：直接指定主节点 IP 和端口（<code>tcp://10.1.1.20:23456</code>）。</p>
+</li>
+<li>
+<p><strong>共享文件初始化</strong>：通过共享文件系统同步（<code>file:///path/to/shared_file</code>）。</p>
+</li>
+<li>
+<p><strong>协调进程启动</strong></p>
+<ul>
+<li><strong>同步所有进程</strong>：确保所有进程完成初始化后再继续执行（避免死锁）。</li>
+<li><strong>建立通信链路</strong>：例如，使用 <code>nccl</code>时为 GPU 建立高速通信通道。</li>
+</ul>
+</li>
+<li>
+<p><strong>准备核心通信操作</strong></p>
+<ul>
+<li><code>dist.all_reduce()</code>：全局求和等规约操作。</li>
+<li><code>dist.broadcast()</code>：主节点向其他节点广播数据。</li>
+<li><code>dist.barrier()</code>：进程同步等待。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>创建ddp模型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">self</span>.model = DDP(model, device_ids=[gpu_id])</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>创建数据分发器</p>
+<ul>
+<li>
+<p><a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/data.html?highlight=distributedsampler#torch.utils.data.distributed.DistributedSampler">DistributedSampler</a> chunks the input data across all distributed processes.</p>
+</li>
+<li>
+<p>The <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader">DataLoader</a> combines a dataset and a sampler, and provides an iterable over the given dataset.</p>
+</li>
+<li>
+<p>Each process will receive an input batch of 32 samples; the effective batch size is <code>32 * nprocs</code>, or 128 when using 4 GPUs.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">train_data = torch.utils.data.DataLoader(</span><br><span class="line">    dataset=train_dataset,</span><br><span class="line">    batch_size=<span class="number">32</span>,</span><br><span class="line">    shuffle=<span class="literal">False</span>,  <span class="comment"># We don&#x27;t shuffle</span></span><br><span class="line">    sampler=DistributedSampler(train_dataset), <span class="comment"># Use the Distributed Sampler here.</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>Calling the <code>set_epoch()</code> method on the <code>DistributedSampler</code> at the beginning of each epoch is necessary to make shuffling work properly across multiple epochs. Otherwise, the same ordering will be used in each epoch.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">_run_epoch</span>(<span class="params">self, epoch</span>):</span><br><span class="line">    b_sz = <span class="built_in">len</span>(<span class="built_in">next</span>(<span class="built_in">iter</span>(<span class="variable language_">self</span>.train_data))[<span class="number">0</span>])</span><br><span class="line">    <span class="variable language_">self</span>.train_data.sampler.set_epoch(epoch)   <span class="comment"># call this additional line at every epoch</span></span><br><span class="line">    <span class="keyword">for</span> source, targets <span class="keyword">in</span> <span class="variable language_">self</span>.train_data:</span><br><span class="line">      ...</span><br><span class="line">      <span class="variable language_">self</span>._run_batch(source, targets)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li>
+<p>保存模型</p>
+<p>We only need to save model checkpoints from one process. Without this condition, each process would save its copy of the identical mode.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- ckp = <span class="variable language_">self</span>.model.state_dict()</span><br><span class="line">+ ckp = <span class="variable language_">self</span>.model.module.state_dict()</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">- <span class="keyword">if</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">+ <span class="keyword">if</span> <span class="variable language_">self</span>.gpu_id == <span class="number">0</span> <span class="keyword">and</span> epoch % <span class="variable language_">self</span>.save_every == <span class="number">0</span>:</span><br><span class="line">  <span class="variable language_">self</span>._save_checkpoint(epoch)</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>运行分布式训练</p>
+<ul>
+<li>
+<p>Include new arguments <code>rank</code> (replacing <code>device</code>) and <code>world_size</code>.</p>
+<ul>
+<li><code>rank</code> is auto-allocated by DDP when calling <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/multiprocessing.html#spawning-subprocesses">mp.spawn</a>.</li>
+<li><code>world_size</code> is the number of processes across the training job. For GPU training, this corresponds to the number of GPUs in use, and each process works on a dedicated GPU.</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">- <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">device, total_epochs, save_every</span>):</span><br><span class="line">+ <span class="keyword">def</span> <span class="title function_">main</span>(<span class="params">rank, world_size, total_epochs, save_every</span>):</span><br><span class="line">+  ddp_setup(rank, world_size)</span><br><span class="line">   dataset, model, optimizer = load_train_objs()</span><br><span class="line">   train_data = prepare_dataloader(dataset, batch_size=<span class="number">32</span>)</span><br><span class="line">-  trainer = Trainer(model, train_data, optimizer, device, save_every)</span><br><span class="line">+  trainer = Trainer(model, train_data, optimizer, rank, save_every)</span><br><span class="line">   trainer.train(total_epochs)</span><br><span class="line">+  destroy_process_group()</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">   <span class="keyword">import</span> sys</span><br><span class="line">   total_epochs = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>])</span><br><span class="line">   save_every = <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line">-  device = <span class="number">0</span>      <span class="comment"># shorthand for cuda:0</span></span><br><span class="line">-  main(device, total_epochs, save_every)</span><br><span class="line">+  world_size = torch.cuda.device_count()</span><br><span class="line">+  mp.spawn(main, args=(world_size, total_epochs, save_every,), nprocs=world_size)</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>也可以改成torchrun运行：torchrun相比于该方法，具有更好的容错性，支持在节点计算失败时，重新启动训练，并且能够简化分布式训练环境的配置与进程管理。</p>
+<p><strong>与 <code>torch.multiprocessing.spawn</code>的对比优势</strong></p>
+<ul>
+<li><strong>跨节点支持</strong>：<code>spawn</code>仅适用于<strong>单机多卡</strong>，而 <code>torchrun</code>原生支持<strong>多机多卡</strong>分布式训练</li>
+<li><strong>配置简化</strong>：<code>spawn</code>需手动设置 <code>MASTER_ADDR</code>/<code>MASTER_PORT</code>并处理端口冲突，<code>torchrun</code>通过参数自动管理。</li>
+<li><strong>高级特性</strong>：<code>spawn</code>缺乏弹性伸缩、进程监控和自动恢复等能力，需用户自行实现容错逻辑。</li>
+</ul>
+</blockquote>
+<h2 id="模型并行">模型并行</h2>
+<p><img src="matmul_model_paralelism.png" alt="模型并行"></p>
+<p><strong>运行步骤：</strong></p>
+<ul>
+<li>所谓的模型并行，就是每个设备上的数据是完整的、一致的，而模型 w 被切分到了各个设备上，每个设备只拥有模型的一部分，所有计算设备上的模型拼在一起，才是完整的模型。</li>
+<li>模型并行的好处是，省去了多个设备之间的梯度 AllReduce；但是，由于每个设备都需要完整的数据输入，因此，数据会在多个设备之间进行广播，产生通信代价。</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>神经网络巨大，梯度同步代价大，甚至网络参数无法放倒单一设备上。</li>
+<li>通信占比高，适合在机器内做模型并行。</li>
+</ul>
+<h2 id="流水并行">流水并行</h2>
+<p><img src="realy.png" alt="流水并行"></p>
+<p><strong>运行步骤：</strong></p>
+<ul>
+<li>
+<p>流水并行指将网络切为多个阶段，并分发到不同的计算设备上，各个计算设备之间以“接力”的方式完成训练。</p>
+</li>
+<li>
+<p>4层网络被切分到2个计算设备上，其中 <code>GPU0</code> 上进行 <code>T1</code> 与 <code>T2</code> 的运算，<code>GPU1</code> 上进行 <code>T3</code> 与 <code>T4</code> 的计算。</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>流水线并行，训练设备容易出现空闲状态，加速效率没有数据并行高；但能减少通信边界支持更多的层数，适合在机器间使用。</li>
+</ul>
+<h2 id="混合并行">混合并行</h2>
+<p><img src="gpt3-overview.png" alt="GPT3 训练架构"></p>
+<ol>
+<li>它首先被分为 64 个阶段，进行流水并行。每个阶段都运行在 6 台 DGX-A100 主机上；</li>
+<li>在6台主机之间，进行的是数据并行训练；</li>
+<li>每台主机有 8 张 GPU 显卡，同一台机器上的8张 GPU 显卡之间是进行模型并行训练。</li>
+</ol>
+<h1>参考文献</h1>
+<blockquote>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://docs.oneflow.org/master/parallelism/01_introduction.html">常见的分布式并行策略</a></li>
+</ol>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E8%A1%8C%E8%AE%AD%E7%BB%83/" rel="tag"># 并行训练</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C/" rel="tag"># 数据并行</a>
+              <a href="/tags/%E6%A8%A1%E5%9E%8B%E5%B9%B6%E8%A1%8C/" rel="tag"># 模型并行</a>
+              <a href="/tags/torchrun/" rel="tag"># torchrun</a>
+              <a href="/tags/ddp/" rel="tag"># ddp</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/03/05/DeepSpeed/" rel="prev" title="DeepSpeed">
+                  <i class="fa fa-angle-left"></i> DeepSpeed
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/04/29/Megatron-LM/" rel="next" title="Megatron-LM">
+                  Megatron-LM <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

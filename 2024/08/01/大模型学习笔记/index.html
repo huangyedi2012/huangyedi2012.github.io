@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="记录大模型学习过程中的问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大模型学习笔记">
+<meta property="og:url" content="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="huangyedi2012">
+<meta property="og:description" content="记录大模型学习过程中的问题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-08-01T15:44:08.000Z">
+<meta property="article:modified_time" content="2026-01-15T10:40:22.887Z">
+<meta property="article:tag" content="llm">
+<meta property="article:tag" content="todo">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/","path":"2024/08/01/大模型学习笔记/","title":"大模型学习笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>大模型学习笔记 | huangyedi2012</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huangyedi2012</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pre-LayerNorm%E5%92%8CPost-LayerNorm%E7%9A%84%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-text">Pre-LayerNorm和Post-LayerNorm的区别？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%85%AC%E5%BC%8F%E5%AF%B9%E6%AF%94%EF%BC%9A"><span class="nav-text">结构定义与公式对比：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%B7%AE%E5%BC%82%E4%B8%8E%E5%BD%B1%E5%93%8D"><span class="nav-text">核心差异与影响</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%9B%B8%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E6%AF%94%E7%BB%9D%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E5%A5%BD%EF%BC%9F"><span class="nav-text">为什么相对位置编码比绝对位置编码好？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AD%E8%A8%80%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E5%85%B3%E7%B3%BB%E9%A9%B1%E5%8A%A8%EF%BC%8C%E8%80%8C%E9%9D%9E%E4%BD%8D%E7%BD%AE%E9%A9%B1%E5%8A%A8"><span class="nav-text">语言的本质：关系驱动，而非位置驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%9D%E5%AF%B9%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E7%9A%84%E6%A0%B8%E5%BF%83%E7%BC%BA%E9%99%B7"><span class="nav-text">绝对位置编码的核心缺陷</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">100</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2024/08/01/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="大模型学习笔记 | huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大模型学习笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-08-01 23:44:08" itemprop="dateCreated datePublished" datetime="2024-08-01T23:44:08+08:00">2024-08-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-01-15 18:40:22" itemprop="dateModified" datetime="2026-01-15T18:40:22+08:00">2026-01-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/nlp/" itemprop="url" rel="index"><span itemprop="name">nlp</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>记录大模型学习过程中的问题。</p>
+<span id="more"></span>
+<h2 id="Pre-LayerNorm和Post-LayerNorm的区别？">Pre-LayerNorm和Post-LayerNorm的区别？</h2>
+<h3 id="结构定义与公式对比："><strong>结构定义与公式对比：</strong></h3>
+<ol>
+<li>
+<p><strong>后置归一化（Post-LN）</strong></p>
+<ul>
+<li>
+<p><strong>结构</strong>：子层（自注意力/前馈网络）输出后，先与残差连接相加，再进行LayerNorm。</p>
+</li>
+<li>
+<p><strong>公式</strong>：<br>
+$$<br>
+x_{out}=LayerNorm(x+Sublayer(x))<br>
+$$</p>
+</li>
+<li>
+<p><strong>特点</strong>：原始Transformer论文采用的设计（如BERT）。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>前置归一化（Pre-LN）</strong></p>
+<ul>
+<li>
+<p><strong>结构</strong>：输入先通过LayerNorm，再进入子层计算，结果与原始输入残差连接。</p>
+</li>
+<li>
+<p><strong>公式</strong>：<br>
+$$<br>
+x_{out}=x+Sublayer(LayerNorm(x))<br>
+$$</p>
+</li>
+</ul>
+</li>
+<li></li>
+</ol>
+<pre><code> - **特点**：GPT系列、LLaMA、T5等现代大模型的主流选择。
+</code></pre>
+<h3 id="核心差异与影响"><strong>核心差异与影响</strong></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"><strong>维度</strong></th>
+<th style="text-align:center"><strong>Pre-LN（前置）</strong></th>
+<th style="text-align:center"><strong>Post-LN（后置）</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>梯度稳定性</strong></td>
+<td style="text-align:center">深层梯度衰减平缓（$O(1/\sqrt{L})$)，不易消失/爆炸</td>
+<td style="text-align:center">低层梯度指数衰减（$O((1/2)^{(N-k)/2}$），易消失</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>训练收敛</strong></td>
+<td style="text-align:center">无需学习率预热（Warm-up），收敛更快</td>
+<td style="text-align:center">需精细调整学习率和Warm-up，否则易震荡或不收敛</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>模型深度适应性</strong></td>
+<td style="text-align:center">支持深层网络（&gt;12层），可扩展至百层</td>
+<td style="text-align:center">仅适用于浅层网络（≤6层），深层训练易崩溃</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>表达能力</strong></td>
+<td style="text-align:center">高层可能表征趋同（Representation Collapse）</td>
+<td style="text-align:center">浅层模型泛化能力更强，输出多样性更高</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>实际应用案例</strong></td>
+<td style="text-align:center">GPT-3/4、LLaMA、PaLM、Qwen 等主流大模型</td>
+<td style="text-align:center">原始Transformer、BERT（浅层微调场景）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="为什么相对位置编码比绝对位置编码好？">为什么相对位置编码比绝对位置编码好？</h2>
+<p><strong>相对位置编码更好地契合了语言的本质，并解决了绝对位置编码在长文本上的根本性缺陷。</strong></p>
+<h3 id="语言的本质：关系驱动，而非位置驱动">语言的本质：关系驱动，而非位置驱动</h3>
+<p>“美味的苹果” 和 “苹果公司很成功”</p>
+<p><strong>绝对位置视角</strong>：第一个“苹果”是第2个词，第二个“苹果”是第1个词。这个“第几个”的信息本身，对于理解“苹果”的含义几乎毫无帮助。</p>
+<h3 id="绝对位置编码的核心缺陷">绝对位置编码的核心缺陷</h3>
+<ul>
+<li><strong>长度外推（Length Extrapolation）能力差</strong>：模型在训练时见过的序列长度是有限的（例如512个token）。当你试图处理一个更长的句子（例如1000个token）时，问题就来了。</li>
+<li><strong>可能引入无关的偏差</strong>：绝对位置编码可能会让模型过度关注绝对位置本身</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/todo/" rel="tag"># todo</a>
+              <a href="/tags/llm/" rel="tag"># llm</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/04/11/%E6%B1%9F%E6%B5%99%E6%B2%AA%E5%9B%9B%E6%97%A5%E8%A1%8C%E7%A8%8B/" rel="prev" title="江浙沪四日行程">
+                  <i class="fa fa-angle-left"></i> 江浙沪四日行程
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/08/02/GPT%E7%B3%BB%E5%88%97%E6%A8%A1%E5%9E%8B/" rel="next" title="GPT系列模型">
+                  GPT系列模型 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

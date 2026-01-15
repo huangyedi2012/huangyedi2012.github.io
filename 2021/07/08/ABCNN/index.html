@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"huangyedi2012.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ABCNN">
+<meta property="og:url" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/index.html">
+<meta property="og:site_name" content="huangyedi2012">
+<meta property="og:description" content="ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/bcnn.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/abcnn_1.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/abcnn_2.png">
+<meta property="og:image" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/abcnn_3.png">
+<meta property="article:published_time" content="2021-07-08T03:35:31.000Z">
+<meta property="article:modified_time" content="2026-01-15T10:40:22.833Z">
+<meta property="article:tag" content="文本匹配">
+<meta property="article:tag" content="模型">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://huangyedi2012.github.io/2021/07/08/ABCNN/bcnn.png">
+
+
+<link rel="canonical" href="https://huangyedi2012.github.io/2021/07/08/ABCNN/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://huangyedi2012.github.io/2021/07/08/ABCNN/","path":"2021/07/08/ABCNN/","title":"ABCNN"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>ABCNN | huangyedi2012</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/next-theme-pjax/0.6.0/pjax.min.js" integrity="sha256-vxLn1tSKWD4dqbMRyv940UYw4sXgMtYcK6reefzZrao=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/medium-zoom/1.1.0/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script><script src="/js/pjax.js" defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.5.0/search.js" integrity="sha256-xFC6PJ82SL9b3WkGjFavNiA9gm5z6UBxWPiu4CYjptg=" crossorigin="anonymous" defer></script>
+<script src="/js/third-party/search/local-search.js" defer></script>
+
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"ams","single_dollars":true,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">huangyedi2012</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">主要思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#BCNN"><span class="nav-text">BCNN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Input-layer"><span class="nav-text">Input layer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Convolution-layer"><span class="nav-text">Convolution layer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Pooling-layer"><span class="nav-text">Pooling layer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Output-layer"><span class="nav-text">Output layer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ABCNN"><span class="nav-text">ABCNN</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ABCNN-1"><span class="nav-text">ABCNN-1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ABCNN-2"><span class="nav-text">ABCNN-2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ABCNN-3"><span class="nav-text">ABCNN-3</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">工程网络图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#BCNN-2"><span class="nav-text">BCNN</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">参考文献</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name"></p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">100</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="返回顶部">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+
+    
+        <div class="pjax">
+        </div>
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://huangyedi2012.github.io/2021/07/08/ABCNN/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="ABCNN | huangyedi2012">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ABCNN
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-08 11:35:31" itemprop="dateCreated datePublished" datetime="2021-07-08T11:35:31+08:00">2021-07-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-01-15 18:40:22" itemprop="dateModified" datetime="2026-01-15T18:40:22+08:00">2026-01-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/nlp/" itemprop="url" rel="index"><span itemprop="name">nlp</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>ABCNN是一种基于卷积神经网络CNN和Attention机制的算法，应用于文本分类等业务场景中。</p>
+<span id="more"></span>
+<h1>主要思路</h1>
+<h2 id="BCNN">BCNN</h2>
+<p><strong>BCNN结构</strong>：使用基本CNN网络（无attention机制），每次处理一对句子，输出层解决sentence pair task.</p>
+<p><img src="bcnn.png" alt="bcnn"></p>
+<p>假设输入两个句子 $s_0$ 和 $s_1$，句子长度分别为 $l_0$ 和 $l_1$。输入的长度取 $s = max(l_0,l_1)$ ,短的补0。</p>
+<h3 id="Input-layer">Input layer</h3>
+<p>每个句子被填充为相同长度$s$，使用词向量映射每个句子为矩阵$ d_0\times s$维矩阵。</p>
+<h3 id="Convolution-layer">Convolution layer</h3>
+<p>卷积核取$d_0 \times w$,沿词方向做卷积，左右做padding，分别加长度$w-$1 补0。则卷积后得到特征长度为$s + 2 \times (w-1) - w + 1 = s+w-1$。叠加$d_1$ 个卷积核，最终得到新的词向量，维度为$d_1 \times (s+w-1)$ 。卷积核的高须为词向量的维度。</p>
+<p>设词向量分别为$v_1,v_2,…,v_s$。记$c_i = [v_{i-w+1},v_{i-w+2},…,v_i]$，$c_i$的维度为$d_0\times w$。$p_i$为卷积$c_i$后的特征，则有：</p>
+<p>$$<br>
+p=tanh(Wc_i + b)<br>
+$$</p>
+<p>其中，$W$为卷积核集合，即为卷积权重，其维度为$d_1\times d_0\times w$，$b_i$为对应的偏置。</p>
+<h3 id="Pooling-layer">Pooling layer</h3>
+<p>沿词的方向，步长为$step$,长度为 $wp $ ,取需要池化的向量$p_i$,维度为 $d_0\times w$,经过池化函数后，维度变为$d_0\times 1 $。池化函数作用的是词向量沿着词维度的特征集合。池化函数可取均值，最大值等。</p>
+<p><strong>all-ap</strong>：对所有特征列做column-wise的pooling操作，得到 $s \times 1$维度的输出向量</p>
+<p><strong>w-ap</strong>：卷积核长度设置为$w$，对窗口$w$内的特征列做column-wise的polling操作，得到$s+w-1$的输出向量。</p>
+<h3 id="Output-layer">Output layer</h3>
+<p>就是对整个特征层做池化。输出特征向量后，把两个句子的特征向量拼接起来得到特征。</p>
+<h2 id="ABCNN">ABCNN</h2>
+<p>ABCNN（Attention-Based BCNN）有3种结构，ABCNN-1，ABCNN-2，ABCNN-3。</p>
+<h3 id="ABCNN-1">ABCNN-1</h3>
+<p><img src="abcnn_1.png" alt="ABCNN-1"></p>
+<p>结构中增加了一个抽象层级，就是在原有单词级上增加了一个短语级的抽象。单词级的抽象文中重新命名为unit,作为低级别的表示，短语级的作为更高一级的表示。图中那个红色的与BCNN网络中的输入是一样的，是句子的词向量矩阵，两个句子。第一个句子5个单词，第二个句子7个单词。</p>
+<p>蓝色的为短语级高一级的词向量表示。蓝色表示是由Attention Matrix A和红色词向量计算生成</p>
+<p>Attention Matrix $A$是由左右两个句子的情况生成。$A$中的 $i$ 列值是由左边句子（五个单词）中第 $i$ 个单词（unit）的向量与右边句子的Attention值分布$j$行值是由右边句子中第$j$个单词的向量与左边句子的Attention值分布</p>
+<p>注意力矩阵$A$定义句子间词的关系，即：<br>
+$$<br>
+A_{i,j}=score(F_{0,r}[:,i],F_{1,r}[:,j])<br>
+$$<br>
+其中，$F_{i,r[:,k]}$定义为第$i$个句子的第$k$个词向量。<br>
+$$<br>
+score(x,y)=\frac{1}{1+|x-y|}<br>
+$$<br>
+生成注意力矩阵后，利用$F_{0,a}=W_0A^T，F_{1,a}=W_1A$ 得到句子对应的注意力特征矩阵。叠加到句子的特征矩阵中，进行卷积。</p>
+<h3 id="ABCNN-2">ABCNN-2</h3>
+<p><img src="abcnn_2.png" alt="ABCNN-2"></p>
+<p>ABCNN-2架构是在以初始词向量形式输入并经过卷积后的输出的向量表示中（两个句子分别变成了7col和9col），计算出Attention Matrix A，计算方法还是计算两个句子对应单词向量的欧式距离，生成向量矩阵，方法同ABCNN-1的架构。</p>
+<p>第二步：计算卷积向量权重，给每个单词计算一个权重值。左边句子（7col）的每个单词对应的Attention权重是由Matrix A中列向量求和的值作为权重值，col-wise sum，右边句子中每个单词的权重值是Matrix A中行向量求和值作为权重值，row-wise sum.<br>
+$$<br>
+a_{0,j}=\sum A[j,:]t<br>
+$$<br>
+句子原始输入是词向量矩阵，左边的是$5<em>d$，右边是$7</em>d$，$w$是3<br>
+$$<br>
+F_{i,r}^c \in R^{d\times(s_i+w-1)}<br>
+$$<br>
+将卷积输出的特征矩阵，基于Attention权重值，做池化。$i$取值为0,1，$j$取值为句子长度。<br>
+$$<br>
+F_{i,r}^p[:,j]=\sum_{k=j:j+2}a_{i,k}F_{i,r}^c[:,k], j = 1…s_i<br>
+$$<br>
+<strong>ABCNN-1和ABCNN-2比较:</strong></p>
+<ol>
+<li>ABCNN-1中Attention是间接的影响卷积，ABCNN-2中通过Attention权重直接影响池化。</li>
+<li>ABCNN-1需要两个权重矩阵需要学习，并且输入特征矩阵要两次， 相比ABCNN-2网络需要更多的参数学习，容易过拟合。</li>
+<li>ABCNN-2执行更大粒度的池化，如果在卷积层输入的是词粒度的，那么ABCNN-2在池化时就已经是短语粒度的（经过卷积了），池化时的w和卷积的w保持一致。</li>
+</ol>
+<h3 id="ABCNN-3">ABCNN-3</h3>
+<p><img src="abcnn_3.png" alt="ABCNN-3"></p>
+<p>将ABCNN-1和ABCNN-2结合，作为架构，这样保留word level信息，也增加了phrase level的信息。更加高层次的特征抽象。</p>
+<h1>工程网络图</h1>
+<h2 id="BCNN-2">BCNN</h2>
+<pre class="mermaid">graph BT 
+
+subgraph Input Layer
+X1("x1 [None, 300, 40]")
+X2("x2 [None, 300, 40]")
+
+X1 --> X1_expand("x1_expand [None,300, 40,1]")
+X2 --> X2_expand("x2_expand [None,300, 40,1]")
+end
+
+X1_expand --all_pool--> left_ap_0("left_ap_0 [None, 300]")
+X2_expand --all_pool--> right_ap_0("right_ap_0 [None, 300]")
+
+subgraph CNN Layer 1
+X1_expand --"padding (3,3)"--> left_pad_1("left_pad [None, 300, 46, 1]")
+X2_expand --"padding (3,3)"--> right_pad_1("right_pad [None, 300, 46, 1]")
+
+left_pad_1 --"convolution (300, 4, 50)"--> left_conv_trans_1("left_conv_trans [None, 50, 43, 1]")
+right_pad_1 --"convolution (300, 4, 50)"--> right_conv_trans_1("right_conv_trans [None, 50, 43, 1]")
+
+left_conv_trans_1 --"w_pool (1, 4)"--> left_wp_1("left_wp [None, 50, 40, 1]")
+left_conv_trans_1 --"all_pool (1, 43)"--> left_ap_1("left_ap [None, 50]")
+
+
+right_conv_trans_1 --"w_pool (1, 4)"--> right_wp_1("left_wp [None, 50, 40, 1]")
+right_conv_trans_1 --"all_pool (1, 43)"--> right_ap_1("left_ap [None, 50]")
+end
+
+subgraph CNN Layer 2
+left_wp_1 --"padding (3,3)" --> left_pad_2("left_pad [None, 50, 46, 1]")
+right_wp_1 --"padding (3,3)" --> right_pad_2("right_pad [None, 50, 46, 1]")
+
+left_pad_2 --"convolution (50, 4, 50)"--> left_conv_trans_2("left_conv_trans [None, 50, 43, 1]")
+right_pad_2 --"convolution (50, 4, 50)"--> right_conv_trans_2("right_conv_trans [None, 50, 43, 1]")
+
+left_conv_trans_2 -- "w_pool (1,4)" --> left_wp_2("left_wp [None, 50, 40, 1]")
+left_conv_trans_2 -- "all_pool (1, 43)" --> left_ap_2("left_ap [None, 50]")
+
+
+right_conv_trans_2 -- "w_pool (1,4)" --> right_wp_2("right_wp [None, 50, 40, 1]")
+right_conv_trans_2 -- "all_pool (1, 43)" --> right_ap_2("right_ap [None, 50]")
+end
+
+left_ap_0 --cosine -------> sims_0("sims_0 [None, ]")
+right_ap_0 --cosine -------> sims_0
+
+
+left_ap_1 --cosine -----> sims_1("sims_1 [None, ]")
+right_ap_1 --cosine -----> sims_1
+
+
+left_ap_2 --cosine --> sims_2("sims_2 [None, ]")
+right_ap_2 --cosine --> sims_2
+
+subgraph Output Layer
+
+sims_0 --stack--> stack_sim("stack_sim [None, 3]")
+sims_1 --stack--> stack_sim
+sims_2 --stack--> stack_sim
+
+features("features [None, 4]") --concat--> output_features("output_features [None, 7]")
+stack_sim --concat--> output_features
+
+output_features --"full connected" --> output("output [None, 2]")
+output --softmax--> softmax("softmax [None, ]")
+
+end</pre>
+<h1>参考文献</h1>
+<blockquote>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://aclanthology.org/Q16-1019.pdf">文献：ABCNN: Attention-Based Convolutional Neural Network for Modeling Sentence Pairs</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/50160263">注意力机制之ABCNN</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/bb366027978a">文献阅读笔记：ABCNN: Attention-Based Convolutional Neural Network for Modeling Sentence Pairs</a></li>
+</ol>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%A8%A1%E5%9E%8B/" rel="tag"># 模型</a>
+              <a href="/tags/%E6%96%87%E6%9C%AC%E5%8C%B9%E9%85%8D/" rel="tag"># 文本匹配</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/08/ESIM/" rel="prev" title="ESIM">
+                  <i class="fa fa-angle-left"></i> ESIM
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/07/08/%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%EF%BC%88CNN%EF%BC%89/" rel="next" title="卷积神经网络（CNN）">
+                  卷积神经网络（CNN） <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder"></span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
