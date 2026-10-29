@@ -39,8 +39,9 @@
 <meta property="og:image" content="https://huangyedi2012.github.io/2021/07/23/Attention%E8%AF%A6%E8%A7%A3/attention6.gif">
 <meta property="og:image" content="https://huangyedi2012.github.io/2021/07/23/Attention%E8%AF%A6%E8%A7%A3/attention.png">
 <meta property="article:published_time" content="2021-07-23T07:53:22.000Z">
-<meta property="article:modified_time" content="2026-01-15T10:40:22.835Z">
+<meta property="article:modified_time" content="2026-01-16T06:48:50.057Z">
 <meta property="article:tag" content="attention">
+<meta property="article:tag" content="todo">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://huangyedi2012.github.io/2021/07/23/Attention%E8%AF%A6%E8%A7%A3/encoder-decoder.png">
 
@@ -179,7 +180,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">Attention机制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">Attention原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">其他理解</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-text">参考文献</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Full-Attention"><span class="nav-text">Full Attention</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Attention%E6%9C%BA%E5%88%B6"><span class="nav-text">Attention机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Attention%E5%8E%9F%E7%90%86"><span class="nav-text">Attention原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E7%90%86%E8%A7%A3"><span class="nav-text">其他理解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-text">参考文献</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -192,7 +193,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">76</span>
+          <span class="site-state-item-count">77</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -203,7 +204,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">100</span>
+        <span class="site-state-item-count">101</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -272,7 +273,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-01-15 18:40:22" itemprop="dateModified" datetime="2026-01-15T18:40:22+08:00">2026-01-15</time>
+      <time title="修改时间：2026-01-16 14:48:50" itemprop="dateModified" datetime="2026-01-16T14:48:50+08:00">2026-01-16</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -295,15 +296,16 @@
     
     <div class="post-body" itemprop="articleBody"><p>Attention机制模仿生物观察行为的内部过程，将内部经验和外部对齐，从而增加部分区域的观察精细度。</p>
 <span id="more"></span>
-<h1>Attention机制</h1>
+<h2 id="Full-Attention">Full Attention</h2>
+<h3 id="Attention机制">Attention机制</h3>
 <p>在一般的Encoder-Decoder框架中，模型会将所有输入的$X$都转化成语义表示$C$，这将导致Decoder出来的每个字都是同权的考虑了输入中的所有词。例如<code>Tom chase Jerry</code>目标翻译的结果是：<code>汤姆追逐杰瑞</code>。在未考虑注意力机制的模型中，<code>汤姆</code>这个词的翻译收到<code>Tom</code>、<code>chase</code>和<code>Jerry</code>三个词同权重的影响。但实际上，<code>汤姆</code>这个词的翻译应该受到<code>Tom</code>这个词的影响最大！</p>
-<p>在带有Attention机制的Encoder-Decoder模型需要从序列中学习到每一个元素的重要成都，然后按照重要程度将元素合并。因此，注意力机制可以看作是 Encoder 和 Decoder 之间的接口，它向 Decoder 提供来自每个 Encoder 隐藏状态的信息。通过该设置，模型能够选择性地关注输入序列的有用部分，从而学习它们之间的“对齐”。这就表明，在 Encoder 将输入的序列元素进行编码时，得到的不在是一个固定的语义编码 C ，而是存在多个语义编码，且不同的语义编码由不同的序列元素以不同的权重参数组合而成。一个简单地体现 Attention 机制运行的示意图如下：</p>
+<p>在带有Attention机制的Encoder-Decoder模型需要从序列中学习到每一个元素的重要程度，然后按照重要程度将元素合并。因此，注意力机制可以看作是 Encoder 和 Decoder 之间的接口，它向 Decoder 提供来自每个 Encoder 隐藏状态的信息。通过该设置，模型能够选择性地关注输入序列的有用部分，从而学习它们之间的“对齐”。这就表明，在 Encoder 将输入的序列元素进行编码时，得到的不在是一个固定的语义编码 C ，而是存在多个语义编码，且不同的语义编码由不同的序列元素以不同的权重参数组合而成。一个简单地体现 Attention 机制运行的示意图如下：</p>
 <p><img src="encoder-decoder.png" alt="Encoder-Decoder"></p>
 <p>在 Attention 机制下，语义编码 $C$ 就不在是输入序列 $X$ 的直接编码了，而是各个元素按其重要程度加权求和得到的，即<br>
 $$<br>
-C_i=\sum^{T_x}<em>{j=0}{a</em>{ij}f(x_j)}<br>
+C_i=\sum^{T_x}_{j=0}{a_{ij}f(x_j)}<br>
 $$<br>
-其中，$i$表示时刻，$j$ 表示序列中的第 $j$ 个元素， $T_x$ 表示序列的长度， $f(⋅)$表示对元素 $x_j$x的编码。$a_{ij}$可以看作是一个概率，反映了元素 $h_j$ 对 $C_i$ 的重要性，可以使用 softmax 来表示：<br>
+其中，$i$表示时刻，$j$ 表示序列中的第 $j$ 个元素， $T_x$ 表示序列的长度， $f(⋅)$表示对元素 $x_j$的编码。$a_{ij}$可以看作是一个概率，反映了元素 $h_j$ 对 $C_i$ 的重要性，可以使用 softmax 来表示：<br>
 $$<br>
 a_{ij}=\frac{exp(e_{ij})}{\sum_{k=1}^{T_x}exp(e_{ik})}<br>
 $$<br>
@@ -312,7 +314,7 @@ $$<br>
 <p><img src="attention_matrix.png" alt="Attention Matrix"></p>
 <p>其中，$h_i$表示 Encoder 的转换函数，$F(h_j,H_i)$ 表示预测与目标的匹配打分函数。将以上过程串联起来，则注意力模型的结构如下图所示：</p>
 <p><img src="attention_architecture.png" alt="Attention Architecture"></p>
-<h1>Attention原理</h1>
+<h3 id="Attention原理">Attention原理</h3>
 <p>Attention 机制的一个重点就是获得 attention value，即机器翻译中的语义编码 $C_i$。在上一节中我们知道该值是通过输入元素按照不同的权重参数组合而成的，所以我们可以将其定义为一个 attention 函数，比较主流的 attention 函数的机制是采用键值对查询的方式，其工作实质如下图所示：</p>
 <p><img src="attention_qkv.png" alt="Attention QKV"></p>
 <p>在自然语言任务中，往往 Key 和 Value 是相同的。需要注意的是，计算出来的 attention value 是一个向量，代表序列元素 $x_j$ 的编码向量，包含了元素 $x_j$ 的上下文关系，即同时包含全局联系和局部联系。全局联系很好理解，因为在计算时考虑了该元素与其他所有元素的相似度计算；而局部联系则是因为在对元素 $x_j$ 进行编码时，重点考虑与其相似度较高的局部元素，尤其是其本身。</p>
@@ -336,14 +338,14 @@ $$<br>
 <p><img src="attention6.gif" alt="Attention6"></p>
 <p>最终得到完整的注意力层结构如下图所示：</p>
 <p><img src="attention.png" alt="Attention"></p>
-<h1>其他理解</h1>
+<h3 id="其他理解">其他理解</h3>
 <p>Q就是词的查询向量，K是“被查”向量，V是内容向量。</p>
 <p>简单来说一句话：Q是最适合查找目标的，K是最适合接收查找的，V就是内容，这三者不一定要一致，所以网络这么设置了三个向量，然后学习出最适合的Q, K, V，以此增强网络的能力。</p>
 <p>主要要理解Q，K的意义，可以<strong>类比搜索</strong>的过程：</p>
 <p>假设我们想查一篇文章，我们不会直接把文章的内容打上去，而是会在搜索框输入该文章的<strong>关键字</strong>，如果我们搜不到，我们往往会再换一个关键字，直到搜到为止，那么可以让我们搜到的关键字就是<strong>最适合查找目标文章的关键字</strong>。这个<strong>最适合查找目标文章的关键字就是Q。</strong></p>
 <p>那么搜索引擎拿到我们输入的关键字Q之后，就会把Q和库里面的文章对比，当然搜索引擎为了节省资源加快对比速度，提前把库里面的文章进行了处理提取了<strong>关键信息</strong>，关键信息有很多，那么那个关键信息能够使得搜索命中率高，那个就是<strong>最适合接收查找的关键信息，<strong>这个</strong>最适合接收查找的关键信息就是K</strong>。</p>
 <p>使用Q和K计算了相似度之后得到score，这就是相似度评分，之后有了相似度评分，就可以把内容V加权回去了。</p>
-<h1>参考文献</h1>
+<h2 id="参考文献">参考文献</h2>
 <blockquote>
 <ol>
 <li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=Mzg5ODAzMTkyMg==&amp;mid=2247485860&amp;idx=1&amp;sn=e926a739784090b3779711164217b968&amp;chksm=c06981f9f71e08efb5f57441444f71a09f1d27fc667af656a5ad1173e32ad394201d02195a3a&amp;mpshare=1&amp;scene=1&amp;srcid=0618HMAYi4gzzwWfedLoOuSD&amp;key=cb6098335ab487a8ec84c95399379f16f975d33ce91588d73ecf857c54b543666b5927e231ad3a9b17bff0c20fff20fc49c262912dca050dee9465801de8a4cdc79e3d8f4fbc058345331fb691bcbacb&amp;ascene=1&amp;uin=MTE3NTM4MTY0NA%3D%3D&amp;devicetype=Windows+10&amp;version=62060833&amp;lang=zh_CN&amp;pass_ticket=ikhBXxX7PL%2Fal9hbIGXbRFA96ei74EF%2BcP8KdbP6UcV6mIpOfPWzVuju%2Bqw86q5r">动画图解Attention机制，让你一看就明白</a></li>
@@ -359,6 +361,7 @@ $$<br>
 
     <footer class="post-footer">
           <div class="post-tags">
+              <a href="/tags/todo/" rel="tag"># todo</a>
               <a href="/tags/attention/" rel="tag"># attention</a>
           </div>
 
